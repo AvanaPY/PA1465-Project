@@ -1,3 +1,6 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -19,9 +22,9 @@ def create_data(from_data, min_value, max_value):
 
 def get_ai_1():
     model = keras.Sequential([
-        layers.Dense(1, input_shape=(1,), activation='sigmoid'),
-        layers.Dense(15, activation='sigmoid'),
-        layers.Dense(15, activation='sigmoid'),
+        layers.Dense(1, input_shape=(1,), activation='relu'),
+        layers.Dense(15, activation='relu'),
+        layers.Dense(15, activation='relu'),
         layers.Dense(2, activation='softmax'),
     ])
     model.compile(
@@ -33,8 +36,9 @@ def get_ai_1():
 
 def get_ai_2():
     model = keras.Sequential([
-        layers.Dense(1, input_shape=(1,), activation='sigmoid'),
-        layers.Dense(15, activation='tanh'),
+        layers.Dense(1, input_shape=(1,), activation='relu'),
+        layers.Dense(25, activation='relu'),
+        layers.Dense(25, activation='relu'),
         layers.Dense(2, activation='softmax'),
     ])
     model.compile(

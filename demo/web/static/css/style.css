@@ -17,10 +17,11 @@ h2 {
 }
 
 .container {
-    height: 50vh;
+    height: 100vh;
+    margin: 2em;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    /* justify-content: center; */
     align-items: center;
 }
 
@@ -36,41 +37,41 @@ h2 {
     width: 170px;
     transition: all 0.5s;
     cursor: pointer;
-  }
+}
   
-  .button span {
+.button span {
       background-color: #f4511e; 
     cursor: pointer;
     display: inline-block;
     position: relative;
     transition: 0.5s;
-  }
-  
-  .button span:after {
+}
+
+.button span:after {
     content: '\00bb';
     position: absolute;
     opacity: 0;
     top: 0;
     right: -10px;
     transition: 0.5s;
-  }
+}
   
-  .button:hover span {
+.button:hover span {
     padding-right: 15px;
-  }
+}
   
-  .button:hover span:after {
+.button:hover span:after {
     opacity: 1;
     right: 0;
-  }
+}
 
-  #uploadDataBtn {
+#uploadDataBtn {
       background-color: grey;
-  }
+}
 
-  #uploadDataBtn span {
-      background-color: grey;
-  }
+#uploadDataBtn span {
+    background-color: grey;
+}
 
 input {
     width: 8em;
@@ -113,4 +114,8 @@ input::-webkit-inner-spin-button {
 /* Firefox */
 input[type=number] {
   -moz-appearance: textfield;
+}
+
+#myChart {
+  width: 800px;
 }
