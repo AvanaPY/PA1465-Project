@@ -37,8 +37,7 @@ def get_ai_1():
 def get_ai_2():
     model = keras.Sequential([
         layers.Dense(1, input_shape=(1,), activation='relu'),
-        layers.Dense(25, activation='relu'),
-        layers.Dense(25, activation='relu'),
+        layers.Dense(15, activation='relu'),
         layers.Dense(2, activation='softmax'),
     ])
     model.compile(
