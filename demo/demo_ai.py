@@ -59,7 +59,7 @@ def test_ai(model, data, min_ok, max_ok):
 
         print(f'Testing on {test:.2f} ({t[0][0]:5.2f}): {p_ok:.2f} / {p_no:.2f} => {"Right" if ok == act else "Wrong" }')
 
-def train_ai(model, min_ok, max_ok, loc, scale, data_size=100_000, batch_size=64, validation_split=0.2, epochs=20):
+def train_ai(model, min_ok, max_ok, loc, scale, data_size=100_000, batch_size=32, validation_split=0.2, epochs=20):
     s = np.random.normal(loc=loc, scale=scale, size=data_size)
     X, Y = create_data(s, min_ok, max_ok)
     model.fit([X], Y, batch_size=batch_size, validation_split=validation_split, epochs=epochs)

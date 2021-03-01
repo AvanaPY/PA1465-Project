@@ -33,8 +33,11 @@ def _train_ai():
     ai_model = get_ai()
     train_ai(ai_model, AI_MIN_OK, AI_MAX_OK, AI_LOC, AI_SCL, batch_size=32, epochs=25)
 
-def _save_ai():
-    ai_model.save_weights(AI_PRE_WEIGHTS_PATH)
+def _save_ai(complete=False):
+    if complete:
+        ai_model.save_weights(AI_ACT_WEIGHTS_PATH)
+    else:
+        ai_model.save_weights(AI_PRE_WEIGHTS_PATH)
 
 ai_model = get_ai()
 if os.path.exists(AI_ACT_WEIGHTS_PATH):
@@ -81,9 +84,8 @@ def api_retrain():
     if RETRAINING_MODEL_ACTIVE:
         return jsonify({"status": "error", "message": "The model is busy being retrained the model."})
     RETRAINING_MODEL_ACTIVE = True
-    # _train_ai()
-    time.sleep(4)
-    _save_ai()
+    _train_ai()
+    _save_ai(complete=True)
     RETRAINING_MODEL_ACTIVE = False
     return jsonify({"status": "ok", "message": "Retrained the model."})
     

@@ -92,8 +92,6 @@ const retrainModel = async () => {
     });
 }
 
-
-
 const bulkClassify = () => {
     console.log("Not yet implemented!");
 }
