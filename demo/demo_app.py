@@ -14,6 +14,8 @@ BASE_DIR = os.path.dirname(__file__)
 
 from threading import Thread
 
+RETRAINING_MODEL_ACTIVE = False 
+
 AI_MIN_OK = 22
 AI_MAX_OK = 28
 AI_LOC = 25
@@ -64,6 +66,16 @@ def api_predict(value):
         print(str(e))
         return jsonify({ "status": "error", "message": "Internal server error" })
 
+@app.route('/api/retrain', methods=['POST'])
+def api_retrain():
+    global RETRAINING_MODEL_ACTIVE
+    if RETRAINING_MODEL_ACTIVE:
+        return jsonify({"status": "error", "message": "The model is busy being retrained the model."})
+    RETRAINING_MODEL_ACTIVE = True
+    time.sleep(1)
+    RETRAINING_MODEL_ACTIVE = False
+    return jsonify({"status": "ok", "message": "Retrained the model."})
+    
 server = Thread(target=app.run)
 server.daemon = True
 server.start()

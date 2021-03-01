@@ -14,7 +14,9 @@
         <div class="buttonContainer">
             <button id="uploadDataBtn" onclick="uploadData();" class="button"><span>Upload Data</span></button>
             <button id="testDataBtn" onclick="testData();" class="button"><span>Test Data</span></button>
+            <button id="retrainModelBtn" onclick="retrainModel();" class="button"><span id="retrainModelBtnSpan">Retrain Model</span></button>
         </div>
+        <span id="retrainModelErrorPlaceholder"></span>
         <div class="dataDiv">
             <label for="testData">Data to test:</label>
             <input type="number" id="testDataInput" name="testData" step="0.1" placeholder="Value"><br><br>

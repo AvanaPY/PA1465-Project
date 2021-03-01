@@ -73,6 +73,16 @@ h2 {
     background-color: grey;
 }
 
+.buttonContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#retrainModelErrorPlaceholder {
+    padding: 1em 0;
+}
+
 input {
     width: 8em;
     height: 1em;

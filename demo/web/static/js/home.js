@@ -76,4 +76,21 @@ const testData = () => {
     }
 }
 
+const retrainModel = async () => {
+    const btn = document.getElementById('retrainModelBtnSpan')
+    const tmp = btn.innerText;
+    btn.innerText = "Waiting..."
+    const response = await fetch("/api/retrain", {
+        method: 'POST'
+    }).then((response) => 
+        response.json()
+    ).then((response) => {
+        const status = response["status"];
+        const message = response["message"]
+        const retrainResult = document.getElementById('retrainModelErrorPlaceholder');
+        btn.innerText = tmp;
+        retrainResult.innerText = message;
+    });
+}
+
 chartIt();
