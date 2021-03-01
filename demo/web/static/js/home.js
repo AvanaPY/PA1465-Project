@@ -40,7 +40,17 @@ const chartIt = async () => {
 }
 
 const uploadData = () => {
-    console.log("Function uploadData() is not yet implemented.");
+    const file = document.getElementById("image-file").files[0];
+    const formData = new FormData()
+    formData.append("file", file);
+    fetch('/upload/dataset', {
+        method: 'POST',
+        body: formData
+    }).then((response) => 
+        response.json()
+    ).then((response) => {
+        console.log(response);
+    });
 }
 
 const testData = () => {

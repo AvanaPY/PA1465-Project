@@ -63,6 +63,17 @@ def api_retrain():
     RETRAINING_MODEL_ACTIVE = False
     return jsonify({"status": "ok", "message": "Retrained the model."})
     
+@app.route('/upload/dataset', methods=['POST'])
+def upload_dataset():
+    body = request.files['file']
+    with open(os.path.join(BASE_DIR, 'web/uploads/tmp.txt'), 'wb+') as f:
+        f.write(body.read())
+
+    return jsonify({
+        "status": "ok",
+        "message": "Dataset has been received"
+    })
+
 def _train_ai():
     global ai_model
     ai_model = get_ai()
