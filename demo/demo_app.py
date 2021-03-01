@@ -63,6 +63,16 @@ def api_retrain():
     RETRAINING_MODEL_ACTIVE = False
     return jsonify({"status": "ok", "message": "Retrained the model."})
     
+def _train_ai():
+    global ai_model
+    ai_model = get_ai()
+    train_ai(ai_model, AI_MIN_OK, AI_MAX_OK, AI_LOC, AI_SCL, batch_size=32, epochs=25)
+
+def _save_ai(complete=False):
+    if complete:
+        ai_model.save_weights(AI_ACT_WEIGHTS_PATH)
+    else:
+        ai_model.save_weights(AI_PRE_WEIGHTS_PATH)
 
 ai_model = get_ai()
 if os.path.exists(AI_ACT_WEIGHTS_PATH):
@@ -84,17 +94,6 @@ else:
     except Exception as e:
         print(f'Unknown error "{e}" occured, exiting program.')
         exit()
-
-def _train_ai():
-    global ai_model
-    ai_model = get_ai()
-    train_ai(ai_model, AI_MIN_OK, AI_MAX_OK, AI_LOC, AI_SCL, batch_size=32, epochs=25)
-
-def _save_ai(complete=False):
-    if complete:
-        ai_model.save_weights(AI_ACT_WEIGHTS_PATH)
-    else:
-        ai_model.save_weights(AI_PRE_WEIGHTS_PATH)
 
 server = Thread(target=app.run)
 server.daemon = True
