@@ -8,22 +8,10 @@ const data = []
 const labels= []
 const classification = []
 
-const generateTimeLabels = (data) => {
-    const labels = []
-    var v = 0;
-    data.forEach((value, index) => {
-        labels.push(String(v));
-        v++;
-    })
-    return labels;
-}
-
 const updateChart = (value) => {
     data.push(value);
     labels.push(labels.length);
     chart.update();
-
-    console.log(data, labels);
 }
 
 const chartIt = async () => {
@@ -79,18 +67,35 @@ const testData = () => {
 const retrainModel = async () => {
     const btn = document.getElementById('retrainModelBtnSpan')
     const tmp = btn.innerText;
+    const retrainResult = document.getElementById('retrainModelErrorPlaceholder');
+
+    let receivedResponse = false;
+    let message;
+    let loopFunction = (n) => {
+        if(receivedResponse) {
+            retrainResult.innerText = message;
+            btn.innerHTML = tmp;
+        } else {
+            btn.innerHTML = "Waiting" + ".".repeat(n);
+            setTimeout(() => loopFunction(1 + n % 4), 500);
+        }
+    }
+
+    loopFunction(0)
     btn.innerText = "Waiting..."
     const response = await fetch("/api/retrain", {
         method: 'POST'
-    }).then((response) => 
-        response.json()
+    }).then((response) => response.json()
     ).then((response) => {
-        const status = response["status"];
-        const message = response["message"]
-        const retrainResult = document.getElementById('retrainModelErrorPlaceholder');
-        btn.innerText = tmp;
-        retrainResult.innerText = message;
+        message = response["message"];
+        receivedResponse = true;
     });
+}
+
+
+
+const bulkClassify = () => {
+    console.log("Not yet implemented!");
 }
 
 chartIt();

@@ -81,7 +81,8 @@ def api_retrain():
     if RETRAINING_MODEL_ACTIVE:
         return jsonify({"status": "error", "message": "The model is busy being retrained the model."})
     RETRAINING_MODEL_ACTIVE = True
-    _train_ai()
+    # _train_ai()
+    time.sleep(4)
     _save_ai()
     RETRAINING_MODEL_ACTIVE = False
     return jsonify({"status": "ok", "message": "Retrained the model."})
