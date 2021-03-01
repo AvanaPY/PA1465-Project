@@ -6,13 +6,14 @@ import time
 
 from demo_ai import get_ai_2 as get_ai, train_ai, load_ai, map
 
-from flask import jsonify
+from flask import jsonify, request
 from web.app import get_app
 app = get_app()
 
-BASE_DIR = os.path.dirname(__file__)
-
 from threading import Thread
+
+BASE_DIR = os.path.dirname(__file__)
+FILE_UPLOAD_ALLOWED_EXTENSION = 'csv' # Only allow .csv files for now
 
 RETRAINING_MODEL_ACTIVE = False 
 
@@ -27,33 +28,6 @@ def exit_handler():
 
 AI_PRE_WEIGHTS_PATH = os.path.join(BASE_DIR, "ai_data/weights_prel.h5")
 AI_ACT_WEIGHTS_PATH = os.path.join(BASE_DIR, "ai_data/weights.h5")
-
-def _train_ai():
-    global ai_model
-    ai_model = get_ai()
-    train_ai(ai_model, AI_MIN_OK, AI_MAX_OK, AI_LOC, AI_SCL, batch_size=32, epochs=25)
-
-def _save_ai(complete=False):
-    if complete:
-        ai_model.save_weights(AI_ACT_WEIGHTS_PATH)
-    else:
-        ai_model.save_weights(AI_PRE_WEIGHTS_PATH)
-
-ai_model = get_ai()
-if os.path.exists(AI_ACT_WEIGHTS_PATH):
-    print(f'Found previous weights, loading weights...')
-    load_ai(ai_model, AI_ACT_WEIGHTS_PATH)
-else:
-    print(f'Found no previous weights, retraining model...')
-    try:
-        train_ai(ai_model, AI_MIN_OK, AI_MAX_OK, AI_LOC, AI_SCL, batch_size=32, epochs=25)
-        ai_model.save_weights(AI_PRE_WEIGHTS_PATH)
-        print(f'Saved weights at "{AI_PRE_WEIGHTS_PATH}". Remember to rename to "{AI_ACT_WEIGHTS_PATH}" to load them for next start.')
-    except KeyboardInterrupt:
-        print('Received keyboard interrupt')
-        exit_handler()
-    except Exception as e:
-        print(str(e))
 
 @app.route('/api/predict/<value>')
 def api_predict(value):
@@ -89,6 +63,39 @@ def api_retrain():
     RETRAINING_MODEL_ACTIVE = False
     return jsonify({"status": "ok", "message": "Retrained the model."})
     
+
+ai_model = get_ai()
+if os.path.exists(AI_ACT_WEIGHTS_PATH):
+    print(f'Found previous weights, loading weights...')
+    try:
+        load_ai(ai_model, AI_ACT_WEIGHTS_PATH)
+    except Exception as e:
+        print(f'Exception "{e}" occured during loading of AI weights, exiting program.')
+        exit()
+else:
+    print(f'Found no previous weights, retraining model...')
+    try:
+        _train_ai()
+        _save_ai()
+        print(f'Saved weights at "{AI_PRE_WEIGHTS_PATH}". Remember to rename to "{AI_ACT_WEIGHTS_PATH}" to load them for next start.')
+    except KeyboardInterrupt:
+        print('Received keyboard interrupt')
+        exit_handler()
+    except Exception as e:
+        print(f'Unknown error "{e}" occured, exiting program.')
+        exit()
+
+def _train_ai():
+    global ai_model
+    ai_model = get_ai()
+    train_ai(ai_model, AI_MIN_OK, AI_MAX_OK, AI_LOC, AI_SCL, batch_size=32, epochs=25)
+
+def _save_ai(complete=False):
+    if complete:
+        ai_model.save_weights(AI_ACT_WEIGHTS_PATH)
+    else:
+        ai_model.save_weights(AI_PRE_WEIGHTS_PATH)
+
 server = Thread(target=app.run)
 server.daemon = True
 server.start()
