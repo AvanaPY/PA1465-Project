@@ -28,6 +28,14 @@ def exit_handler():
 AI_PRE_WEIGHTS_PATH = os.path.join(BASE_DIR, "ai_data/weights_prel.h5")
 AI_ACT_WEIGHTS_PATH = os.path.join(BASE_DIR, "ai_data/weights.h5")
 
+def _train_ai():
+    global ai_model
+    ai_model = get_ai()
+    train_ai(ai_model, AI_MIN_OK, AI_MAX_OK, AI_LOC, AI_SCL, batch_size=32, epochs=25)
+
+def _save_ai():
+    ai_model.save_weights(AI_PRE_WEIGHTS_PATH)
+
 ai_model = get_ai()
 if os.path.exists(AI_ACT_WEIGHTS_PATH):
     print(f'Found previous weights, loading weights...')
@@ -68,11 +76,13 @@ def api_predict(value):
 
 @app.route('/api/retrain', methods=['POST'])
 def api_retrain():
+    print("Training AI")
     global RETRAINING_MODEL_ACTIVE
     if RETRAINING_MODEL_ACTIVE:
         return jsonify({"status": "error", "message": "The model is busy being retrained the model."})
     RETRAINING_MODEL_ACTIVE = True
-    time.sleep(1)
+    _train_ai()
+    _save_ai()
     RETRAINING_MODEL_ACTIVE = False
     return jsonify({"status": "ok", "message": "Retrained the model."})
     
