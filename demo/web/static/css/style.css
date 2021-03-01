@@ -64,6 +64,9 @@ h2 {
     opacity: 1;
     right: 0;
 }
+.button:active {
+    border: none;
+}
 
 .buttonContainer {
     display: flex;
@@ -74,21 +77,40 @@ h2 {
 #uploadDataDiv {
     display: flex;
     flex-direction: column;
-    align-items: center;
 }
 
-#uploadDataBtn {
+/* #uploadDataBtn {
       background-color: grey;
 }
 
 #uploadDataBtn span {
     background-color: grey;
-}
+} */
 
 #image-file {
     /* display: none; */
     height: 100%;
     width: 170px;
+    outline: none;
+    white-space: nowrap;
+    border: none;
+    border-radius: 9px;
+    color: transparent;
+}
+#image-file::-webkit-file-upload-button {
+    visibility: hidden;
+}
+#image-file::before {
+    content: "Select a file";
+    color: black;
+    padding: 8px 24px;
+    border: 1px solid grey;
+    border-radius: 4px;
+    display: inline;
+    cursor: pointer;
+}
+#image-file:hover::before {
+    border: 1px solid black;
 }
 
 #retrainModelErrorPlaceholder {
