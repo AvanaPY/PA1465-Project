@@ -56,7 +56,7 @@ def api_retrain():
     print("Training AI")
     global RETRAINING_MODEL_ACTIVE
     if RETRAINING_MODEL_ACTIVE:
-        return jsonify({"status": "error", "message": "The model is busy being retrained the model."})
+        return jsonify({"status": "error", "message": "The model is busy already retraining the model."})
     RETRAINING_MODEL_ACTIVE = True
     _train_ai()
     _save_ai(complete=True)
