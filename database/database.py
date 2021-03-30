@@ -101,4 +101,10 @@ def edit_data(conn, table_name, column_names, column_values, new_data):
     """
     return
 
-conn = create_sql_connection()
+try:
+    conn, _ = create_sql_connection()
+    cursor = conn.cursor()
+
+    print(f'Succesfully connected to database')
+except Exception as e:
+    print(str(e))
