@@ -22,11 +22,6 @@ def create_sql_connection(filename="config.ini", section="mysql"):
     conn = MySQLConnection(autocommit=True, **db_config)
     return conn, db_config
 
-{
-    "förnamn": "text",
-    "efternamn": "text",
-
-}
 def create_table(conn, table_name, column_dictionary):
     """
         Creates a table in the database
@@ -47,7 +42,7 @@ def create_table(conn, table_name, column_dictionary):
     my_sql_command = f"CREATE TABLE IF NOT EXISTS {table_name} ({COLUMNS})"
     conn.execute(my_sql_command)
 
-def insert_data(conn, table_name, data_dictionary):
+def insert_data(conn, table_name, data_dictionary, sql_database_insert_char="%s"):
     """
         Inserts data into a table in the database
 
@@ -65,9 +60,8 @@ def insert_data(conn, table_name, data_dictionary):
     COL_NAMES = [i for i in data_dictionary.keys() if not (data_dictionary.get(i) is None)]
     COL_VALS = [str(i) for i in list(data_dictionary.values()) if not (i is None)]
 
-    my_sql_command = f"INSERT INTO {table_name} ({', '.join(COL_NAMES)}) VALUES ({', '.join(['?'] * len(COL_VALS))})"
+    my_sql_command = f"INSERT INTO {table_name} ({', '.join(COL_NAMES)}) VALUES ({', '.join([sql_database_insert_char] * len(COL_VALS))})"
     conn.execute(my_sql_command, tuple(COL_VALS))
-    print(my_sql_command)
 
 def get_data(conn, table_name, column_dictionary=None):
     """
@@ -84,14 +78,14 @@ def get_data(conn, table_name, column_dictionary=None):
             Any errors that occured from MySQLConnection
     """
     CONSTRAINTS = len(column_dictionary.items()) if column_dictionary else 0
-    WHERE_CONSTRAINTS = ' AND '.join([f"{key} = {value}" for (key, value) in column_dictionary.items()]) if CONSTRAINTS != 0 else ''
+    WHERE_CONSTRAINTS = ' AND '.join([f"{key}='{value}'" for (key, value) in column_dictionary.items()]) if CONSTRAINTS != 0 else ''
 
     my_sql_command = f"SELECT * FROM {table_name} {'WHERE' if CONSTRAINTS != 0 else ''} {WHERE_CONSTRAINTS};"
     conn.execute(my_sql_command)
     return conn.fetchall()
 
 def edit_data(conn, table_name, column_names, column_values, new_data):
-   """
+    """
         Returns data into a table in the database
 
         Args:
@@ -105,23 +99,6 @@ def edit_data(conn, table_name, column_names, column_values, new_data):
         Raises:
             Any errors that occured from MySQLConnection
     """
+    return
 
-conn = sqlite3.connect("database.db")
-curs = conn.cursor()
-
-create_table(curs, "users", {
-    "ID": "INTEGER PRIMARY KEY AUTOINCREMENT",
-    "NAME": "text",
-    "AGE": "INTEGER"
-})
-
-# cols = {
-#     "NAME": "Jonathan",
-#     "AGE": "14",
-# }
-# insert_data(curs, "users", cols)
-# conn.commit()
-
-print(get_data(curs, "users"))
-data = get_data(curs, "users", { "ID" : "1", "NAME": "Emil" })
-print(data)
+conn = create_sql_connection()
