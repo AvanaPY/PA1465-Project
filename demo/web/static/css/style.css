@@ -1,0 +1,165 @@
+:root {
+    --background:white;
+    --header-bg: rgba(50, 50, 50);
+    --btn-bg: #f4511e;
+}
+* {
+    background: var(--background);
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    font-family: sans-serif;
+    font-size: 18px;
+}
+
+h2 {
+    font-size: 28px;
+}
+
+.container {
+    height: 100vh;
+    margin: 2em;
+    display: flex;
+    flex-direction: column;
+    /* justify-content: center; */
+    align-items: center;
+}
+
+.button {
+    border-radius: 4px;
+    background-color: #f4511e;
+    border: none;
+    color: #FFFFFF;
+    text-align: center;
+    font-size: 15px;
+    padding: 20px;
+    margin: 5px 10px;
+    width: 170px;
+    transition: all 0.5s;
+    cursor: pointer;
+}
+  
+.button span {
+    background-color: #f4511e; 
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+    transition: 0.5s;
+}
+
+.button span:after {
+    content: '\00bb';
+    position: absolute;
+    opacity: 0;
+    top: 0;
+    right: -10px;
+    transition: 0.5s;
+}
+  
+.button:hover span {
+    padding-right: 15px;
+}
+  
+.button:hover span:after {
+    opacity: 1;
+    right: 0;
+}
+.button:active {
+    border: none;
+}
+
+.buttonContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#uploadDataDiv {
+    display: flex;
+    flex-direction: column;
+}
+
+/* #uploadDataBtn {
+      background-color: grey;
+}
+
+#uploadDataBtn span {
+    background-color: grey;
+} */
+
+#image-file {
+    /* display: none; */
+    height: 100%;
+    width: 170px;
+    outline: none;
+    white-space: nowrap;
+    border: none;
+    border-radius: 9px;
+    color: transparent;
+}
+#image-file::-webkit-file-upload-button {
+    visibility: hidden;
+}
+#image-file::before {
+    content: "Select a file";
+    color: black;
+    padding: 8px 24px;
+    border: 1px solid grey;
+    border-radius: 4px;
+    display: inline;
+    cursor: pointer;
+}
+#image-file:hover::before {
+    border: 1px solid black;
+}
+
+#retrainModelErrorPlaceholder {
+    padding: 1em 0;
+}
+
+input {
+    width: 18em;
+    height: 1em;
+    padding: 12px 20px;
+    margin: 0px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    border: 2px solid black;
+    text-align: center;
+}
+
+.dataDiv {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 10px;
+}
+
+input:focus {
+    background-color: lightblue;
+}
+
+#result {
+    width: auto;
+    margin: 5px 10px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    border: none;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+#myChart {
+  width: 800px;
+}
