@@ -12,9 +12,41 @@ This program requires python 3.8.3 as of the time or the latest version that is 
 ## Config.ini
 
 Create a config.ini file with this content
-
+```
 [mysql]
 host = localhost
 database = python_mysql
 user = root
 password =
+```
+
+## Test with a docker container
+
+You can test-run the `database.py` file if you start up a mysql docker container and run the file. 
+
+Pull the mysql docker image with 
+
+```
+docker pull mysql
+```
+
+Run the docker image with 
+
+```
+docker run --name mysql -e MYSQL_ROOT_PASSWORD=123 -d -p 3306:3306 mysql:latest
+```
+
+Let this be your config.ini file
+```
+[mysql]
+host = localhost
+database = mysql
+user = root
+password = 123
+```
+
+Then run
+```
+python ./database/database_test.py
+```
+and it should work without problems.

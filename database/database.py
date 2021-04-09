@@ -1,8 +1,6 @@
 from mysql.connector import MySQLConnection
 from python_mysql_dbconfig import read_db_config
-
-import sqlite3
-
+ 
 def create_sql_connection(filename="config.ini", section="mysql"):
     """
         Creates a MySQLConnection instance connected to the database
@@ -22,7 +20,7 @@ def create_sql_connection(filename="config.ini", section="mysql"):
     conn = MySQLConnection(autocommit=True, **db_config)
     return conn, db_config
 
-def create_table(conn, table_name, column_dictionary):
+def create_table(curs, table_name, column_dictionary={}):
     """
         Creates a table in the database
 
@@ -39,10 +37,18 @@ def create_table(conn, table_name, column_dictionary):
             None
     """
     COLUMNS = ', '.join([f'{key} {value}' for (key, value) in column_dictionary.items()])
-    my_sql_command = f"CREATE TABLE IF NOT EXISTS {table_name} ({COLUMNS})"
+    if COLUMNS:
+        COLUMNS  = f' ({COLUMNS})'
+    my_sql_command = f"CREATE TABLE {table_name}{COLUMNS}"
     conn.execute(my_sql_command)
 
-def insert_data(conn, table_name, data_dictionary, sql_database_insert_char="%s"):
+def show_databases(curs):
+    my_sql_command = 'SHOW DATABASES'
+    curs.execute(my_sql_command)
+    for x in curs:
+        print(x)
+
+def insert_data(curs, table_name, data_dictionary, sql_database_insert_char="%s"):
     """
         Inserts data into a table in the database
 
@@ -63,7 +69,7 @@ def insert_data(conn, table_name, data_dictionary, sql_database_insert_char="%s"
     my_sql_command = f"INSERT INTO {table_name} ({', '.join(COL_NAMES)}) VALUES ({', '.join([sql_database_insert_char] * len(COL_VALS))})"
     conn.execute(my_sql_command, tuple(COL_VALS))
 
-def get_data(conn, table_name, column_dictionary=None):
+def get_data(curs, table_name, column_dictionary=None):
     """
         Returns data into a table in the database
 
@@ -84,7 +90,7 @@ def get_data(conn, table_name, column_dictionary=None):
     conn.execute(my_sql_command)
     return conn.fetchall()
 
-def edit_data(conn, table_name, column_names, column_values, new_data):
+def edit_data(curs, table_name, column_names, column_values, new_data):
     """
         Returns data into a table in the database
 
@@ -100,11 +106,3 @@ def edit_data(conn, table_name, column_names, column_values, new_data):
             Any errors that occured from MySQLConnection
     """
     return
-
-try:
-    conn, _ = create_sql_connection()
-    cursor = conn.cursor()
-
-    print(f'Succesfully connected to database')
-except Exception as e:
-    print(str(e))
