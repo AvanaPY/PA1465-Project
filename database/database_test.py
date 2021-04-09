@@ -7,9 +7,10 @@ try:
     my_db, _ = create_sql_connection()
     curs = my_db.cursor()
 
-    create_table(curs, 'table')
-
-
+    drop_table(curs, 'customers')
+    create_table(curs, 'customers', {
+        "name": "VARCHAR(255)",
+    })
 
     print(f'Succesfully connected to database')
 except Exception as e:

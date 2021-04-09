@@ -11,7 +11,7 @@ This program requires python 3.8.3 as of the time or the latest version that is 
 
 ## Config.ini
 
-Create a config.ini file with this content
+Create a config.ini file in the root directory with this content
 ```
 [mysql]
 host = localhost
