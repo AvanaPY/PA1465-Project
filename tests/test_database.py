@@ -15,7 +15,6 @@ class DatabaseUnitTest(unittest.TestCase):
             'age':'INT(6)'
         })
         drop_table(curs, 'customers')
-
     def test_create_insert_4_drop(self):
         create_table(curs, 'customers', {
             'name':'VARCHAR(255)',
@@ -58,7 +57,6 @@ class DatabaseUnitTest(unittest.TestCase):
         })
         self.assertEqual(data, [('samuel', 1)])
         drop_table(curs, 'customers')
-
     def test_create_insert_edit_get_drop(self):
         create_table(curs, 'customers', {
             'name':'VARCHAR(255)',
@@ -79,7 +77,6 @@ class DatabaseUnitTest(unittest.TestCase):
         })
         self.assertNotEqual(data, [('emil', 4)])
         drop_table(curs, 'customers')
-
     def test_create_insert_delete_get_drop(self):
         create_table(curs, 'customers', {
             'name':'VARCHAR(255)',
@@ -100,7 +97,6 @@ class DatabaseUnitTest(unittest.TestCase):
         self.assertNotEqual(data, [('samuel', 20), ('emil', 4)])
         self.assertEqual(data, [('samuel', 20)])
         drop_table(curs, 'customers')
-
     def test_create_insert_with_none_get_drop(self):
         create_table(curs, 'customers', {
             'name':'VARCHAR(255)',
@@ -113,7 +109,6 @@ class DatabaseUnitTest(unittest.TestCase):
         data = get_data(curs, 'customers')
         self.assertEqual(data, [('emil', None)])
         drop_table(curs, 'customers')
-
     def test_create_insert_with_null_get_drop(self):
         create_table(curs, 'customers', {
             'name':'VARCHAR(255)',
@@ -125,25 +120,3 @@ class DatabaseUnitTest(unittest.TestCase):
         data = get_data(curs, 'customers')
         self.assertEqual(data, [('emil', None)])
         drop_table(curs, 'customers')
-
-def test_database():
-    try:
-
-        try:
-            drop_table(curs, 'customers')
-        except Exception as e:
-            print('Could not drop table: ', str(e))
-
-        insert_data(curs, 'customers', {
-            'name':'alex',
-            'age':20
-        })
-
-        edit_data(curs, 'customers', {'name':'samuel','age':420}, {'name':'emil'})
-
-        data = get_data(curs, 'customers', {'name':'samuel'})
-        print(data)
-        print(f'Succesfully connected to database')
-    except Exception as e:
-        print(str(e))
-        raise
