@@ -1,6 +1,6 @@
 #https://www.w3schools.com/python/python_mysql_insert.asp
 from mysql.connector import MySQLConnection
-from python_mysql_dbconfig import read_db_config
+from .python_mysql_dbconfig import read_db_config
 
 def skip_none_dictionary(dictionary):
     keys = dictionary.keys()
