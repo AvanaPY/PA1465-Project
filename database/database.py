@@ -8,9 +8,9 @@ def skip_none_dictionary(dictionary):
         if dictionary[key] is None:
             dictionary.pop(key)
 
-def column_dictionary_to_sql_and_join(dictionary):
+def column_dictionary_to_sql_and_join(dictionary, join_key=' AND '):
     safe_query_list = [f'{key}=%({key})s' for key in dictionary]     # Safe query
-    WHERE_LOOK = ' AND '.join(safe_query_list)          
+    WHERE_LOOK = join_key.join(safe_query_list)          
     return WHERE_LOOK 
 
 def create_sql_connection(filename="config.ini", section="mysql"):
@@ -127,7 +127,7 @@ def delete_data(curs, table_name, column_dictionary):
     my_sql_command = f'DELETE FROM {table_name} WHERE ({WHERE_LOOK});'
     curs.execute(my_sql_command, column_dictionary)
 
-def edit_data(curs, table_name, column_names, column_values, new_data):
+def edit_data(curs, table_name, new_column_values, column_constraints):
     """
         Returns data into a table in the database
 
@@ -142,4 +142,15 @@ def edit_data(curs, table_name, column_names, column_values, new_data):
         Raises:
             Any errors that occured from MySQLConnection
     """
-    return
+
+    SET_VALUES = 'name=%(set_name)s, age=%(set_age)s'
+    safe_query_list = [f'{key}=%(set_{key})s' for key in new_column_values]     # Safe query
+    SET_VALUES = ', '.join(safe_query_list)          
+
+    WHERE_LOOK = column_dictionary_to_sql_and_join(column_constraints, ', ')
+
+    major_dictionary = {**column_constraints}
+    for key in new_column_values:
+        major_dictionary[f'set_{key}'] = new_column_values[key]
+    my_sql_command = f'UPDATE {table_name} SET {SET_VALUES} WHERE ({WHERE_LOOK})'
+    curs.execute(my_sql_command, major_dictionary)
