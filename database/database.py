@@ -85,7 +85,7 @@ def insert_data(curs, table_name, data_dictionary):
     my_sql_command = f"INSERT INTO {table_name} ({insert_names}) VALUES ({insert_values})"
     curs.execute(my_sql_command, data_dictionary)
 
-def get_data(curs, table_name, column_dictionary):
+def get_data(curs, table_name, column_dictionary=None):
     """
         Returns data into a table in the database
 
@@ -99,9 +99,12 @@ def get_data(curs, table_name, column_dictionary):
         Raises:
             Any errors that occured from MySQLConnection
     """
-    skip_none_dictionary(column_dictionary)
-    WHERE_LOOK = column_dictionary_to_sql_and_join(column_dictionary)  # Join into an AND list
-    my_sql_command = f"SELECT * FROM {table_name} WHERE {WHERE_LOOK}"
+    if column_dictionary:
+        skip_none_dictionary(column_dictionary)
+        WHERE_LOOK = column_dictionary_to_sql_and_join(column_dictionary)  # Join into an AND list
+        my_sql_command = f"SELECT * FROM {table_name} WHERE {WHERE_LOOK}"
+    else:
+        my_sql_command = f"SELECT * FROM {table_name}"
     curs.execute(my_sql_command, column_dictionary)
     return curs.fetchall()
 
