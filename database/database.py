@@ -1,7 +1,18 @@
 #https://www.w3schools.com/python/python_mysql_insert.asp
 from mysql.connector import MySQLConnection
 from python_mysql_dbconfig import read_db_config
- 
+
+def skip_none_dictionary(dictionary):
+    keys = dictionary.keys()
+    for key in list(keys):
+        if dictionary[key] is None:
+            dictionary.pop(key)
+
+def column_dictionary_to_sql_and_join(dictionary):
+    safe_query_list = [f'{key}=%({key})s' for key in dictionary]     # Safe query
+    WHERE_LOOK = ' AND '.join(safe_query_list)          
+    return WHERE_LOOK 
+
 def create_sql_connection(filename="config.ini", section="mysql"):
     """
         Creates a MySQLConnection instance connected to the database
@@ -21,7 +32,7 @@ def create_sql_connection(filename="config.ini", section="mysql"):
     my_db = MySQLConnection(autocommit=True, **db_config)
     return my_db, db_config
 
-def create_table(curs, table_name, column_dictionary={}):
+def create_table(curs, table_name, column_dictionary):
     """
         Creates a table in the database
 
@@ -36,11 +47,11 @@ def create_table(curs, table_name, column_dictionary={}):
         Raises:
             Propagates any exceptions from cursor.execute
     """
-    COLUMNS = ', '.join([f'{key} {value}' for (key, value) in column_dictionary.items()])
-    if COLUMNS:
-        COLUMNS  = f' ({COLUMNS})'
-    my_sql_command = f"CREATE TABLE {table_name}{COLUMNS}"
-    print(my_sql_command)
+    skip_none_dictionary(column_dictionary)
+    columns = [f'{key} {value}' for key, value in column_dictionary.items()]
+    columns = ', '.join(columns)
+
+    my_sql_command = f"CREATE TABLE {table_name} ({columns})"
     curs.execute(my_sql_command)
 
 def show_databases(curs):
@@ -53,7 +64,7 @@ def drop_table(curs, table_name):
     my_sql_command = f'DROP TABLE {table_name}'
     curs.execute(my_sql_command)
 
-def insert_data(curs, table_name, data_dictionary, sql_database_insert_char="%s"):
+def insert_data(curs, table_name, data_dictionary):
     """
         Inserts data into a table in the database
 
@@ -68,13 +79,13 @@ def insert_data(curs, table_name, data_dictionary, sql_database_insert_char="%s"
         Raises:
             Any errors that occured from MySQLConnection
     """
-    COL_NAMES = [i for i in data_dictionary.keys() if not (data_dictionary.get(i) is None)]
-    COL_VALS = [str(i) for i in list(data_dictionary.values()) if not (i is None)]
+    skip_none_dictionary(data_dictionary)
+    insert_names = ', '.join([str(key) for key in data_dictionary])
+    insert_values = ', '.join([f'%({key})s' for key in data_dictionary])
+    my_sql_command = f"INSERT INTO {table_name} ({insert_names}) VALUES ({insert_values})"
+    curs.execute(my_sql_command, data_dictionary)
 
-    my_sql_command = f"INSERT INTO {table_name} ({', '.join(COL_NAMES)}) VALUES ({', '.join([sql_database_insert_char] * len(COL_VALS))})"
-    conn.execute(my_sql_command, tuple(COL_VALS))
-
-def get_data(curs, table_name, column_dictionary=None):
+def get_data(curs, table_name, column_dictionary):
     """
         Returns data into a table in the database
 
@@ -88,12 +99,30 @@ def get_data(curs, table_name, column_dictionary=None):
         Raises:
             Any errors that occured from MySQLConnection
     """
-    CONSTRAINTS = len(column_dictionary.items()) if column_dictionary else 0
-    WHERE_CONSTRAINTS = ' AND '.join([f"{key}='{value}'" for (key, value) in column_dictionary.items()]) if CONSTRAINTS != 0 else ''
+    skip_none_dictionary(column_dictionary)
+    WHERE_LOOK = column_dictionary_to_sql_and_join(column_dictionary)  # Join into an AND list
+    my_sql_command = f"SELECT * FROM {table_name} WHERE {WHERE_LOOK}"
+    curs.execute(my_sql_command, column_dictionary)
+    return curs.fetchall()
 
-    my_sql_command = f"SELECT * FROM {table_name} {'WHERE' if CONSTRAINTS != 0 else ''} {WHERE_CONSTRAINTS};"
-    conn.execute(my_sql_command)
-    return conn.fetchall()
+def delete_data(curs, table_name, column_dictionary):
+    """
+        Deletes data from table_name
+
+        Args:
+            conn: a MySQLConnection instance
+            column_dictionary: dictionary with columnname-columnvale mapping, e.g { "ID": "1", "Data1": "ABC" } for SQL lookup
+        
+        Returns:
+            Nothing
+
+        Raises:
+            Any errors that occured from MySQLConnection
+    """
+    skip_none_dictionary(column_dictionary)
+    WHERE_LOOK = column_dictionary_to_sql_and_join(column_dictionary)  # Join into an AND list
+    my_sql_command = f'DELETE FROM {table_name} WHERE ({WHERE_LOOK});'
+    curs.execute(my_sql_command, column_dictionary)
 
 def edit_data(curs, table_name, column_names, column_values, new_data):
     """
