@@ -44,7 +44,9 @@ try:
     data = get_data(curs, 'customers', {
         'name':'emil'
     })
+    print(data)
 
+    data = get_data(curs, 'customers')
     print(data)
 
     print(f'Succesfully connected to database')
