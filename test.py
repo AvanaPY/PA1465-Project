@@ -1,3 +1,5 @@
-from tests import test_database
+import unittest
+from tests import DatabaseUnitTest
+unittest.TestLoader.sortTestMethodsUsing = None
 
-test_database()
+unittest.main()

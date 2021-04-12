@@ -51,7 +51,7 @@ def create_table(curs, table_name, column_dictionary):
     columns = [f'{key} {value}' for key, value in column_dictionary.items()]
     columns = ', '.join(columns)
 
-    my_sql_command = f"CREATE TABLE {table_name} ({columns})"
+    my_sql_command = f"CREATE TABLE IF NOT EXISTS {table_name} ({columns})"
     curs.execute(my_sql_command)
 
 def show_databases(curs):
