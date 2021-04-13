@@ -20,7 +20,7 @@ user = root
 password =
 ```
 
-# Test with a docker container
+# Starting up a database
 
 You can test-run the `database.py` file if you start up a mysql docker container and run the file. 
 
@@ -45,6 +45,7 @@ user = root
 password = 123
 ```
 
+## Testing the database
 Then run
 ```
 python test.py
