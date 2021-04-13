@@ -111,7 +111,7 @@ def insert_data(curs, table_name, data_dictionary):
     my_sql_command = f"INSERT INTO {table_name} ({insert_names}) VALUES ({insert_values})"
     curs.execute(my_sql_command, data_dictionary)
 
-def get_data(curs, table_name, column_dictionary=None, order_by=None,order_by_asc_desc='ASC'):
+def get_data(curs, table_name, column_dictionary=None, order_by=None,order_by_asc_desc='ASC', limit_offset=0, limit_row_count=0):
     """
         Returns data into a table in the database
 
@@ -139,6 +139,10 @@ def get_data(curs, table_name, column_dictionary=None, order_by=None,order_by_as
         order_by_string = ', '.join([str(v) for v in order_by])
         order_by_string = f' ORDER BY ' + order_by_string + ' ' + order_by_asc_desc
         my_sql_command += order_by_string
+
+    if limit_row_count > 0:
+        limit_string = f' LIMIT {limit_offset}, {limit_row_count}' 
+        my_sql_command += limit_string
 
     curs.execute(my_sql_command, column_dictionary)
     return curs.fetchall()

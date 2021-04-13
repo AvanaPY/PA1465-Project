@@ -142,3 +142,99 @@ class DatabaseUnitTest(unittest.TestCase):
         })
         data = get_data(curs, 'test_insert_order_by_drop', order_by=['age'])
         drop_table(curs, 'test_insert_order_by_drop')
+    def test_create_insert_limit_drop(self):
+        create_table(curs, 'test_insert_order_by_drop', {
+            'name':'VARCHAR(255)',
+            'age':'INT(6)'
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':72
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':43
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':98
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':4
+        })
+        data = get_data(curs, 'test_insert_order_by_drop', limit_row_count=2)
+        self.assertTrue(len(data) <= 2)
+        drop_table(curs, 'test_insert_order_by_drop')
+    def test_create_insert_limit_drop2(self):
+        create_table(curs, 'test_insert_order_by_drop', {
+            'name':'VARCHAR(255)',
+            'age':'INT(6)'
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':72
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':43
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':98
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':4
+        })
+        data = get_data(curs, 'test_insert_order_by_drop', limit_row_count=2)
+        self.assertFalse(len(data) > 2)
+        drop_table(curs, 'test_insert_order_by_drop')
+    def test_create_insert_limit_order_by_drop3(self):
+        create_table(curs, 'test_insert_order_by_drop', {
+            'name':'VARCHAR(255)',
+            'age':'INT(6)'
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':72
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':43
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':98
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':4
+        })
+        data = get_data(curs, 'test_insert_order_by_drop', order_by=['age'], limit_row_count=2)
+        self.assertTrue(data == [('emil', 4), ('emil', 43)])
+        drop_table(curs, 'test_insert_order_by_drop')  
+    def test_create_insert_offset_limit_order_by_drop(self):
+        create_table(curs, 'test_insert_order_by_drop', {
+            'name':'VARCHAR(255)',
+            'age':'INT(6)'
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':72
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':43
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':98
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':4
+        })
+        data = get_data(curs, 'test_insert_order_by_drop', order_by=['age'], limit_offset=1, limit_row_count=2)
+        self.assertTrue(data == [('emil', 43), ('emil', 72)])
+        drop_table(curs, 'test_insert_order_by_drop')
