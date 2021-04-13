@@ -8,7 +8,6 @@ my_db, _ = create_sql_connection()
 curs = my_db.cursor()
 
 class DatabaseUnitTest(unittest.TestCase):
-
     def test_create_drop_table(self):
         create_table(curs, 'customers', {
             'name':'VARCHAR(255)',
