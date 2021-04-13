@@ -55,12 +55,38 @@ def create_table(curs, table_name, column_dictionary):
     curs.execute(my_sql_command)
 
 def show_databases(curs):
+    """
+        Prints out all databases in the MySQL database
+
+        Args:
+            curs: a MySQLConnection cursor
+        
+        Returns:
+            None
+
+        Raises:
+            Propagates any exceptions from cursor.execute
+    """
     my_sql_command = 'SHOW DATABASES'
     curs.execute(my_sql_command)
     for x in curs:
         print(x)
 
 def drop_table(curs, table_name):
+    
+    """
+        Drops a table from a database
+
+        Args:
+            curs: a MySQLConnection cursor
+            table_name: str
+        
+        Returns:
+            None
+
+        Raises:
+            Propagates any exceptions from cursor.execute
+    """
     my_sql_command = f'DROP TABLE {table_name}'
     curs.execute(my_sql_command)
 
