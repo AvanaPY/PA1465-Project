@@ -60,7 +60,7 @@ and it should work without problems.
 * show_databases : `()` &#8594; None 
 * drop_table : `(cursor, table name)` &#8594; None
 * insert_data : `(cursor, table name, column dictionary)` &#8594; None
-* get_data : `(cursor, table name, column dictionary)` &#8594; `Queried Data`
+* get_data : `(cursor, table name, column dictionary, order_by, order_by_asc_desc)` &#8594; `Queried Data`
 * delete_data : `(cursor, table name, column dictionary)` &#8594; None
 * edit_data : `(cursor, table name, column dictionary, column dictionary)` &#8594; None
 
@@ -96,3 +96,9 @@ where the column `name` will receive the value `'cogitel'` and column `age` will
     'age':'INTEGER(6)'
 }
 ```
+
+## order_by and order_by_asc_desc
+
+Whether to order the query in any specific manner. 
+* order_by: list[str] specifices which columns to order by
+* order_by_asc_desc: 'ASC' for ascending or 'DESC' for descending
