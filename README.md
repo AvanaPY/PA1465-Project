@@ -20,7 +20,7 @@ user = root
 password =
 ```
 
-## Test with a docker container
+# Test with a docker container
 
 You can test-run the `database.py` file if you start up a mysql docker container and run the file. 
 
@@ -50,3 +50,48 @@ Then run
 python ./database/database_test.py
 ```
 and it should work without problems.
+
+# Database API
+
+## API Functions
+* create_sql_connection : `(filename, section)` &#8594; (my_db, db_config)
+* create_table : `(cursor, table name, column dictionary)` &#8594; None
+* show_databases : `()` &#8594; None 
+* drop_table : `(cursor, table name)` &#8594; None
+* insert_data : `(cursor, table name, column dictionary)` &#8594; None
+* get_data : `(cursor, table name, column dictionary)` &#8594; `Queried Data`
+* delete_data : `(cursor, table name, column dictionary)` &#8594; None
+* edit_data : `(cursor, table name, column dictionary, column dictionary)` &#8594; None
+
+## filename and section
+
+The `filename` parameter in function `create_sql_connection` shall point to the `config.ini` file used to connect to the database, and the `section` parameter shall point to the section where the MySQL configuration is located.
+
+## cursor
+
+The `cursor` parameter is a MySQLConnection cursor instance that you can get by calling `my_db.cursor()` after having connected to the database using `create_sql_connection()`.
+
+## table name
+
+A python string representing the name of the table you want to access.
+
+## Queried Data
+A list of tuples where each tuple is representing the MySQL database row queried for. This list can include more than one item.
+
+## column dictionary
+
+A column dictionary is a python dictionary that indicates which column should receive which value in the database. An example of a column dictionary would be:
+```
+{
+    'name':'cogitel',
+    'age':420
+}
+```
+where the column `name` will receive the value `'cogitel'` and column `age` will receive the value `420`. Note that the user must know beforehand the names of the columns except in the function `create_table` where the table itself is created. create_table also uses a specific `column dictionary` style where it's a `column-name-to-column-type` mapping instead, such as:
+```
+{
+    'id':'INTEGER(6) AUTOINCREMENT',
+    'name':'VARCHAR(255)',
+    'age':'INTEGER(6)'
+}
+```

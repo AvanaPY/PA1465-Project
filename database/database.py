@@ -116,7 +116,8 @@ def get_data(curs, table_name, column_dictionary=None):
         Returns data into a table in the database
 
         Args:
-            conn: a MySQLConnection instance
+            curs: a MySQLConnection cursor instance
+            table_name: str
             column_dictionary: dictionary with columnname-columnvale mapping, e.g { "ID": "1", "Data1": "ABC" } for SQL lookup
         
         Returns:
@@ -139,7 +140,8 @@ def delete_data(curs, table_name, column_dictionary):
         Deletes data from table_name
 
         Args:
-            conn: a MySQLConnection instance
+            curs: a MySQLConnection cursor instance
+            table_name: str
             column_dictionary: dictionary with columnname-columnvale mapping, e.g { "ID": "1", "Data1": "ABC" } for SQL lookup
         
         Returns:
@@ -158,9 +160,10 @@ def edit_data(curs, table_name, new_column_values, column_constraints):
         Returns data into a table in the database
 
         Args:
-            conn: a MySQLConnection instance
-            column_names: array of column names for SQL lookup
-            column_values: array of column values that will be matched with column_names for SQL lookup
+            curs: a MySQLConnection cursor instance
+            table_name: str
+            new_column_values: column dictionary of new values
+            column_constraints: column dictionary of look-up values in the database
         
         Returns:
             a tuple of data to be inserted into the database
