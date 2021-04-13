@@ -119,3 +119,26 @@ class DatabaseUnitTest(unittest.TestCase):
         data = get_data(curs, 'customers')
         self.assertEqual(data, [('emil', None)])
         drop_table(curs, 'customers')
+    def test_create_insert_order_by_drop(self):
+        create_table(curs, 'test_insert_order_by_drop', {
+            'name':'VARCHAR(255)',
+            'age':'INT(6)'
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':72
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':43
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':98
+        })
+        insert_data(curs, 'test_insert_order_by_drop', {
+            'name':'emil',
+            'age':4
+        })
+        data = get_data(curs, 'test_insert_order_by_drop', order_by=['age'])
+        drop_table(curs, 'test_insert_order_by_drop')

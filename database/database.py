@@ -111,7 +111,7 @@ def insert_data(curs, table_name, data_dictionary):
     my_sql_command = f"INSERT INTO {table_name} ({insert_names}) VALUES ({insert_values})"
     curs.execute(my_sql_command, data_dictionary)
 
-def get_data(curs, table_name, column_dictionary=None):
+def get_data(curs, table_name, column_dictionary=None, order_by=None,order_by_asc_desc='ASC'):
     """
         Returns data into a table in the database
 
@@ -119,6 +119,8 @@ def get_data(curs, table_name, column_dictionary=None):
             curs: a MySQLConnection cursor instance
             table_name: str
             column_dictionary: dictionary with columnname-columnvale mapping, e.g { "ID": "1", "Data1": "ABC" } for SQL lookup
+            order_by: a list of column values to order by. None is default for no ordering.
+            order_by_asc_desc: Whether to order by ascending ('ASC') or descending ('DESC'). 
         
         Returns:
             a tuple of data to be inserted into the database
@@ -132,6 +134,12 @@ def get_data(curs, table_name, column_dictionary=None):
         my_sql_command = f"SELECT * FROM {table_name} WHERE {WHERE_LOOK}"
     else:
         my_sql_command = f"SELECT * FROM {table_name}"
+
+    if order_by:
+        order_by_string = ', '.join([str(v) for v in order_by])
+        order_by_string = f' ORDER BY ' + order_by_string + ' ' + order_by_asc_desc
+        my_sql_command += order_by_string
+
     curs.execute(my_sql_command, column_dictionary)
     return curs.fetchall()
 
