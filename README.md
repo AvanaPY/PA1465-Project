@@ -47,7 +47,7 @@ password = 123
 
 Then run
 ```
-python ./database/database_test.py
+python test.py
 ```
 and it should work without problems.
 
