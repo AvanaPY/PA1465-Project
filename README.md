@@ -56,13 +56,13 @@ and it should work without problems.
 
 ## API Functions
 * create_sql_connection : `(filename, section)` &#8594; (my_db, db_config)
-* create_table : `(cursor, table name, column dictionary)` &#8594; None
+* create_table : `(cursor, table_name, column_dictionary)` &#8594; None
 * show_databases : `()` &#8594; None 
-* drop_table : `(cursor, table name)` &#8594; None
-* insert_data : `(cursor, table name, column dictionary)` &#8594; None
-* get_data : `(cursor, table name, column dictionary, order_by, order_by_asc_desc)` &#8594; `Queried Data`
-* delete_data : `(cursor, table name, column dictionary)` &#8594; None
-* edit_data : `(cursor, table name, column dictionary, column dictionary)` &#8594; None
+* drop_table : `(cursor, table_name)` &#8594; None
+* insert_data : `(cursor, table_name, column_dictionary, limit_offset, limit_row_count)` &#8594; None
+* get_data : `(cursor, table_name, column_dictionary, order_by, order_by_asc_desc)` &#8594; `Queried_Data`
+* delete_data : `(cursor, table_name, column_dictionary)` &#8594; None
+* edit_data : `(cursor, table_name, column_dictionary, column_dictionary)` &#8594; None
 
 ## filename and section
 
@@ -72,16 +72,16 @@ The `filename` parameter in function `create_sql_connection` shall point to the 
 
 The `cursor` parameter is a MySQLConnection cursor instance that you can get by calling `my_db.cursor()` after having connected to the database using `create_sql_connection()`.
 
-## table name
+## table_name
 
 A python string representing the name of the table you want to access.
 
-## Queried Data
+## Queried_Data
 A list of tuples where each tuple is representing the MySQL database row queried for. This list can include more than one item.
 
-## column dictionary
+## column_dictionary
 
-A column dictionary is a python dictionary that indicates which column should receive which value in the database. An example of a column dictionary would be:
+A column_dictionary is a python dictionary that indicates which column should receive which value in the database. An example of a column dictionary would be:
 ```
 {
     'name':'cogitel',
@@ -100,5 +100,11 @@ where the column `name` will receive the value `'cogitel'` and column `age` will
 ## order_by and order_by_asc_desc
 
 Whether to order the query in any specific manner. 
-* order_by: list[str] specifices which columns to order by
-* order_by_asc_desc: 'ASC' for ascending or 'DESC' for descending
+* order_by: list[str] specifices which columns to order by.
+* order_by_asc_desc: 'ASC' for ascending or 'DESC' for descending.
+
+## limit_offset and limit_row_count
+
+Whether or not the SQL query should limit its length.
+* limit_offset: int specifies the offset in the starting row.
+* limit_row_count: int specifies the maximum number of rows it should return.
