@@ -18,8 +18,8 @@ def create_sql_connection(filename="config.ini", section="mysql"):
         Creates a MySQLConnection instance connected to the database
 
         Args:
-            filename: A configuration file for the MySQL database
-            section:  section what the fuck does this even mean 
+            filename: A configuration.ini file for the MySQL database
+            section:  section of the configuration file in which the database configuration parameters are set
 
         Returns:
             my_db      : MySQLConnection
