@@ -25,7 +25,7 @@ def create_ai_model():
     return model
 
 def load_ai_model(model, load_weights_path):
-    model.load_weights(load_weights_path)
+    model = model.load_weights(load_weights_path)
     """
         Loads the AI model's weights from a file
 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     import tensorflow as tf
     import seaborn as sns
 
-    if input("Do you want to use a previously saved version?[y/n]") == "y":
+    if input("Do you want to use a previously saved version?[y/n]") == "n":
         #with open("Raspberry data/hum_dataset_1.json", "r") as f:
         with open("Raspberry data/temp_dataset_3.json", "r") as f:
             open_file = json.load(f)
@@ -216,6 +216,13 @@ if __name__ == "__main__":
 
         if input("do you want to save?[y/n]") == "y":
             save_ai_model(model, "saved_model.h5")
+    else:
+        model = create_ai_model()
+        values = [1, 2, 3, 4, 5, 6]
+        own_data = own_data = tf.stack([values])
+        own_data = tf.stack([own_data] * 1) #need fixing
+        print(model(own_data))
+        model = load_ai_model(model, "saved_model.h5")
 
     #own_data = [1]
     #own_data = tf.stack([own_data] * 6)
@@ -229,6 +236,7 @@ if __name__ == "__main__":
     values = []
     while value != "s":
         value = input("vilket värde ska jag gissa på?")
+        print(type(value))
         if value == "r":
             continue
         if type(value) == float or type(value) == int:
