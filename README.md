@@ -11,10 +11,100 @@ This program requires python 3.8.3 as of the time or the latest version that is 
 
 ## Config.ini
 
-Create a config.ini file with this content
-
+Create a config.ini file in the root directory with this content
+```
 [mysql]
 host = localhost
 database = python_mysql
 user = root
 password =
+```
+
+# Starting up a database
+
+You can test-run the `database.py` file if you start up a mysql docker container and run the file. 
+
+Pull the mysql docker image with 
+
+```
+docker pull mysql
+```
+
+Run the docker image with 
+
+```
+docker run --name mysql -e MYSQL_ROOT_PASSWORD=123 -d -p 3306:3306 mysql:latest
+```
+
+Let this be your config.ini file
+```
+[mysql]
+host = localhost
+database = mysql
+user = root
+password = 123
+```
+
+## Testing the database
+Then run
+```
+python test.py
+```
+and it should work without problems.
+
+# Database API
+
+## API Functions
+* create_sql_connection : `(filename, section)` &#8594; (my_db, db_config)
+* create_table : `(cursor, table_name, column_dictionary)` &#8594; None
+* show_databases : `()` &#8594; None 
+* drop_table : `(cursor, table_name)` &#8594; None
+* insert_data : `(cursor, table_name, column_dictionary, limit_offset, limit_row_count)` &#8594; None
+* get_data : `(cursor, table_name, column_dictionary, order_by, order_by_asc_desc)` &#8594; `Queried_Data`
+* delete_data : `(cursor, table_name, column_dictionary)` &#8594; None
+* edit_data : `(cursor, table_name, column_dictionary, column_dictionary)` &#8594; None
+
+## filename and section
+
+The `filename` parameter in function `create_sql_connection` shall point to the `config.ini` file used to connect to the database, and the `section` parameter shall point to the section where the MySQL configuration is located.
+
+## cursor
+
+The `cursor` parameter is a MySQLConnection cursor instance that you can get by calling `my_db.cursor()` after having connected to the database using `create_sql_connection()`.
+
+## table_name
+
+A python string representing the name of the table you want to access.
+
+## Queried_Data
+A list of tuples where each tuple is representing the MySQL database row queried for. This list can include more than one item.
+
+## column_dictionary
+
+A column_dictionary is a python dictionary that indicates which column should receive which value in the database. An example of a column dictionary would be:
+```
+{
+    'name':'cogitel',
+    'age':420
+}
+```
+where the column `name` will receive the value `'cogitel'` and column `age` will receive the value `420`. Note that the user must know beforehand the names of the columns except in the function `create_table` where the table itself is created. create_table also uses a specific `column dictionary` style where it's a `column-name-to-column-type` mapping instead, such as:
+```
+{
+    'id':'INTEGER(6) AUTOINCREMENT',
+    'name':'VARCHAR(255)',
+    'age':'INTEGER(6)'
+}
+```
+
+## order_by and order_by_asc_desc
+
+Whether to order the query in any specific manner. 
+* order_by: list[str] specifices which columns to order by.
+* order_by_asc_desc: 'ASC' for ascending or 'DESC' for descending.
+
+## limit_offset and limit_row_count
+
+Whether or not the SQL query should limit its length.
+* limit_offset: int specifies the offset in the starting row.
+* limit_row_count: int specifies the maximum number of rows it should return.

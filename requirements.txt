@@ -4,4 +4,13 @@ mysql-connector-python
 pip-chill
 seaborn
 sklearn
+cycler
+flask
+kiwisolver
+mysql
+mysql-connector-python
+pillow
+pip-chill
+pyparsing
+python-dateutil
 tensorflow
