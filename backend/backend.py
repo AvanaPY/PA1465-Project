@@ -5,18 +5,16 @@ from database import *
 
 def import_data_json(path_to_file):
     """
-        Deletes data from table_name
+        imports data from a json file and converts it into dict
 
         Args:
-            curs: a MySQLConnection cursor instance
-            table_name: str
-            column_dictionary: dictionary with columnname-columnvale mapping, e.g { "ID": "1", "Data1": "ABC" } for SQL lookup
+            path_to_file: str
         
         Returns:
-            Nothing
+            dct: a dictionary containing the data in the json file 
 
         Raises:
-            Any errors that occured from MySQLConnection
+            None
     """
 
     with open(path_to_file, "r") as f:
@@ -25,18 +23,16 @@ def import_data_json(path_to_file):
 
 def import_data_csv(path_to_file):
     """
-        Deletes data from table_name
+        imports data from a csv file and converts it into dict
 
         Args:
-            curs: a MySQLConnection cursor instance
-            table_name: str
-            column_dictionary: dictionary with columnname-columnvale mapping, e.g { "ID": "1", "Data1": "ABC" } for SQL lookup
+            path_to_file: str
         
         Returns:
-            Nothing
+            dct: a dictionary containing the data in the csv file 
 
         Raises:
-            Any errors that occured from MySQLConnection
+            None
     """
     dct = pd.read_csv(path_to_file).to_dict()
 
@@ -44,7 +40,7 @@ def import_data_csv(path_to_file):
  
 def add_dict_to_database(data_dict):
     """
-        Adds a dctionary to the database
+        Adds a dictionary to the database
 
         Args:
             data_dict: a dictionary containing the data from the import functions
