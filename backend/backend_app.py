@@ -24,4 +24,3 @@ class App(Flask):
     
     def run(self):
         super().run(host=self._host, port=self._port)
-
