@@ -24,8 +24,6 @@ zip_path = tf.keras.utils.get_file(
     extract=True)
 csv_path, _ = os.path.splitext(zip_path)
 
-
-
 df = pd.read_csv(csv_path)
 print("done downloading")
 # slice [start:stop:step], starting from index 5 take every 6th record.
@@ -175,7 +173,9 @@ WindowGenerator.plot = plot
 
 
 def make_dataset(self, data):
+  print("data 1", data)
   data = np.array(data, dtype=np.float32)
+  print("data 2", data)
   ds = tf.keras.preprocessing.timeseries_dataset_from_array(
       data=data,
       targets=None,
@@ -183,8 +183,10 @@ def make_dataset(self, data):
       sequence_stride=1, #how many jumps betweeen predicted outputs
       shuffle=True, #shuffle the batches
       batch_size=32,) #batch size == how many training examples in each training cycle
+  print("data 3", ds)
 
   ds = ds.map(self.split_window)
+  print("data 4", ds)
 
   return ds
 
