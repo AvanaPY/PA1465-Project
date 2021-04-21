@@ -15,6 +15,7 @@ except Exception as e:
 class DatabaseUnitTest(unittest.TestCase):
     def test_create_drop_table(self):
         create_table(curs, 'testing_table', {
+            'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT'
             'name':'VARCHAR(255)',
             'age':'INT(6)'
         })
