@@ -68,6 +68,8 @@ class BackendBase:
             print(":tboof:")
             print(e)
 
+        print(get_data(self._curs, database_table))
+
     def _create_table_dict(self, data_dict, date_col=None, create_id_column=False):
         """
             Creates a table type dict based on a data dictionary

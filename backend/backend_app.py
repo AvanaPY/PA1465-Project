@@ -30,7 +30,10 @@ def create_app(host, port):
             with open(file_path, 'wb') as f:
                 f.write(body.read())
 
-            app._backend.import_data_csv(file_path, 'atable')
+            if filename.endswith('.json'):
+                app._backend.import_data_json(file_path, 'atable')
+            elif filename.endswith('.csv'):
+                app._backend.import_data_csv(file_path, 'atable')
 
             os.remove(file_path)
         except Exception as e:
