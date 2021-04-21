@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     if input("Do you want to use a previously saved version?[y/n]") == "n":
         #with open("Raspberry data/hum_dataset_1.json", "r") as f:
-        with open("Raspberry data/temp_dataset_3.json", "r") as f:
+        with open("backend/ai/Raspberry_data/temp_dataset_3.json", "r") as f:
             open_file = json.load(f)
             #open_file = pd.DataFrame(open_file)#, index=False)
             dates = open_file.keys()
@@ -221,7 +221,7 @@ if __name__ == "__main__":
             #save_ai_model(model, "saved_model.h5")
     else:
         #model = create_ai_model()
-        model = tf.keras.models.load_model('saved_model/my_model')
+        model = tf.keras.models.load_model('backend/ai/saved_model/my_model')
         #model = load_ai_model("/saved_model.h5")
 
     #own_data = [1]
