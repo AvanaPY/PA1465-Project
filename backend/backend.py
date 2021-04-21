@@ -8,6 +8,10 @@ class BackendBase:
     def __init__(self, config_file_name="config.ini", section="mysql"):
         self._my_db, self._db_config = create_sql_connection(config_file_name, section)
         self._curs = self._my_db.cursor()
+        try:
+            drop_table(self._curs, 'atable')
+        except:
+            pass
 
     def create_table_based_on_data_dict(self, table_name, data, **kwargs):
         table_types = self._create_table_dict(data, **kwargs)
