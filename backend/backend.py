@@ -8,7 +8,11 @@ class BackendBase:
         self._my_db, self._db_config = create_sql_connection(config_file_name, section)
         self._curs = self._my_db.cursor()
 
-    def import_data_json(self, path_to_file):
+    def create_table_based_on_data_dict(self, table_name, data, **kwargs):
+        table_types = self._create_table_dict(data, **kwargs)
+        create_table(self._curs, table_name, table_types)
+
+    def import_data_json(self, path_to_file, database_table, **kwargs):
         """
             imports data from a json file and converts it into dict
 
@@ -23,9 +27,9 @@ class BackendBase:
         """
         with open(path_to_file, "r") as f:
             dct = json.load(f)
-        self.add_dict_to_database(dct)
+        self.add_dict_to_database(dct, database_table, **kwargs)
 
-    def import_data_csv(self, path_to_file):
+    def import_data_csv(self, path_to_file, database_table):
         """
             imports data from a csv file and converts it into dict
 
@@ -39,10 +43,10 @@ class BackendBase:
                 None
         """
         dct = pd.read_csv(path_to_file).to_dict()
-        dict_with_lists = { key: [val for val in dct[key].values() ] for key in dct }
-        self.add_dict_to_database(dict_with_lists)
+        dct = { key: [val for val in dct[key].values() ] for key in dct }
+        self.add_dict_to_database(dct, database_table)
     
-    def add_dict_to_database(self, data_dict, database_table, date_col=None):
+    def add_dict_to_database(self, data_dict, database_table, date_col=None, **kwargs):
         """
             Adds a dictionary to the database
 
@@ -56,21 +60,15 @@ class BackendBase:
                 :tboof:
         """
         try:
-            table_dct = _create_table_dict(data_dict)
-
-            create_table(conn, table, table_dct)
-
-            inv_dct = _invert_dictionary(data_dict)
+            self.create_table_based_on_data_dict(database_table, data_dict, create_id_column=True)
+            inv_dct = self._invert_dictionary(data_dict)
             for row in inv_dct:
-                insert_data(conn, table, row)
-
-            drop_table(conn, table)
-
+                insert_data(self._curs, database_table, row)
         except Exception as e:
             print(":tboof:")
             print(e)
 
-    def _create_table_dict(self, data_dict, date_col=None):
+    def _create_table_dict(self, data_dict, date_col=None, create_id_column=False):
         """
             Creates a table type dict based on a data dictionary
 
@@ -89,6 +87,10 @@ class BackendBase:
             str: "VARCHAR(255)",
             int: "INT(6)"
         }
+
+        if create_id_column:
+            dct['ID'] = 'INT(6) PRIMARY KEY AUTO_INCREMENT'
+
         col_names = data_dict.keys()
         for col in col_names:
             data_type = type(data_dict[col][0])
@@ -96,6 +98,7 @@ class BackendBase:
                 dct[col] = 'DATETIME'
             else:
                 dct[col] = type_dict[data_type]
+        
         return dct
 
     def _invert_dictionary(self, dct):
