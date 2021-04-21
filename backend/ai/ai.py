@@ -234,20 +234,13 @@ if __name__ == "__main__":
 
     value = None
     values = []
-    while value != "s":
-        value = input("vilket värde ska jag gissa på?")
-        print(type(value))
-        value = int(value)
-        if value == "r":
-            continue
-        if type(value) == float or type(value) == int:
-            values.append(value)
-            own_data = own_data = tf.stack([values])
-            own_data = tf.stack([own_data] * 1)
-            output = model(own_data)
-            print(values, "-->", output)
-        else:
-            print("try again (type a number, or 's' to stop, or 'r' to restart")
+    while True:
+        value = int(input("vilket värde ska jag gissa på?"))
+        values.append(value)
+        own_data = tf.stack([value for value in values])
+        own_data = tf.stack([own_data] * 1)
+        output = model(own_data)
+        print(values, "-->", output)
 
 
 
