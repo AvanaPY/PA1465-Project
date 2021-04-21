@@ -18,31 +18,38 @@ def create_app(host, port):
     
     @app.route('/upload/dataset', methods=['POST'])
     def upload_dataset():
-        try:
-            body = request.files['file']
-            filename = body.filename
-            upload_dir_path = os.path.join(BASE_DIR, 'web/uploads')
-            file_path = os.path.join(upload_dir_path, filename)
-            
-            if not os.path.exists(upload_dir_path):
-                os.makedirs(upload_dir_path)
-            
-            with open(file_path, 'wb') as f:
-                f.write(body.read())
+        ok = True
 
+        body = request.files['file']
+        filename = body.filename
+        upload_dir_path = os.path.join(BASE_DIR, 'web/uploads')
+        file_path = os.path.join(upload_dir_path, filename)
+        if not os.path.exists(upload_dir_path):
+            os.makedirs(upload_dir_path)
+        with open(file_path, 'wb') as f:
+            f.write(body.read())
+
+        try:
             if filename.endswith('.json'):
                 app._backend.import_data_json(file_path, 'atable')
             elif filename.endswith('.csv'):
                 app._backend.import_data_csv(file_path, 'atable')
-
-            os.remove(file_path)
+            else:
+                raise Exception('Unknown extension bitch :tboof:')
         except Exception as e:
-            print(e)
+            print(str(e))
+            status = 'error'
+            message = str(e)
+        else:
+            status = 'ok'
+            message = 'Dataset has been received'
+        
+        os.remove(file_path)
 
         return jsonify({
-            "status": "ok",
-            "message": "Dataset has been received"
-        })
+            "status": status,
+            "message": message
+            })
 
     return app
 
