@@ -2,6 +2,7 @@ import json
 import csv
 import pandas as pd
 from database import *
+import mysql.connector.errors as merrors
 
 class BackendBase:
     def __init__(self, config_file_name="config.ini", section="mysql"):
@@ -27,6 +28,10 @@ class BackendBase:
         """
         with open(path_to_file, "r") as f:
             dct = json.load(f)
+        lens = [ len(dct[k]) for k in dct ]
+        lens_equal = all([k == lens[0] for k in lens])
+        if not lens_equal:
+            raise Exception('import_data_json error: JSON columns are not equally long')
         self.add_dict_to_database(dct, database_table, **kwargs)
 
     def import_data_csv(self, path_to_file, database_table):
@@ -65,10 +70,9 @@ class BackendBase:
             for row in inv_dct:
                 insert_data(self._curs, database_table, row)
         except Exception as e:
-            print(":tboof:")
-            print(e)
+            raise
 
-        print(get_data(self._curs, database_table))
+        #print(get_data(self._curs, database_table))
 
     def _create_table_dict(self, data_dict, date_col=None, create_id_column=False):
         """

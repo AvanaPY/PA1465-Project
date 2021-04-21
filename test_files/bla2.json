@@ -1,0 +1,6 @@
+{
+    "hello": ["from", 2],
+    "world": ["json"],
+    "date":[ 1 ],
+    "val" : [2, 3]
+}
