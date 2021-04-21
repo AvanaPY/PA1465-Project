@@ -24,8 +24,9 @@ def create_ai_model():
     """
     return model
 
-def load_ai_model(model, load_weights_path):
-    model = model.load_weights(load_weights_path)
+def load_ai_model(load_weights_path):
+    #model = model.load_weights(load_weights_path)
+    model = tf.keras.models.load_model(load_weights_path)
     """
         Loads the AI model's weights from a file
 
@@ -42,7 +43,8 @@ def load_ai_model(model, load_weights_path):
     return model
 
 def save_ai_model(model, save_weights_path):
-    model.save_weights(save_weights_path)
+    #model.save_weights(save_weights_path)
+    model.save('save_weights_path')
     """
         Saves the AI model's weights into a file
 
@@ -58,7 +60,7 @@ def save_ai_model(model, save_weights_path):
     """
     return model
 
-def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 20): #need to fix data into train and validation
+def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5): #need to fix data into train and validation
 
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
                                                     patience=patience,
@@ -169,7 +171,7 @@ if __name__ == "__main__":
 
         WindowGenerator.split_window = split_window
 
-        w2 = WindowGenerator(input_width=6, label_width=1, shift=1,
+        w2 = WindowGenerator(input_width=6, label_width=6, shift=6,
                         label_columns=['values'])
 
         def make_dataset(self, data):
@@ -215,14 +217,12 @@ if __name__ == "__main__":
         performance['LSTM'] = model.evaluate(w2.test, verbose=0)
 
         if input("do you want to save?[y/n]") == "y":
-            save_ai_model(model, "saved_model.h5")
+            model.save('saved_model/my_model')
+            #save_ai_model(model, "saved_model.h5")
     else:
-        model = create_ai_model()
-        values = [1, 2, 3, 4, 5, 6]
-        own_data = own_data = tf.stack([values])
-        own_data = tf.stack([own_data] * 1) #need fixing
-        print(model(own_data))
-        model = load_ai_model(model, "saved_model.h5")
+        #model = create_ai_model()
+        model = tf.keras.models.load_model('saved_model/my_model')
+        #model = load_ai_model("/saved_model.h5")
 
     #own_data = [1]
     #own_data = tf.stack([own_data] * 6)
@@ -237,6 +237,7 @@ if __name__ == "__main__":
     while value != "s":
         value = input("vilket värde ska jag gissa på?")
         print(type(value))
+        value = int(value)
         if value == "r":
             continue
         if type(value) == float or type(value) == int:
