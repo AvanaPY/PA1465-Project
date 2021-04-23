@@ -18,10 +18,21 @@ class BackendBase:
         #     pass
 
     def compatability_check_json(self, data, table_name):
-        '''
-        - Kolonnamn som nycklar
-	    - kolonndata i form av en lista
-	    - Samma datatyper i hela kolonnen
+        ''' Checks the compatibility of a json document against the database table.
+
+            A (probably) very over-engineered method that checks whether or not a json document is compatible with the database. 
+            It achieves this by comparing the column names, types, and sizes to the database's own columns.
+
+            Args:
+                data : dict - json document
+                table_name: str - the table name
+
+            Returns:
+                boolean - Wether or not it's compatible
+                str - The reason for the json document not being compatible. This is None if it is compatible.
+
+            Raises:
+                Nothing
         '''
         try:
             # Ask the database for the table's data types
@@ -30,36 +41,39 @@ class BackendBase:
             desc = self._curs.fetchall()
 
             database_col_names = list((a[0] for a in desc))
-            print(f'Database col names: {database_col_names}')
 
+            # Fast check to make sure the column counts are the same
             data_col_names = data.keys()
             if len(database_col_names) != len(data_col_names):
-                return False, 'Invalid column names, make sure that every column in the database also exists in the JSON file.'
+                return False, 'Invalid column name count, make sure that every column in the database also exists in the JSON file.'
 
+            # Checking that all the column names in the data exists in the database too
             for name in data_col_names:
                 if name not in database_col_names:
-                    return False, 'Invalid column names'
+                    return False, f'Invalid column name: {name}'
 
+            # Checking that all the items in the columns have the exact same type
             database_col_types = list((sql_type_to_python_type(a[1].decode('utf-8'))for a in desc))
-            print(f'Database col types: {database_col_types}')
-            
+            data_column_lengths = [ len(data[key]) for key in data ]
+            all_same = all([a == data_column_lengths[0] for a in data_column_lengths])
+            if not all_same:
+                return False, f'Columns are not of equal length in data.'
+
+            # Checking that the columns in the data have the same type as in the database.
             data_types = {
                 key: all_type_equal_or_none([type(a) for a in data[key]]) for key in data
             }
-            print(f'Data types: {data_types}')
             for i, key in enumerate(data_types):
                 t = data_types[key]
                 if t is _all_types_not_equal:
                     return False, f'One or more columns in the data contains values which are not of the same type: Column "{key}" of data "{data[key]}"'
                 if t != database_col_types[i]:
                     return False, f'Column type does not match with the database\'s column type: Colum "{key}" with type {database_col_types[i]} against data type {t}.'
-
         except merrors.Error as e:
             return False, str(e)
         
+        # If no errors occured and nothing seems wrong, let's just return True.
         return True, None
-
-
 
     def compatability_check_csv(self, data, table_name):
         '''
