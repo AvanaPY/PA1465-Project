@@ -43,7 +43,6 @@ def load_ai_model(load_weights_path):
     return model
 
 def save_ai_model(model, save_weights_path):
-    #model.save_weights(save_weights_path)
     model.save('save_weights_path')
     """
         Saves the AI model's weights into a file
@@ -91,6 +90,7 @@ if __name__ == "__main__":
     import numpy as np
     import tensorflow as tf
     import seaborn as sns
+    import math
 
     if input("Do you want to use a previously saved version?[y/n]") == "n":
         #with open("Raspberry data/hum_dataset_1.json", "r") as f:
