@@ -25,7 +25,6 @@ def create_ai_model():
     return model
 
 def load_ai_model(load_weights_path):
-    #model = model.load_weights(load_weights_path)
     model = tf.keras.models.load_model(load_weights_path)
     """
         Loads the AI model's weights from a file
@@ -43,7 +42,7 @@ def load_ai_model(load_weights_path):
     return model
 
 def save_ai_model(model, save_weights_path):
-    model.save('save_weights_path')
+    model.save(save_weights_path)
     """
         Saves the AI model's weights into a file
 
@@ -217,12 +216,9 @@ if __name__ == "__main__":
         performance['LSTM'] = model.evaluate(w2.test, verbose=0)
 
         if input("do you want to save?[y/n]") == "y":
-            model.save('saved_model/my_model')
-            #save_ai_model(model, "saved_model.h5")
+            save_ai_model(model, 'backend/ai/saved_model/my_model')
     else:
-        #model = create_ai_model()
-        model = tf.keras.models.load_model('backend/ai/saved_model/my_model')
-        #model = load_ai_model("/saved_model.h5")
+        model = load_ai_model('backend/ai/saved_model/my_model')
 
     #own_data = [1]
     #own_data = tf.stack([own_data] * 6)
