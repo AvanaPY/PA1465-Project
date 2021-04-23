@@ -1,17 +1,21 @@
 import json
 import csv
 import pandas as pd
-from database import *
 import mysql.connector.errors as merrors
+
+from database import *
+
+from .ext import sql_type_to_python_type, all_type_equal_or_none, _all_types_not_equal
+
 
 class BackendBase:
     def __init__(self, config_file_name="config.ini", section="mysql"):
         self._my_db, self._db_config = create_sql_connection(config_file_name, section)
         self._curs = self._my_db.cursor()
-        try:
-            desc = drop_table(self._curs, 'atable')
-        except:
-            pass
+        # try:
+        #     desc = drop_table(self._curs, 'atable')
+        # except:
+        #     pass
 
     def compatability_check_json(self, data, table_name):
         '''
@@ -19,22 +23,41 @@ class BackendBase:
 	    - kolonndata i form av en lista
 	    - Samma datatyper i hela kolonnen
         '''
-        compatability = False
-        
         try:
+            # Ask the database for the table's data types
             my_sql_command = f'DESCRIBE {table_name}'
             self._curs.execute(my_sql_command)
             desc = self._curs.fetchall()
-            col_names = desc[0]
+
+            database_col_names = list((a[0] for a in desc))
+            print(f'Database col names: {database_col_names}')
+
             data_col_names = data.keys()
+            if len(database_col_names) != len(data_col_names):
+                return False, 'Invalid column names, make sure that every column in the database also exists in the JSON file.'
 
             for name in data_col_names:
-                if name not in col_names:
-                    return compatability
+                if name not in database_col_names:
+                    return False, 'Invalid column names'
+
+            database_col_types = list((sql_type_to_python_type(a[1].decode('utf-8'))for a in desc))
+            print(f'Database col types: {database_col_types}')
+            
+            data_types = {
+                key: all_type_equal_or_none([type(a) for a in data[key]]) for key in data
+            }
+            print(f'Data types: {data_types}')
+            for i, key in enumerate(data_types):
+                t = data_types[key]
+                if t is _all_types_not_equal:
+                    return False, f'One or more columns in the data contains values which are not of the same type: Column "{key}" of data "{data[key]}"'
+                if t != database_col_types[i]:
+                    return False, f'Column type does not match with the database\'s column type: Colum "{key}" with type {database_col_types[i]} against data type {t}.'
+
         except merrors.Error as e:
-            print(f'Error: {e}')
+            return False, str(e)
         
-        return
+        return True, None
 
 
 
