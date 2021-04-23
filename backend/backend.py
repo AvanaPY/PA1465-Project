@@ -9,9 +9,61 @@ class BackendBase:
         self._my_db, self._db_config = create_sql_connection(config_file_name, section)
         self._curs = self._my_db.cursor()
         try:
-            drop_table(self._curs, 'atable')
+            desc = drop_table(self._curs, 'atable')
         except:
             pass
+
+    def compatability_check_json(self, data, table_name):
+        '''
+        - Kolonnamn som nycklar
+	    - kolonndata i form av en lista
+	    - Samma datatyper i hela kolonnen
+        '''
+        compatability = False
+        
+        try:
+            my_sql_command = f'DESCRIBE {table_name}'
+            self._curs.execute(my_sql_command)
+            desc = self._curs.fetchall()
+            col_names = desc[0]
+            data_col_names = data.keys()
+
+            for name in data_col_names:
+                if name not in col_names:
+                    return compatability
+        except merrors.Error as e:
+            print(f'Error: {e}')
+        
+        return
+
+
+
+    def compatability_check_csv(self, data, table_name):
+        '''
+        - kolonnamn på första raden
+        - Samma datatyper i hela kolonnen
+        - Får ej ha fler datapunkter i en rad än vad det finns kolonner.
+        '''
+
+        compatability = False
+        
+        try:
+            my_sql_command = f'DESCRIBE {table_name}'
+            self._curs.execute(my_sql_command)
+            desc = self._curs.fetchall()
+            col_names = desc[0]
+            with open('some.csv', newline='') as f:
+                reader = csv.reader(f)
+                row1 = next(reader)
+                data_col_names = row1.split(',')
+
+            for name in data_col_names:
+                if name not in col_names:
+                    return compatability
+        except merrors.Error as e:
+            print(f'Error: {e}')
+
+        return
 
     def create_table_based_on_data_dict(self, table_name, data, **kwargs):
         table_types = self._create_table_dict(data, **kwargs)
@@ -97,10 +149,10 @@ class BackendBase:
             str: "VARCHAR(255)",
             int: "INT(6)"
         }
-
+        
         if create_id_column:
             dct['ID'] = 'INT(6) PRIMARY KEY AUTO_INCREMENT'
-
+        
         col_names = data_dict.keys()
         for col in col_names:
             data_type = type(data_dict[col][0])
