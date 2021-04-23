@@ -10,7 +10,7 @@ def export_to_ai(data_file):
             values = open_file.values()
             new_dict = {"dates": dates, "values": values}
             df = pd.DataFrame(new_dict)
-    visualize_df = ai.xx(df)
+    visualize_df = ai.run_ai(df)
     return visualize_df
 
 def visualize(df):
