@@ -81,9 +81,23 @@ def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5): 
         Raises::
            --
     """
-    pass
+
+def run_ai(model, df_data):
+    """
+    df_data has "dates" and "values"
+    """
+    input_data = df_data["values"]
+
+    own_data = tf.stack([value for value in input_data])
+    own_data = tf.stack([own_data] * 1)
+    output = model(own_data)
+    df_data["predictions"] = output.values()
+
+    return df_data
+    
 
 if __name__ == "__main__":
+    #until next time: Clean out ai and keep the data outside of it and ai in separate functions
     import json
     import pandas as pd
     import numpy as np
@@ -170,7 +184,7 @@ if __name__ == "__main__":
 
         WindowGenerator.split_window = split_window
 
-        w2 = WindowGenerator(input_width=6, label_width=6, shift=6,
+        w2 = WindowGenerator(input_width=6, label_width=1, shift=1,
                         label_columns=['values'])
 
         def make_dataset(self, data):
