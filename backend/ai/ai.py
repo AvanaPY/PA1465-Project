@@ -91,7 +91,8 @@ def run_ai(model, df_data):
     own_data = tf.stack([value for value in input_data])
     own_data = tf.stack([own_data] * 1)
     output = model(own_data)
-    df_data["predictions"] = output.values()
+    #df_data["predictions"] = output.values()
+    df_data = output
 
     return df_data
     
@@ -241,23 +242,19 @@ if __name__ == "__main__":
     else:
         model = load_ai_model('backend/ai/saved_model/my_model')
 
-    #own_data = [1]
-    #own_data = tf.stack([own_data] * 6)
-    #own_data = tf.stack([own_data] * 1)
-
-    #print("training on own data")
-    #print(model(own_data))
-
 
     value = None
     values = []
     while True:
         value = int(input("vilket värde ska jag gissa på?"))
         values.append(value)
-        own_data = tf.stack([value for value in values])
-        own_data = tf.stack([own_data] * 1)
-        output = model(own_data)
-        print(values, "-->", output)
+        values_dict = {"values": values}
+        own_df = pd.DataFrame.from_dict(values_dict)
+        df_data = run_ai(model, own_df)
+        #own_data = tf.stack([value for value in values])
+        #own_data = tf.stack([own_data] * 1)
+        #output = model(own_data)
+        print(values, "-->", df_data[0][0])
 
 
 
