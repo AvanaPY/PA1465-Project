@@ -93,7 +93,7 @@ class BackendBase:
                 dct: a dictionary containing the data in the json file 
 
             Raises:
-                None
+                Propagates any errors
         """
         with open(path_to_file, "r") as f:
             dct = json.load(f)
@@ -134,7 +134,7 @@ class BackendBase:
         try:
             self._compatability_check(data_dict, database_table)
         except backend_errors.TableDoesNotExistException:
-            self.create_table_based_on_data_dict(database_table, data_dict, create_id_column=True)
+            self.create_table_based_on_data_dict(database_table, data_dict, **kwargs)
             self._compatability_check(data_dict, database_table)
         except:
             raise
@@ -146,7 +146,7 @@ class BackendBase:
         except Exception as e:
             raise
 
-    def _create_table_dict(self, data_dict, date_col=None, create_id_column=False):
+    def _create_table_dict(self, data_dict, date_col=None, id_colum_name=None):
         """
             Creates a table type dict based on a data dictionary
 
@@ -166,8 +166,6 @@ class BackendBase:
             int: "INT(6)"
         }
         
-        if create_id_column:
-            dct['ID'] = 'INT(6) PRIMARY KEY AUTO_INCREMENT'
         
         col_names = data_dict.keys()
         for col in col_names:
@@ -176,6 +174,8 @@ class BackendBase:
                 dct[col] = 'DATETIME'
             else:
                 dct[col] = type_dict[data_type]
+        if not id_colum_name is None:
+            dct[id_colum_name] = 'INT(6) PRIMARY KEY AUTO_INCREMENT'
         
         return dct
 

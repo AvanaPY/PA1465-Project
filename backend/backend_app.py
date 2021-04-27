@@ -39,9 +39,6 @@ def create_app(host, port):
                 app._backend.import_data_csv(file_path, 'atable')
             else:
                 raise Exception('Unknown extension bitch :tboof:')
-        except pandas_errors.ParserError:
-            status = 'error'
-            message = 'File columns not compatible with database columns'
         except Exception as e:
             status = 'error'
             message = str(e)
