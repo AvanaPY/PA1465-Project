@@ -95,6 +95,114 @@ def run_ai(model, df_data):
 
     return df_data
     
+def create_window(data_df):
+    n = len(df)
+    train_df = df[0:int(n*0.7)] #trainging data = first 70%
+    val_df = df[int(n*0.7):int(n*0.9)] #validation = 90-70 = 20%
+    test_df = df[int(n*0.9):] #test = last 10%
+    if False:
+        train_mean = train_df.mean() #meadian
+        train_std = train_df.std() #standard deviation (expecting every data being normal distributed)
+
+        #Converting every value into standard deviations from the mean of training data
+        train_df = (train_df - train_mean) / train_std
+        val_df = (val_df - train_mean) / train_std
+        test_df = (test_df - train_mean) / train_std
+
+    class WindowGenerator():
+    #inpun width = how many indexes of data before making each prediction (in single prediction)
+    #label_width = how many predictions the model will make (per label (I expect))
+    #shift = how big the gap is from the input indexes to the nodes we want to predict (including the labels)
+    #label_columns = the labels we want it to predict
+        def __init__(self, input_width, label_width, shift,
+                    train_df=train_df, val_df=val_df, test_df=test_df,
+                    label_columns=None):
+            # Store the raw data.
+            self.train_df = train_df
+            self.val_df = val_df
+            self.test_df = test_df
+
+            # Work out the label column indices.
+            self.label_columns = label_columns
+            if label_columns is not None:
+                self.label_columns_indices = {name: i for i, name in enumerate(label_columns)}
+            self.column_indices = {name: i for i, name in enumerate(train_df.columns)}
+
+            # Work out the window parameters.
+            self.input_width = input_width
+            self.label_width = label_width
+            self.shift = shift
+
+            self.total_window_size = input_width + shift
+
+            self.input_slice = slice(0, input_width) #skapar en slice:are?
+            self.input_indices = np.arange(self.total_window_size)[self.input_slice] #skapar en mall för villka som är input i en indice
+
+            self.label_start = self.total_window_size - self.label_width #at what number of indexes that prediction labels start
+            self.labels_slice = slice(self.label_start, None) #a slicer to slice out the labels
+            self.label_indices = np.arange(self.total_window_size)[self.labels_slice] #skapar en mall för vilka som är labels
+
+            #def __repr__(self): #print the values
+            #    return '\n'.join([
+            #        f'Total window size: {self.total_window_size}',
+            #        f'Input indices: {self.input_indices}',
+            #        f'Label indices: {self.label_indices}',
+            #        f'Label column name(s): {self.label_columns}'])
+
+    def split_window(self, features):
+        inputs = features[:, self.input_slice, :]
+        labels = features[:, self.labels_slice, :]
+        if self.label_columns is not None:
+            labels = tf.stack([labels[:, :, self.column_indices[name]] for name in self.label_columns],axis=-1)
+
+        # Slicing doesn't preserve static shape information, so set the shapes
+        # manually. This way the `tf.data.Datasets` are easier to inspect.
+        inputs.set_shape([None, self.input_width, None])
+        labels.set_shape([None, self.label_width, None])
+
+        return inputs, labels
+
+    WindowGenerator.split_window = split_window
+
+    w2 = WindowGenerator(input_width=6, label_width=1, shift=1,
+                    label_columns=['values'])
+
+    def make_dataset(self, data):
+        data = np.array(data, dtype=np.float32)
+        ds = tf.keras.preprocessing.timeseries_dataset_from_array(
+            data=data,
+            targets=None,
+            sequence_length=self.total_window_size,
+            sequence_stride=1, #how many jumps betweeen predicted outputs
+            shuffle=True, #shuffle the batches
+            batch_size=32,) #batch size == how many training examples in each training cycle
+
+        ds = ds.map(self.split_window)
+
+        return ds
+
+    WindowGenerator.make_dataset = make_dataset
+
+    @property
+    def train(self):
+        return self.make_dataset(self.train_df)
+
+    @property
+    def val(self):
+        return self.make_dataset(self.val_df)
+
+    @property
+    def test(self):
+        return self.make_dataset(self.test_df)
+
+    WindowGenerator.train = train
+    WindowGenerator.val = val
+    WindowGenerator.test = test
+
+    w2 = WindowGenerator(input_width=6, label_width=1, shift=1,
+                    label_columns=['values'])
+    return w2
+
 
 if __name__ == "__main__":
     #until next time: Clean out ai and keep the data outside of it and ai in separate functions
@@ -112,120 +220,19 @@ if __name__ == "__main__":
             #open_file = pd.DataFrame(open_file)#, index=False)
             dates = open_file.keys()
             values = open_file.values()
-            new_dict = {"dates": dates, "values": values}
-            df = pd.DataFrame(new_dict)
         
+        new_dict = {"dates": dates, "values": values}
+        df = pd.DataFrame(new_dict)
         df.pop("dates")
-        n = len(df)
-        train_df = df[0:int(n*0.7)] #trainging data = first 70%
-        val_df = df[int(n*0.7):int(n*0.9)] #validation = 90-70 = 20%
-        test_df = df[int(n*0.9):] #test = last 10%
-        if False:
-            train_mean = train_df.mean() #meadian
-            train_std = train_df.std() #standard deviation (expecting every data being normal distributed)
-
-            #Converting every value into standard deviations from the mean of training data
-            train_df = (train_df - train_mean) / train_std
-            val_df = (val_df - train_mean) / train_std
-            test_df = (test_df - train_mean) / train_std
-
-        class WindowGenerator():
-        #inpun width = how many indexes of data before making each prediction (in single prediction)
-        #label_width = how many predictions the model will make (per label (I expect))
-        #shift = how big the gap is from the input indexes to the nodes we want to predict (including the labels)
-        #label_columns = the labels we want it to predict
-            def __init__(self, input_width, label_width, shift,
-                        train_df=train_df, val_df=val_df, test_df=test_df,
-                        label_columns=None):
-                # Store the raw data.
-                self.train_df = train_df
-                self.val_df = val_df
-                self.test_df = test_df
-
-                # Work out the label column indices.
-                self.label_columns = label_columns
-                if label_columns is not None:
-                    self.label_columns_indices = {name: i for i, name in enumerate(label_columns)}
-                self.column_indices = {name: i for i, name in enumerate(train_df.columns)}
-
-                # Work out the window parameters.
-                self.input_width = input_width
-                self.label_width = label_width
-                self.shift = shift
-
-                self.total_window_size = input_width + shift
-
-                self.input_slice = slice(0, input_width) #skapar en slice:are?
-                self.input_indices = np.arange(self.total_window_size)[self.input_slice] #skapar en mall för villka som är input i en indice
-
-                self.label_start = self.total_window_size - self.label_width #at what number of indexes that prediction labels start
-                self.labels_slice = slice(self.label_start, None) #a slicer to slice out the labels
-                self.label_indices = np.arange(self.total_window_size)[self.labels_slice] #skapar en mall för vilka som är labels
-
-                #def __repr__(self): #print the values
-                #    return '\n'.join([
-                #        f'Total window size: {self.total_window_size}',
-                #        f'Input indices: {self.input_indices}',
-                #        f'Label indices: {self.label_indices}',
-                #        f'Label column name(s): {self.label_columns}'])
-
-        def split_window(self, features):
-            inputs = features[:, self.input_slice, :]
-            labels = features[:, self.labels_slice, :]
-            if self.label_columns is not None:
-                labels = tf.stack([labels[:, :, self.column_indices[name]] for name in self.label_columns],axis=-1)
-
-            # Slicing doesn't preserve static shape information, so set the shapes
-            # manually. This way the `tf.data.Datasets` are easier to inspect.
-            inputs.set_shape([None, self.input_width, None])
-            labels.set_shape([None, self.label_width, None])
-
-            return inputs, labels
-
-        WindowGenerator.split_window = split_window
-
-        w2 = WindowGenerator(input_width=6, label_width=1, shift=1,
-                        label_columns=['values'])
-
-        def make_dataset(self, data):
-            data = np.array(data, dtype=np.float32)
-            ds = tf.keras.preprocessing.timeseries_dataset_from_array(
-                data=data,
-                targets=None,
-                sequence_length=self.total_window_size,
-                sequence_stride=1, #how many jumps betweeen predicted outputs
-                shuffle=True, #shuffle the batches
-                batch_size=32,) #batch size == how many training examples in each training cycle
-
-            ds = ds.map(self.split_window)
-
-            return ds
-
-        WindowGenerator.make_dataset = make_dataset
-
-        @property
-        def train(self):
-            return self.make_dataset(self.train_df)
-
-        @property
-        def val(self):
-            return self.make_dataset(self.val_df)
-
-        @property
-        def test(self):
-            return self.make_dataset(self.test_df)
-
-        WindowGenerator.train = train
-        WindowGenerator.val = val
-        WindowGenerator.test = test
-
-        val_performance = {}
-        performance = {}
+        
+        w2 = create_window(df)
 
         model = create_ai_model()
 
         train_ai(model, w2.train, w2.val)
 
+        val_performance = {}
+        performance = {}
         val_performance['LSTM'] = model.evaluate(w2.val)
         performance['LSTM'] = model.evaluate(w2.test, verbose=0)
 
