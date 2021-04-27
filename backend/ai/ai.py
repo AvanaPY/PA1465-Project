@@ -96,7 +96,7 @@ def run_ai(model, df_data):
 
     return df_data
     
-def create_window(data_df):
+def create_window(data_df, input_width=6, label_width=1, shift=1, label_columns=['values']):
     n = len(df)
     train_df = df[0:int(n*0.7)] #trainging data = first 70%
     val_df = df[int(n*0.7):int(n*0.9)] #validation = 90-70 = 20%
@@ -200,8 +200,8 @@ def create_window(data_df):
     WindowGenerator.val = val
     WindowGenerator.test = test
 
-    w2 = WindowGenerator(input_width=6, label_width=1, shift=1,
-                    label_columns=['values'])
+    w2 = WindowGenerator(input_width=input_width, label_width=label_width, shift=shift,
+                    label_columns=label_columns)
     return w2
 
 
@@ -251,9 +251,6 @@ if __name__ == "__main__":
         values_dict = {"values": values}
         own_df = pd.DataFrame.from_dict(values_dict)
         df_data = run_ai(model, own_df)
-        #own_data = tf.stack([value for value in values])
-        #own_data = tf.stack([own_data] * 1)
-        #output = model(own_data)
         print(df_data)
 
 
