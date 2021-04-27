@@ -5,7 +5,9 @@ from flask import url_for
 from flask import jsonify
 from flask import request
 from .backend import BackendBase
-import pandas.errors as perrors
+
+import pandas.errors as pandas_errors
+import backend.errors as backend_errors
 
 BASE_DIR = os.path.dirname(__file__)
 TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
@@ -37,7 +39,7 @@ def create_app(host, port):
                 app._backend.import_data_csv(file_path, 'atable')
             else:
                 raise Exception('Unknown extension bitch :tboof:')
-        except perrors.ParserError:
+        except pandas_errors.ParserError:
             status = 'error'
             message = 'File columns not compatible with database columns'
         except Exception as e:
