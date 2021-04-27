@@ -1,10 +1,8 @@
-cycler
+coverage
 flask
-kiwisolver
 mysql
 mysql-connector-python
-pillow
 pip-chill
-pyparsing
-python-dateutil
+seaborn
+sklearn
 tensorflow
