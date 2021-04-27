@@ -91,8 +91,8 @@ def run_ai(model, df_data):
     own_data = tf.stack([value for value in input_data])
     own_data = tf.stack([own_data] * 1)
     output = model(own_data)
-    #df_data["predictions"] = output.values()
-    df_data = output
+    new_array = [n[0] for n in np.array(output)[0]]
+    df_data["predictions"] = new_array
 
     return df_data
     
@@ -254,7 +254,7 @@ if __name__ == "__main__":
         #own_data = tf.stack([value for value in values])
         #own_data = tf.stack([own_data] * 1)
         #output = model(own_data)
-        print(values, "-->", df_data[0][0])
+        print(df_data)
 
 
 
