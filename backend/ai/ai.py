@@ -103,10 +103,8 @@ def run_ai(model, df_data, return_full = "no"):
 
     if return_full == "no":
         df_data_last_row = df_data.iloc[-1]
-        print("returns_part", df_data_last_row)
         return df_data_last_row
     else:
-        print("returns_whole", df_data)
         return df_data
     
 def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['values']):
@@ -265,20 +263,3 @@ if __name__ == "__main__":
         own_df = pd.DataFrame.from_dict(values_dict)
         df_data = run_ai(model, own_df)
         print(df_data)
-
-
-
-        
-    """
-    Epoch 1/5
-    3071/3071 [==============================] - 30s 10ms/step - loss: 0.1866 - mean_absolute_error: 0.2566 - val_loss: 0.3495 - val_mean_absolute_error: 0.3635
-    Epoch 2/5
-    3071/3071 [==============================] - 30s 10ms/step - loss: 0.0081 - mean_absolute_error: 0.0497 - val_loss: 0.1244 - val_mean_absolute_error: 0.1944
-    Epoch 3/5
-    3071/3071 [==============================] - 30s 10ms/step - loss: 0.0030 - mean_absolute_error: 0.0296 - val_loss: 0.0500 - val_mean_absolute_error: 0.1114
-    Epoch 4/5
-    3071/3071 [==============================] - 29s 10ms/step - loss: 0.0015 - mean_absolute_error: 0.0216 - val_loss: 0.0255 - val_mean_absolute_error: 0.0739
-    Epoch 5/5
-    3071/3071 [==============================] - 29s 10ms/step - loss: 0.0011 - mean_absolute_error: 0.0182 - val_loss: 0.0169 - val_mean_absolute_error: 0.0603
-    878/878 [==============================] - 4s 5ms/step - loss: 0.0169 - mean_absolute_error: 0.0603
-    """

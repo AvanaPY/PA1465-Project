@@ -21,13 +21,12 @@ def predict_json_file(data_file):
     return visualize_df
 
 def visualize(df_data, shifting):
-    #shifting = 6
     df_data_vis = df_data.copy()
     for i in range(shifting):
         df_data_vis.loc[df_data_vis.iloc[-1].name + 1,:] = np.nan #creates a new nan row
     df_data_vis['predictions'] = df_data_vis['predictions'].shift(shifting) #shifts all predictions down
-    #print("after_shifting it:", df_data_vis)
     fig = go.Figure()
+    
     fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["predictions"],
                     mode='lines+markers',
                     name='predictions'))
@@ -35,7 +34,6 @@ def visualize(df_data, shifting):
                     mode='lines+markers',
                     name='values'))
                 
-    #fig = px.line(x=df_data.index, y=df_data["predictions"])
     fig.show()
 
 if __name__ == "__main__":
@@ -62,18 +60,6 @@ if __name__ == "__main__":
     else:
         model = ai.load_ai_model('backend/ai/saved_model/my_model')
 
-    """ #DONT KEEP THIS :3
-    with open("backend/ai/Raspberry_data/temp_dataset_3.json", "r") as f:
-        open_file = json.load(f)
-        dates = open_file.keys()
-        values = open_file.values()
-    new_dict = {"dates": dates, "values": values}
-    df = pd.DataFrame(new_dict)
-    df.pop("dates") """
-
-    # plt.hist(df, bins = 13)
-    # plt.show()
-
     value = None
     values = []
     while True:
@@ -86,10 +72,7 @@ if __name__ == "__main__":
                 df_data = ai.run_ai(model, own_df, return_full = "yes")
             else:
                 df_data = df_data.append(ai.run_ai(model, own_df, return_full = "no"), ignore_index=True)
-            print("df_data after recieving", df_data)
-            #print(df_data)
-            #if input("do you want to save?[y/n]") == "y":
-            #how to get w2 shift without training?
+            print(df_data)
             visualize(df_data, 6)
 
 #visualize_df = export_to_ai("backend/ai/Raspberry_data/temp_dataset_3.json")        
