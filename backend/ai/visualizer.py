@@ -49,17 +49,17 @@ if __name__ == "__main__":
     else:
         model = ai.load_ai_model('backend/ai/saved_model/my_model')
 
-    #DONT KEEP THIS :3
+    """ #DONT KEEP THIS :3
     with open("backend/ai/Raspberry_data/temp_dataset_3.json", "r") as f:
         open_file = json.load(f)
         dates = open_file.keys()
         values = open_file.values()
     new_dict = {"dates": dates, "values": values}
     df = pd.DataFrame(new_dict)
-    df.pop("dates")
+    df.pop("dates") """
 
-    plt.hist(df, bins = 13)
-    plt.show()
+    # plt.hist(df, bins = 13)
+    # plt.show()
 
     value = None
     values = []
@@ -80,4 +80,4 @@ if __name__ == "__main__":
                     name='lines+markers'))
                 
         #fig = px.line(x=df_data.index, y=df_data["predictions"])
-        #fig.show()
+        fig.show()
