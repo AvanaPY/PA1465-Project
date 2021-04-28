@@ -63,7 +63,7 @@ def save_ai_model(model, save_weights_path):
     """
     return model
 
-def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5): #need to fix data into train and validation
+def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5):
 
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
                                                     patience=patience,
@@ -87,7 +87,7 @@ def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5): 
            --
     """
 
-def run_ai(model, df_data):
+def run_ai(model, df_data, return_full = "no"):
     """
     df_data has "dates" and "values"
     """
@@ -97,9 +97,17 @@ def run_ai(model, df_data):
     own_data = tf.stack([own_data] * 1)
     output = model(own_data)
     new_array = [n[0] for n in np.array(output)[0]]
+    for i in range(len(new_array) - 1):
+        new_array[i] = np.nan
     df_data["predictions"] = new_array
 
-    return df_data
+    if return_full == "no":
+        df_data_last_row = df_data.iloc[-1]
+        print("returns_part", df_data_last_row)
+        return df_data_last_row
+    else:
+        print("returns_whole", df_data)
+        return df_data
     
 def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['values']):
     n = len(df)

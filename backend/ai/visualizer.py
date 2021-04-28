@@ -20,14 +20,20 @@ def predict_json_file(data_file):
     visualize_df = ai.run_ai(df)
     return visualize_df
 
-def visualize(df_data):
+def visualize(df_data, shifting):
+    #shifting = 6
+    df_data_vis = df_data.copy()
+    for i in range(shifting):
+        df_data_vis.loc[df_data_vis.iloc[-1].name + 1,:] = np.nan #creates a new nan row
+    df_data_vis['predictions'] = df_data_vis['predictions'].shift(shifting) #shifts all predictions down
+    #print("after_shifting it:", df_data_vis)
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df_data.index, y=df_data["predictions"],
+    fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["predictions"],
                     mode='lines+markers',
-                    name='lines+markers'))
-    fig.add_trace(go.Scatter(x=df_data.index, y=df_data["values"],
+                    name='predictions'))
+    fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["values"],
                     mode='lines+markers',
-                    name='lines+markers'))
+                    name='values'))
                 
     #fig = px.line(x=df_data.index, y=df_data["predictions"])
     fig.show()
@@ -38,16 +44,18 @@ if __name__ == "__main__":
         with open("backend/ai/Raspberry_data/temp_dataset_3.json", "r") as f:
             open_file = json.load(f)
             dates = open_file.keys()
-            values = open_file.values()
+            values = list(open_file.values())
+            for index, value in enumerate(values):
+                values[index] = index % 5
         new_dict = {"dates": dates, "values": values}
         df = pd.DataFrame(new_dict)
         df.pop("dates")
         
-        w2 = ai.create_window(df)
+        w2 = ai.create_window(df, input_width=6, label_width = 1, shift=6)
 
         model = ai.create_ai_model()
 
-        ai.train_ai(model, w2.train, w2.val)
+        ai.train_ai(model, w2.train, w2.val, max_epochs = 10)
 
         if input("do you want to save?[y/n]") == "y":
             ai.save_ai_model(model, 'backend/ai/saved_model/my_model')
@@ -71,11 +79,17 @@ if __name__ == "__main__":
     while True:
         value = int(input("vilket värde ska jag gissa på?"))
         values.append(value)
-        values_dict = {"values": values}
-        own_df = pd.DataFrame.from_dict(values_dict)
-        df_data = ai.run_ai(model, own_df)
-        print(df_data)
-        #if input("do you want to save?[y/n]") == "y":
-        visualize(df_data)
+        if len(values) > 5:
+            values_dict = {"values": values[-6:]}
+            own_df = pd.DataFrame.from_dict(values_dict)
+            if len(values) == 6:
+                df_data = ai.run_ai(model, own_df, return_full = "yes")
+            else:
+                df_data = df_data.append(ai.run_ai(model, own_df, return_full = "no"), ignore_index=True)
+            print("df_data after recieving", df_data)
+            #print(df_data)
+            #if input("do you want to save?[y/n]") == "y":
+            #how to get w2 shift without training?
+            visualize(df_data, 6)
 
 #visualize_df = export_to_ai("backend/ai/Raspberry_data/temp_dataset_3.json")        
