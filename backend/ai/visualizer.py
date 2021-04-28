@@ -9,8 +9,8 @@ import math
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 
-"""
-def export_to_ai(data_file):
+
+def predict_json_file(data_file):
     with open(data_file, "r") as f:
             open_file = json.load(f)
             dates = open_file.keys()
@@ -20,12 +20,17 @@ def export_to_ai(data_file):
     visualize_df = ai.run_ai(df)
     return visualize_df
 
-def visualize(df):
-    df_vis = sns.load_dataset(df)
-    graph = sns.lineplot(data = df_vis, x = "dates")
-
-visualize_df = export_to_ai("backend/ai/Raspberry_data/temp_dataset_3.json")
-"""
+def visualize(df_data):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=df_data.index, y=df_data["predictions"],
+                    mode='lines+markers',
+                    name='lines+markers'))
+    fig.add_trace(go.Scatter(x=df_data.index, y=df_data["values"],
+                    mode='lines+markers',
+                    name='lines+markers'))
+                
+    #fig = px.line(x=df_data.index, y=df_data["predictions"])
+    fig.show()
 
 if __name__ == "__main__":
 
@@ -71,13 +76,6 @@ if __name__ == "__main__":
         df_data = ai.run_ai(model, own_df)
         print(df_data)
         #if input("do you want to save?[y/n]") == "y":
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=df_data.index, y=df_data["predictions"],
-                    mode='lines+markers',
-                    name='lines+markers'))
-        fig.add_trace(go.Scatter(x=df_data.index, y=df_data["values"],
-                    mode='lines+markers',
-                    name='lines+markers'))
-                
-        #fig = px.line(x=df_data.index, y=df_data["predictions"])
-        fig.show()
+        visualize(df_data)
+
+#visualize_df = export_to_ai("backend/ai/Raspberry_data/temp_dataset_3.json")        

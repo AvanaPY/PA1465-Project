@@ -101,7 +101,7 @@ def run_ai(model, df_data):
 
     return df_data
     
-def create_window(data_df, input_width=6, label_width=1, shift=1, label_columns=['values']):
+def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['values']):
     n = len(df)
     train_df = df[0:int(n*0.7)] #trainging data = first 70%
     val_df = df[int(n*0.7):int(n*0.9)] #validation = 90-70 = 20%
