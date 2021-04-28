@@ -1,4 +1,4 @@
 Saker backend vill ha från fråntend:
 - Nånting där man kan välja table
-- Skapa table name
-
+- Skapa ett table och definiera table_name
+- Definiera ID/Datetime column vid skapning av table
