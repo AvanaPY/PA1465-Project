@@ -52,7 +52,7 @@ class BackendUnitTest(unittest.TestCase):
             self.assertFalse(True)
 
     def test_import_json_invalid_column_count(self):
-        b.import_data_json('./test_files/json_invalid_column_count.json', table_name_json, id_colum_name='id')
+        b.import_data_json('./test_files/base_json_file_id.json', table_name_json, id_colum_name='id')
 
         try:
             b.import_data_json('./test_files/json_invalid_column_count.json', table_name_json)
