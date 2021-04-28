@@ -48,6 +48,8 @@ def create_app(host, port):
         
         os.remove(file_path)
 
+        app._backend.helo()
+
         return jsonify({
             "status": status,
             "message": message

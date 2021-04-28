@@ -42,6 +42,7 @@ class BackendBase:
             desc = self._curs.fetchall()
 
             database_col_names = list((a[0] for a in desc))
+        
         except merrors.Error as e:
             raise backend_errors.TableDoesNotExistException(table_name)
 
@@ -97,7 +98,7 @@ class BackendBase:
         """
         with open(path_to_file, "r") as f:
             dct = json.load(f)
-        
+
         self.add_dict_to_database(dct, database_table, **kwargs)
             
     def import_data_csv(self, path_to_file, database_table, **kwargs):
@@ -177,6 +178,9 @@ class BackendBase:
         if not id_colum_name is None:
             dct[id_colum_name] = 'INT(6) PRIMARY KEY AUTO_INCREMENT'
         
+        # Classification column
+        #dct["class"] = "BIT"
+
         return dct
 
     def _invert_dictionary(self, dct):
@@ -212,6 +216,16 @@ class BackendBase:
                 o[i][key] = dct[key][i]
         return o
 
+    def helo(self):
+        data = self._insert_classifications()
+        print(data)
 
+    def _insert_classifications(self):
+        data = self._get_all_non_classified("atable")
+        return data
 
-
+    def _get_all_non_classified(self, table_name):
+        my_sql_command = f'SELECT * FROM {table_name};'
+        self._curs.execute(my_sql_command)
+        data = self._curs.fetchall()
+        return data
