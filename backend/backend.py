@@ -12,10 +12,11 @@ class BackendBase:
     def __init__(self, config_file_name="config.ini", section="mysql"):
         self._my_db, self._db_config = create_sql_connection(config_file_name, section)
         self._curs = self._my_db.cursor()
-        # try:
-        #     desc = drop_table(self._curs, 'atable')
-        # except:
-        #     pass
+        try:
+            desc = drop_table(self._curs, 'atable')
+        except:
+            pass
+            pass
 
     def _compatability_check(self, data, table_name):
         ''' Checks the compatibility of a json document against the database table.
@@ -45,11 +46,13 @@ class BackendBase:
         
         except merrors.Error as e:
             raise backend_errors.TableDoesNotExistException(table_name)
+        except Exception as e:
+            raise
 
         # Fast check to make sure the column counts are the same
         data_col_names = data.keys()
         if len(database_col_names) != len(data_col_names):
-            raise backend_errors.ColumnCountNotCorrectException('Invalid column name count, make sure that every column in the database also exists in the JSON file.')
+            raise backend_errors.ColumnCountNotCorrectException('Invalid column count, make sure that every column in the database also exists in the JSON file.')
 
         # Checking that all the column names in the data exists in the database too
         for name in data_col_names:
