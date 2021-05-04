@@ -197,7 +197,7 @@ def edit_data(curs, table_name, new_column_values, column_constraints):
             column_constraints: column dictionary of look-up values in the database
         
         Returns:
-            a tuple of data to be inserted into the database
+            -
 
         Raises:
             Any errors that occured from MySQLConnection
