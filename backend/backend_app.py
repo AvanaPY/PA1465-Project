@@ -57,6 +57,60 @@ def create_app(host, port):
 
     return app
 
+def console_program(host, port):
+    app = App(host=host, port=port)
+    app.debug = True 
+    run = True
+    while (run) :
+        print("What do you want to do?")
+        print("1. Choose a device to manage.")
+        print("2. Get device data points.")
+        print("3. Edit device data point.")
+        print("4. Show current device.")
+        print("5. Show anomalies")
+        print("6. Exit program.")
+        menuDecision = int(input("Input number: "))
+        if menuDecision == 1 :
+            app._backend.get_tables()
+            table_name = input("Input table name: ")
+            app._backend.set_current_table(table_name)
+        elif menuDecision == 2 :
+            data_points = app._backend._get_all_non_classified()
+            i = 1
+            for item in data_points :
+                print(f"{i}. {item}")
+                i += 1
+        elif menuDecision == 3 :
+            print("Select data point to edit.")
+            print("To edit classification: e {id} {true/false}")
+            print("To remove: r {id}")
+            edit_command = input("Input: ")
+            edit_args = edit_command.split(" ")
+            if edit_args[0] == "e" :
+                classification = False
+                if edit_args[2] == "true" or edit_args[2] == "t" or edit_args[2] == "1" :
+                    classification = True
+                elif edit_args[2] == "false" or edit_args[2] == "f" or edit_args[2] == "0" :
+                    classification = False
+                else :
+                    break
+                app._backend._insert_classifications(int(edit_args[1]), classification)
+            elif edit_args[0] == "r" :
+                app._backend._delete_data_point(int(edit_args[1]))
+        elif menuDecision == 4 :
+            print(f"Current device: {app._backend.get_current_table()}")
+        elif menuDecision == 5 :
+            anomalies = app._backend._get_all_anomalies()
+            if len(anomalies) == 0 :
+                print("No anomlies found.")
+            else :
+                for anomaly in anomalies :
+                    print(anomaly)
+        elif menuDecision == 6 :
+            exit = input("Exit? (y/n)")
+            if (exit == "y") :
+                run = False
+
 class App(Flask):
     def __init__(self, host, port):
         super().__init__(__name__)
