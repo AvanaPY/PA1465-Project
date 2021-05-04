@@ -298,8 +298,7 @@ class BackendBase:
         """
             Screams in python
         """
-        if error:
-            print("REEEEEEEEE")
+        print("REEEEEEEEE")
 
     def helo(self):
         """ Says hello
