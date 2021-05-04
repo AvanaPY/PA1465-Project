@@ -48,11 +48,13 @@ class BackendBase:
         
         except merrors.Error as e:
             raise backend_errors.TableDoesNotExistException(table_name)
+        except Exception as e:
+            raise
 
         # Fast check to make sure the column counts are the same
         data_col_names = data.keys()
         if len(database_col_names) != len(data_col_names):
-            raise backend_errors.ColumnCountNotCorrectException('Invalid column name count, make sure that every column in the database also exists in the JSON file.')
+            raise backend_errors.ColumnCountNotCorrectException('Invalid column count, make sure that every column in the database also exists in the JSON file.')
 
         # Checking that all the column names in the data exists in the database too
         for name in data_col_names:
