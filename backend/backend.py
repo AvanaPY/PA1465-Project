@@ -222,43 +222,123 @@ class BackendBase:
                 o[i][key] = dct[key][i]
         return o
 
-    def set_current_table(self, unit):
-        self._current_table = unit
+    def set_current_table(self, table_name):
+        """ Sets the current table name
+
+            Sets the current table name under consideration to a value.
+
+            Args:
+                table_name: str
+            
+            Returns:
+                -
+
+            Raises:
+                -
+        """
+        self._current_table = table_name
 
     def get_tables(self):
+        """ Prints all the tables
+
+            Args:
+                -   
+            Returns
+                -
+            Raises
+                -
+        """
         try:    
             tables = show_tables(self._curs)
             print(tables)
         except Exception as e:
             print(str(e))        
 
-    def check_has_classifications(self, dct):
-        try:
-            if not CLASSIFICATION_COLUMN_NAME in dct:
-                for data in dct:
-                    row_vals = [data[key] for key in data]
-                    # TODO: fix AI_API 
-                    classification = 0
-                    data[CLASSIFICATION_COLUMN_NAME] = classification   
-        except Exception as e:
-            raise e
+    def check_has_classifications(self, data_lst):
+        """ Checks whether or not data has the classification column
+
+            Checks if the data has a classification column, if it doesn't it adds the column and also classifies every "row" in the data.
+
+            Args:
+                data_lst: data_lst - List of data points with format 
+                [
+                    {
+                        "key1": value1,
+                        "key2": value2
+                    },
+                    {
+                        "key1": value3,
+                        "key2": value4
+                    },
+                    ...
+                ]
+            Returns:
+                -
+            Raises:
+                -
+
+        """
+        if not CLASSIFICATION_COLUMN_NAME in data_lst:
+            for data in data_lst:
+                row_vals = [data[key] for key in data]
+                # TODO: fix AI_API 
+                classification = 0
+                data[CLASSIFICATION_COLUMN_NAME] = classification   
     
     def edit_classification(self, dp):
+        """ Edits a classification
+            
+            Args:
+                dp: ???
+            Returns:
+                -
+            Raises:
+                -
+        """
         pass
 
     def scream(self):
+        """
+            Screams in python
+        """
         if error:
             print("REEEEEEEEE")
 
     def helo(self):
+        """ Says hello
+
+            Args:
+                -
+            Returns:
+                -
+            Raises:
+                -
+        """
         data = self._insert_classifications()
         print(data)
 
     def _insert_classifications(self):
+        """ Not sure
+
+            Args:
+                -
+            Returns:
+                -
+            Raises:
+                -
+        """
         data = self._get_all_non_classified("atable")
         return data
 
     def _get_all_non_classified(self, table_name):
+        """ Returns all non-classified data points
+            Args:
+                -
+            Returns:
+                -
+            Raises:
+                -
+        """
         my_sql_command = f'SELECT * FROM {table_name};'
         self._curs.execute(my_sql_command)
         data = self._curs.fetchall()
