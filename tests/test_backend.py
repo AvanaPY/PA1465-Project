@@ -45,7 +45,7 @@ class BackendUnitTest(unittest.TestCase):
         try:
             b.import_data_json('./test_files/base_json_file_id.json', table_name_json, id_colum_name='id')
             data = database.get_data(b._curs, table_name_json)
-            self.assertTrue(data == [(1, '2021-01-20', 21, 22, 23), (2, '2021-01-21', 22, 32, 32)])
+            self.assertTrue(data == [(1, '2021-01-20', 21, 22, 23, 0), (2, '2021-01-21', 22, 32, 32, 0)])
 
             database.drop_table(b._curs, table_name_json)
         except Exception as e:
