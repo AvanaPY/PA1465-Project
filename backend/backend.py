@@ -138,6 +138,7 @@ class BackendBase:
             Raises:
                 Propagates any errors
         """
+        self.check_has_classifications(data_dict)
         try:
             self._compatability_check(data_dict, database_table)
         except backend_errors.TableDoesNotExistException:
@@ -147,7 +148,6 @@ class BackendBase:
             raise
         try:
             inv_dct = self._invert_dictionary(data_dict)
-            self.check_has_classifications(inv_dct)
             for row in inv_dct:
                 insert_data(self._curs, database_table, row)
         except Exception as e:
@@ -254,37 +254,34 @@ class BackendBase:
         except Exception as e:
             print(str(e))        
 
-    def check_has_classifications(self, data_lst):
+    def check_has_classifications(self, data):
         """ Checks whether or not data has the classification column
 
             Checks if the data has a classification column, if it doesn't it adds the column and also classifies every "row" in the data.
 
             Args:
-                data_lst: data_lst - List of data points with format 
-                [
-                    {
-                        "key1": value1,
-                        "key2": value2
-                    },
-                    {
-                        "key1": value3,
-                        "key2": value4
-                    },
-                    ...
-                ]
+                data: dict - Data dictionary of format
+                {
+                    "key1": [ value1, value2 ],
+                    "key2": [ value3, value4 ]
+                }
             Returns:
                 -
             Raises:
                 -
 
         """
-        if not CLASSIFICATION_COLUMN_NAME in data_lst:
-            for data in data_lst:
-                row_vals = [data[key] for key in data]
-                # TODO: fix AI_API 
-                classification = 0
-                data[CLASSIFICATION_COLUMN_NAME] = classification   
-    
+        if not CLASSIFICATION_COLUMN_NAME in data:
+            data_keys = data.keys()
+            cols = [data[key] for key in data_keys]
+            classifications = []
+            for i in range(len(cols[0])):
+                d = tuple([data[key][i] for key in data_keys])
+                
+                classification = 0 # TODO: Use the AI Api to generate this
+                classifications.append(classification)
+            
+            data[CLASSIFICATION_COLUMN_NAME] = classifications
     def edit_classification(self, dp):
         """ Edits a classification
             
