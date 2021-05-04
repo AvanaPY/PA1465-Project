@@ -14,7 +14,8 @@ class BackendBase:
     def __init__(self, config_file_name="config.ini", section="mysql"):
         self._my_db, self._db_config = create_sql_connection(config_file_name, section)
         self._curs = self._my_db.cursor()
-        self._unit = None
+        self._current_table = None                                                          # The current table name that is being under consideration
+                                                                                            # This is more a temporary solution and should be done on the front end instead
         # try:
         #     desc = drop_table(self._curs, 'atable')
         # except:
@@ -221,8 +222,8 @@ class BackendBase:
                 o[i][key] = dct[key][i]
         return o
 
-    def set_unit(self, unit):
-        self._unit = unit
+    def set_current_table(self, unit):
+        self._current_table = unit
 
     def get_tables(self):
         try:    
