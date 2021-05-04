@@ -8,10 +8,13 @@ from database import *
 from .ext import sql_type_to_python_type, all_type_equal_or_none, _all_types_not_equal
 import backend.errors as backend_errors
 
+CLASSIFICATION_COLUMN_NAME = "classification"
+
 class BackendBase:
     def __init__(self, config_file_name="config.ini", section="mysql"):
         self._my_db, self._db_config = create_sql_connection(config_file_name, section)
         self._curs = self._my_db.cursor()
+        self._unit = None
         # try:
         #     desc = drop_table(self._curs, 'atable')
         # except:
@@ -139,9 +142,9 @@ class BackendBase:
             self._compatability_check(data_dict, database_table)
         except:
             raise
-
         try:
             inv_dct = self._invert_dictionary(data_dict)
+            self.check_has_classifications(inv_dct)
             for row in inv_dct:
                 insert_data(self._curs, database_table, row)
         except Exception as e:
@@ -179,7 +182,7 @@ class BackendBase:
             dct[id_colum_name] = 'INT(6) PRIMARY KEY AUTO_INCREMENT'
         
         # Classification column
-        #dct["class"] = "BIT"
+        dct[CLASSIFICATION_COLUMN_NAME] = "BIT"
 
         return dct
 
@@ -215,6 +218,34 @@ class BackendBase:
             for key in keys:
                 o[i][key] = dct[key][i]
         return o
+
+    def set_unit(self, unit):
+        self._unit = unit
+
+    def get_tables(self):
+        try:    
+            tables = show_tables(self._curs)
+            print(tables)
+        except Exception as e:
+            print(str(e))        
+
+    def check_has_classifications(self, dct):
+        try:
+            if not CLASSIFICATION_COLUMN_NAME in dct:
+                for data in dct:
+                    row_vals = [data[key] for key in data]
+                    # TODO: fix AI_API 
+                    classification = 0
+                    data[CLASSIFICATION_COLUMN_NAME] = classification   
+        except Exception as e:
+            raise e
+    
+    def edit_classification(self, dp):
+        pass
+
+    def scream(self):
+        if error:
+            print("REEEEEEEEE")
 
     def helo(self):
         data = self._insert_classifications()
