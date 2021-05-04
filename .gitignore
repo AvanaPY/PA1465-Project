@@ -6,6 +6,7 @@
 *.ini
 
 # User-specific files
+*.pyproj
 *.rsuser
 *.suo
 *.user
