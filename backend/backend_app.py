@@ -34,9 +34,9 @@ def create_app(host, port):
 
         try:
             if filename.endswith('.json'):
-                app._backend.import_data_json(file_path, 'atable')
+                app._backend.import_data_json(file_path, 'atable2')
             elif filename.endswith('.csv'):
-                app._backend.import_data_csv(file_path, 'atable')
+                app._backend.import_data_csv(file_path, 'atable2')
             else:
                 raise Exception('Unknown extension bitch :tboof:')
         except Exception as e:
@@ -48,7 +48,7 @@ def create_app(host, port):
         
         os.remove(file_path)
 
-        app._backend.helo()
+        #app._backend.helo()
 
         return jsonify({
             "status": status,
@@ -73,7 +73,10 @@ def console_program(host, port):
         if menuDecision == 1 :
             app._backend.get_tables()
             table_name = input("Input table name: ")
-            app._backend.set_current_table(table_name)
+            try:
+                app._backend.set_current_table(table_name)
+            except backend_errors.TableDoesNotExistException(table_name) :
+                print("The table you selected was not found. Try again.")
         elif menuDecision == 2 :
             data_points = app._backend._get_all_non_classified()
             i = 1

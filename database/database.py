@@ -47,14 +47,11 @@ def create_table(curs, table_name, column_dictionary):
         Raises:
             Propagates any exceptions from cursor.execute
     """
-    input("hejCT1")
     skip_none_dictionary(column_dictionary)
     columns = [f'{key} {value}' for key, value in column_dictionary.items()]
     columns = ', '.join(columns)
     
-    input("hejCT2")
     my_sql_command = f"CREATE TABLE IF NOT EXISTS {table_name} ({columns})"
-    print(my_sql_command)
     curs.execute(my_sql_command)
 
 def get_columns(curs) :

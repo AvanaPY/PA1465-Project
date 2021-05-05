@@ -264,14 +264,16 @@ class BackendBase:
 
         for table in tables :
             if table[0] == table_name :
-
                 table_exists = True
 
         if table_exists == False :
-            print("The table you selected was not found. Try again.")
+            raise backend_errors.TableDoesNotExistException(table_name)
         else :
             self._current_table = table_name
             print(f"Current device: {self._current_table}")
+
+    def reset_current_table(self) :
+        self._current_table = None
 
     def get_current_table(self):
         """ Description
@@ -397,7 +399,7 @@ class BackendBase:
             print(e)
         
 
-    def _get_all_non_classified(self):
+    def _get_all_non_classified(self, _table_name = None):
         """ Returns all non-classified data points
             Args:
                 -
@@ -406,7 +408,15 @@ class BackendBase:
             Raises:
                 -
         """
-        my_sql_command = f'SELECT * FROM {self._current_table};'
+
+        table_name = ""
+
+        if _table_name == None :
+            table_name = self.get_current_table
+        else :
+            table_name = _table_name
+
+        my_sql_command = f'SELECT * FROM {table_name};'
         self._curs.execute(my_sql_command)
         data = self._curs.fetchall()
         return data
