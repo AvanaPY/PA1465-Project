@@ -8,7 +8,11 @@ import json
 def create_ai_model():
 
     model = tf.keras.models.Sequential([
-        tf.keras.layers.LSTM(1, return_sequences=True),
+        tf.keras.layers.LSTM(10, return_sequences=True),#, dropout=0.5, recurrent_dropout=0.1),
+        tf.keras.layers.LSTM(20, return_sequences=True),#, dropout=0.5, recurrent_dropout=0.1),
+        tf.keras.layers.LSTM(10, return_sequences=True),#, dropout=0.5, recurrent_dropout=0.1),
+        tf.keras.layers.Dense(units=20),
+        tf.keras.layers.Dense(units=10),
         tf.keras.layers.Dense(units=1)
     ])
 
@@ -101,6 +105,11 @@ def run_ai(model, df_data, return_full = "no"):
         new_array[i] = np.nan
     df_data["predictions"] = new_array
 
+    new_anomaly_array = [n[0] for n in np.array(output)[0]]
+    for i in range(len(new_array)):
+        new_anomaly_array[i] = "False"
+    df_data["anomaly"] = new_anomaly_array
+
     if return_full == "no":
         df_data_last_row = df_data.iloc[-1]
         return df_data_last_row
@@ -112,7 +121,7 @@ def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['val
     train_df = df[0:int(n*0.7)] #trainging data = first 70%
     val_df = df[int(n*0.7):int(n*0.9)] #validation = 90-70 = 20%
     test_df = df[int(n*0.9):] #test = last 10%
-    if False:
+    if True: #is it tho?
         train_mean = train_df.mean() #meadian
         train_std = train_df.std() #standard deviation (expecting every data being normal distributed)
 
@@ -175,9 +184,6 @@ def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['val
         return inputs, labels
 
     WindowGenerator.split_window = split_window
-
-    w2 = WindowGenerator(input_width=6, label_width=1, shift=1,
-                    label_columns=['values'])
 
     def make_dataset(self, data):
         data = np.array(data, dtype=np.float32)
