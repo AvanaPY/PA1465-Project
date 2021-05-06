@@ -75,7 +75,7 @@ def console_program(host, port):
             table_name = input("Input table name: ")
             try:
                 app._backend.set_current_table(table_name)
-            except backend_errors.TableDoesNotExistException(table_name) :
+            except backend_errors.TableDoesNotExistException :
                 print("The table you selected was not found. Try again.")
         elif menuDecision == 2 :
             data_points = app._backend._get_all_non_classified()
