@@ -55,7 +55,8 @@ class BackendBase:
 
         # Fast check to make sure the column counts are the same
         data_col_names = data.keys()
-        if len(database_col_names) - 1 != len(data_col_names):
+        
+        if len(database_col_names) != len(data_col_names):
             raise backend_errors.ColumnCountNotCorrectException('Invalid column count, make sure that every column in the database also exists in the JSON file.')
 
         # Checking that all the column names in the data exists in the database too
@@ -142,11 +143,18 @@ class BackendBase:
                 Propagates any errors
         """
         self.check_has_classifications(data_dict)
+        for key in data_dict.keys():
+            if key.lwer() == "id":
+                del data_dict[key]
+                break
+
         try:
             self._compatability_check(data_dict, database_table)
+        
         except backend_errors.TableDoesNotExistException:
             self.create_table_based_on_data_dict(database_table, data_dict, **kwargs)
             self._compatability_check(data_dict, database_table)
+        
         except:
             raise
         try:
@@ -171,6 +179,9 @@ class BackendBase:
                 None
         """
         dct = {}
+        
+        dct["id"] = 'INT(6) PRIMARY KEY AUTO_INCREMENT'
+
         type_dict = {
             str: "VARCHAR(255)",
             int: "INT(6)"
@@ -186,7 +197,6 @@ class BackendBase:
                 dct[col] = type_dict[data_type]
         #if not id_colum_name is None:
             #print("Added Id column!")
-        dct["id"] = 'INT(6) PRIMARY KEY AUTO_INCREMENT'
         
         # Classification column
         dct[CLASSIFICATION_COLUMN_NAME] = "BIT"
@@ -236,12 +246,13 @@ class BackendBase:
                 -
 
             Raises:
-                -
+                No tables available error
         """
-        tables = show_tables(self._curs)
-
-        for table in tables :
-            print(table[0])
+        try:
+            tables = show_tables(self._curs)
+            return tables
+        except:
+            raise
 
     def set_current_table(self, table_name):
         """ Sets the current table name
@@ -287,23 +298,7 @@ class BackendBase:
             Raises:
                 -
         """
-        return self._current_table
-
-    #def get_tables(self):
-        """ Prints all the tables
-
-            Args:
-                -   
-            Returns
-                -
-            Raises
-                -
-        """
-   #     try:    
-    #        tables = show_tables(self._curs)
-   #         print(tables)
-   #     except Exception as e:
-   #         print(str(e))   */     
+        return self._current_table    
 
     def check_has_classifications(self, data):
         """ Checks whether or not data has the classification column
@@ -397,7 +392,6 @@ class BackendBase:
             print("Successful")
         except Exception as e:
             print(e)
-        
 
     def _get_all_non_classified(self, _table_name = None):
         """ Returns all non-classified data points
@@ -411,15 +405,18 @@ class BackendBase:
 
         table_name = ""
 
-        if _table_name == None :
+        if _table_name == None:
             table_name = self.get_current_table
-        else :
+        else:
             table_name = _table_name
 
-        my_sql_command = f'SELECT * FROM {table_name};'
-        self._curs.execute(my_sql_command)
-        data = self._curs.fetchall()
-        return data
+        try:
+            my_sql_command = f'SELECT * FROM {table_name} WHERE classification IS NULL;'
+            self._curs.execute(my_sql_command)
+            data = self._curs.fetchall()
+            return data
+        except Exception as e:
+            print(str(e))
 
     def _get_all_anomalies(self):
         """ Returns all non-classified data points
