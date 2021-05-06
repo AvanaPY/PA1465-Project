@@ -32,7 +32,8 @@ def visualize(df_data, shifting):
     
     fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["predictions"],
                     mode='markers+lines',
-                    name='predicted values'))
+                    name='predicted values',
+                    marker_color=df_data["color"]))
     fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["values"],
                     mode='markers+lines',
                     name='real values'))
@@ -72,6 +73,50 @@ def generate_interval(number, size, dataset):
         intervals.append(interval)
 
     return intervals
+
+def loop_through_samples(samples_df, num_of_samples = 1, sample_size = 20, all = False, anom_range = 1):
+
+    INPUT_WIDTH = 2
+    SHIFT = 1
+    LABEL_WIDTH = 1
+
+    if all == True:
+        values_samples = [samples_df["values"][-1000:]]
+        print(values_samples)
+    else:
+        values_samples = generate_interval(num_of_samples, sample_size, normal_df)
+
+    for sample in values_samples:
+        value = None
+        values = []
+        for index, a in enumerate(sample):
+            if index % 100 == 0:
+                print(index, "samples done of", len(sample))
+        #while True:
+            #value = float(input("vilket värde ska jag gissa på?"))
+            value = a
+            values.append(value)
+            if len(values) >= INPUT_WIDTH:
+                values_dict = {"values": values[-1 * INPUT_WIDTH +1 -SHIFT:]}
+                own_df = pd.DataFrame.from_dict(values_dict)
+                if len(values) == INPUT_WIDTH:
+                    df_data = ai.run_ai(model, own_df, return_full = "yes")
+                else:
+                    new_row = ai.run_ai(model, own_df, return_full = "no")
+                    if abs(new_row["values"] - new_row["predictions"]) > anom_range:
+                        new_row["anomaly"] = "True"
+                        new_row["color"] = "firebrick"
+                    else:
+                        new_row["color"] = "deepskyblue"
+                    df_data = df_data.append(new_row, ignore_index=True)
+        print(df_data)
+        visualize(df_data, SHIFT)
+    return df_data   
+
+def anomaly_range(total_df):
+    total_df["dif"] = total_df.eval("values-predictions").abs()
+    return total_df
+
 
 if __name__ == "__main__":
     INPUT_WIDTH = 2
@@ -121,32 +166,25 @@ if __name__ == "__main__":
 
     normal_df = (df_train - mean) / std
 
+    total_df = loop_through_samples(normal_df, 1, 20, all = True)
+
+    df_data_shifted = total_df.copy()
+    for i in range(SHIFT):
+        df_data_shifted.loc[df_data_shifted.iloc[-1].name + 1,:] = np.nan #creates a new nan row
+    df_data_shifted['predictions'] = df_data_shifted['predictions'].shift(SHIFT) #shifts all predictions down
+
+    total_df = anomaly_range(df_data_shifted)
+
+    top_90_dif = total_df["dif"].quantile(q = 0.9)
+    print("total_df with a top 90 of",top_90_dif)
+    print(total_df)
+
+    plt.hist(total_df["dif"])
+    plt.show()
+
     while True:
+        loop_through_samples(normal_df, 1, 20, all = False, anom_range = 0.1) # fix until next time - colors and integrations
+        input("go again?[y/n]")
 
-        values_samples = generate_interval(1, 20, normal_df)
-        for sample in values_samples:
-            value = None
-            values = []
-            for a in sample:
-            #while True:
-                #value = float(input("vilket värde ska jag gissa på?"))
-                value = a
-                values.append(value)
-                if len(values) >= INPUT_WIDTH:
-                    values_dict = {"values": values[-1 * INPUT_WIDTH +1 -SHIFT:]}
-                    own_df = pd.DataFrame.from_dict(values_dict)
-                    if len(values) == INPUT_WIDTH:
-                        df_data = ai.run_ai(model, own_df, return_full = "yes")
-                    else:
-                        new_row = ai.run_ai(model, own_df, return_full = "no")
-                        if abs(new_row["values"] - new_row["predictions"]) > 1:
-                            new_row["anomaly"] = "True"
-                        df_data = df_data.append(new_row, ignore_index=True)
-            print(df_data)
-            visualize(df_data, SHIFT)
-        #print(df_data)
-        #visualize(df_data, 6) #(only visualizes the data after all data-points in the sample has been done)
-        if input("want to try again?[y/n]") == "n":
-            break
 
-#visualize_df = export_to_ai("backend/ai/Raspberry_data/temp_dataset_3.json")        
+
