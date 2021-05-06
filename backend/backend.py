@@ -33,6 +33,13 @@ class BackendBase:
         database_col_types = list((sql_type_to_python_type(a[1].decode('utf-8')) for a in desc if a[0] in database_col_names))
         return database_col_names, database_col_types
 
+    def get_database_column_names(self, table_name):
+        my_sql_command = f'DESCRIBE {table_name}'
+        self._curs.execute(my_sql_command)
+        desc = self._curs.fetchall()
+
+        database_col_names = list((a[0] for a in desc))
+        return database_col_names
 
     def _compatability_check(self, data, table_name):
         ''' Checks the compatibility of a json document against the database table.
@@ -262,6 +269,10 @@ class BackendBase:
             return tables
         except:
             raise
+
+    def get_all_data(self, table_name):
+        data = get_data(self._curs, table_name)
+        return data
 
     def set_current_table(self, table_name):
         """ Sets the current table name
