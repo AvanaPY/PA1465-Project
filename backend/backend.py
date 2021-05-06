@@ -144,6 +144,21 @@ class BackendBase:
         dct = { key: [val for val in dct[key].values() ] for key in dct }
         self.add_dict_to_database(dct, database_table, **kwargs)
     
+    def export_data_json(self, path_to_file, database_table, **kwargs):
+        columns = self.get_database_column_names(database_table)
+        json_data = {
+            key: [] for key in columns
+        }
+        data = self.get_all_data(database_table)
+        for i in range(len(data)):
+            for key, j in zip(columns, data[i]):
+                json_data[key].append(j)
+        with open(path_to_file, 'w') as f:
+            json.dump(json_data, f)
+
+    def export_data_csv(self, path_to_file, database_table, **kwargs):
+        pass
+
     def add_dict_to_database(self, data_dict, database_table, date_col=None, **kwargs):
         """ Adds a dictionary to the database.
 
