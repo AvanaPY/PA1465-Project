@@ -134,7 +134,7 @@ def insert_data(curs, table_name, data_dictionary):
     my_sql_command = f"INSERT INTO {table_name} ({insert_names}) VALUES ({insert_values})"
     curs.execute(my_sql_command, data_dictionary)
 
-def get_data(curs, table_name, column_dictionary=None, order_by=None,order_by_asc_desc='ASC', limit_offset=0, limit_row_count=0):
+def get_data(curs, table_name, column_dictionary=None, order_by=None, order_by_asc_desc='ASC', limit_offset=0, limit_row_count=0):
     """
         Returns data into a table in the database
 
