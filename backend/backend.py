@@ -144,7 +144,7 @@ class BackendBase:
         """
         self.check_has_classifications(data_dict)
         for key in data_dict.keys():
-            if key.lwer() == "id":
+            if key.lower() == "id":
                 del data_dict[key]
                 break
 
