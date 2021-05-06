@@ -9,6 +9,7 @@ from .ext import sql_type_to_python_type, all_type_equal_or_none, _all_types_not
 import backend.errors as backend_errors
 
 CLASSIFICATION_COLUMN_NAME = "classification"
+ID_COLUMN_NAME = 'id'
 
 class BackendBase:
     def __init__(self, config_file_name="config.ini", section="mysql"):
@@ -20,6 +21,18 @@ class BackendBase:
         #     desc = drop_table(self._curs, 'atable')
         # except:
         #     pass
+
+    def _get_database_description_no_id_column(self, table_name):
+        my_sql_command = f'DESCRIBE {table_name}'
+        self._curs.execute(my_sql_command)
+        desc = self._curs.fetchall()
+
+        database_col_names = list((a[0] for a in desc))
+        database_col_names.remove(ID_COLUMN_NAME)
+
+        database_col_types = list((sql_type_to_python_type(a[1].decode('utf-8')) for a in desc if a[0] in database_col_names))
+        return database_col_names, database_col_types
+
 
     def _compatability_check(self, data, table_name):
         ''' Checks the compatibility of a json document against the database table.
@@ -41,12 +54,7 @@ class BackendBase:
         '''
         try:
             # Ask the database for the table's data types
-            my_sql_command = f'DESCRIBE {table_name}'
-            self._curs.execute(my_sql_command)
-            desc = self._curs.fetchall()
-
-            database_col_names = list((a[0] for a in desc))
-            
+            database_col_names, database_col_types = self._get_database_description_no_id_column(table_name)
 
         except merrors.Error as e:
             raise backend_errors.TableDoesNotExistException(table_name)
@@ -56,7 +64,10 @@ class BackendBase:
         # Fast check to make sure the column counts are the same
         data_col_names = data.keys()
         
+        # TODO: FIX
         if len(database_col_names) != len(data_col_names):
+            print(data_col_names)
+            print(database_col_names)
             raise backend_errors.ColumnCountNotCorrectException('Invalid column count, make sure that every column in the database also exists in the JSON file.')
 
         # Checking that all the column names in the data exists in the database too
@@ -65,7 +76,6 @@ class BackendBase:
                 raise backend_errors.InvalidColumnNameException(name)
 
         # Checking that all the items in the columns have the exact same type
-        database_col_types = list((sql_type_to_python_type(a[1].decode('utf-8'))for a in desc))
         data_column_lengths = [ len(data[key]) for key in data ]
         all_same = all([a == data_column_lengths[0] for a in data_column_lengths])
         if not all_same:
@@ -75,7 +85,7 @@ class BackendBase:
         data_types = {
             key: all_type_equal_or_none([type(a) for a in data[key]]) for key in data
         }
-        for i, key in enumerate(data_types):
+        for i, key in enumerate(database_col_names):
             t = data_types[key]
             # Column type checking
             if t is _all_types_not_equal:
@@ -106,7 +116,6 @@ class BackendBase:
         """
         with open(path_to_file, "r") as f:
             dct = json.load(f)
-        print(dct)
 
         self.add_dict_to_database(dct, database_table, **kwargs)
         
@@ -143,10 +152,11 @@ class BackendBase:
                 Propagates any errors
         """
         self.check_has_classifications(data_dict)
-        for key in data_dict.keys():
+
+        keys = list(data_dict.keys())
+        for key in keys:
             if key.lower() == "id":
                 del data_dict[key]
-                break
 
         try:
             self._compatability_check(data_dict, database_table)
@@ -178,16 +188,15 @@ class BackendBase:
             Raises:
                 None
         """
-        dct = {}
-        
-        dct["id"] = 'INT(6) PRIMARY KEY AUTO_INCREMENT'
-
         type_dict = {
             str: "VARCHAR(255)",
             int: "INT(6)"
         }
         
-        
+        dct = {
+            "id": 'INT(6) PRIMARY KEY AUTO_INCREMENT'
+        }
+
         col_names = data_dict.keys()
         for col in col_names:
             data_type = type(data_dict[col][0])
