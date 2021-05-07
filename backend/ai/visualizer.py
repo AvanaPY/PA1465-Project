@@ -104,7 +104,9 @@ def loop_through_samples(samples_df, num_of_samples = 1, sample_size = 20, all =
                 else:
                     new_row = ai.run_ai(model, own_df, return_full = "no")
                     if abs(new_row["values"] - new_row["predictions"]) > anom_range:
+                        print("a true")
                         new_row["anomaly"] = "True"
+                        print("a", new_row["anomaly"])
                         new_row["color"] = "firebrick"
                     else:
                         new_row["color"] = "deepskyblue"
