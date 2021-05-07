@@ -45,9 +45,7 @@ class BackendBase:
         database_col_names = list((a[0] for a in desc))
         database_col_names.remove(ID_COLUMN_NAME)
 
-        print(database_col_names)
         database_col_types = list((sql_type_to_python_type(a[1].decode('utf-8')) for a in desc if a[0] in database_col_names))
-        print(database_col_types)
         return database_col_names, database_col_types
 
     def get_database_column_names(self, table_name):
@@ -125,9 +123,15 @@ class BackendBase:
             # Column type checking
             if t is _all_types_not_equal:
                 raise backend_errors.ColumnTypesNotSameException(key, data[key])
+                
             # Database cross-checking by type
-            if t != database_col_types[i]:
-                raise backend_errors.ColumnTypesNotMatchingException(key, database_col_types[i], t)
+            wanted_type = database_col_types[i]
+            if isinstance(wanted_type, tuple):
+                if not t in wanted_type:
+                    backend_errors.ColumnTypesNotMatchingException(key, database_col_types[i], t)
+            else:
+                if t != wanted_type:
+                    raise backend_errors.ColumnTypesNotMatchingException(key, database_col_types[i], t)
                 
         # If no errors occured and nothing seems wrong, let's just return True.
         return True
@@ -262,7 +266,8 @@ class BackendBase:
                 dct[col] = type_dict[data_type]
         
         # Classification column
-        dct[CLASSIFICATION_COLUMN_NAME] = "BIT"
+        dct[CLASSIFICATION_COLUMN_NAME] = 'bit'
+        dct[PREDICTION_COLUMN_NAME] = 'FLOAT(6)'
 
         return dct
 
