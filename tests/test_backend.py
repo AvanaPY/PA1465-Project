@@ -153,7 +153,7 @@ class BackendUnitTest(unittest.TestCase):
         except:
             self.assertTrue(False)
         database.drop_table(b._curs, table_name_json)
-
+    
     def test_kp_set_table(self):
         database.create_table(b._curs, table_name_json, {
             'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
@@ -241,3 +241,28 @@ class BackendUnitTest(unittest.TestCase):
             except :
                 self.assertFalse(True)
         b.reset_current_table()'''
+
+    # TODO: Test cases to create
+    def test_column_length_differ(self):
+        self.assertTrue(True)
+    
+    def test_column_types_not_same(self):
+        self.assertTrue(True)
+
+    def test_column_types_not_matching(self):
+        self.assertTrue(True)
+
+    def test_anomaly_alert(self):
+        self.assertTrue(True)
+
+    def test_insert_classification(self):
+        self.assertTrue(True)
+
+    def test_delete_data_point(self):
+        self.assertTrue(True)
+
+    def test_get_all_non_classified(self):
+        self.assertTrue(True)
+    
+    def test_get_anomalies(self):
+        self.assertTrue(True)
