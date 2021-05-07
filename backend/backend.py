@@ -9,7 +9,8 @@ from database import *
 from .ext import sql_type_to_python_type, all_type_equal_or_none, _all_types_not_equal
 import backend.errors as backend_errors
 
-CLASSIFICATION_COLUMN_NAME = "classification"
+CLASSIFICATION_COLUMN_NAME = 'classification'
+PREDICTION_COLUMN_NAME = 'prediction'
 ID_COLUMN_NAME = 'id'
 
 class BackendBase:
@@ -44,7 +45,9 @@ class BackendBase:
         database_col_names = list((a[0] for a in desc))
         database_col_names.remove(ID_COLUMN_NAME)
 
+        print(database_col_names)
         database_col_types = list((sql_type_to_python_type(a[1].decode('utf-8')) for a in desc if a[0] in database_col_names))
+        print(database_col_types)
         return database_col_names, database_col_types
 
     def get_database_column_names(self, table_name):
@@ -100,8 +103,6 @@ class BackendBase:
         
         # TODO: FIX
         if len(database_col_names) != len(data_col_names):
-            print(data_col_names)
-            print(database_col_names)
             raise backend_errors.ColumnCountNotCorrectException('Invalid column count, make sure that every column in the database also exists in the JSON file.')
 
         # Checking that all the column names in the data exists in the database too
@@ -200,7 +201,6 @@ class BackendBase:
             Raises:
                 Propagates any errors
         """
-        print(date_col)
         self.check_has_classifications(data_dict)
 
         keys = list(data_dict.keys())
@@ -244,7 +244,6 @@ class BackendBase:
             Raises:
                 None
         """
-        print(date_col)
         type_dict = {
             str: "VARCHAR(255)",
             int: "INT(6)"
@@ -397,9 +396,10 @@ class BackendBase:
 
     def check_has_classifications(self, data):
         """ 
-            Checks whether or not data has the classification column
+            Checks whether or not data has classification data.
 
-            Checks if the data has a classification column, if it doesn't it adds the column and also classifies every "row" in the data.
+            Checks if the data has a classification column, if it doesn't it adds the column and also classifies every "row" in the data. 
+            It also checks if it has a "prediction" column, if it doesn't it also adds this column to the data with new prediction values.
 
             Args:
                 data: dict - Data dictionary of format
@@ -413,17 +413,18 @@ class BackendBase:
                 -
 
         """
-        if not CLASSIFICATION_COLUMN_NAME in data:
-            data_keys = data.keys()
-            cols = [data[key] for key in data_keys]
-            classifications = []
+        cols = [data[key] for key in data.keys()]
+        if not CLASSIFICATION_COLUMN_NAME in cols or not PREDICTION_COLUMN_NAME in cols:
+            classifications, prediction_values = [], []
             for i in range(len(cols[0])):
-                d = tuple([data[key][i] for key in data_keys])
-                
-                classification = 0 # TODO: Use the AI Api to generate this
+                prediction, classification = 0, 0 # TODO: Use the AI Api to generate those
+
                 classifications.append(classification)
+                prediction_values.append(prediction)
             
             data[CLASSIFICATION_COLUMN_NAME] = classifications
+            data[PREDICTION_COLUMN_NAME] = prediction_values
+            
     
     def edit_classification(self, id):
         """ 
