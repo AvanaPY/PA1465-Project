@@ -93,6 +93,67 @@ class BackendUnitTest(unittest.TestCase):
         except:
             self.assertTrue(False)
 
+    def test_get_tables(self):
+        table_list = ["atable1", "atable2", "atable3", "atable4"]
+        for table in table_list:
+            database.create_table(b._curs, table, {
+                'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
+                'name':'VARCHAR(255)',
+                'age':'INT(6)'
+            })
+
+        try:
+            tables = b.get_tables()
+            self.assertTrue([tables[0], tables[1], tables[2], tables[3]], table_list)
+        except:
+            self.assertTrue(False)
+              
+        for table in table_list:
+            database.drop_table(b._curs, table)
+    
+    def test_set_reset_current_table(self):
+        table_list = ["atable1", "atable2", "atable3", "atable4"]
+        for table in table_list:
+            database.create_table(b._curs, table, {
+                'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
+                'name':'VARCHAR(255)',
+                'age':'INT(6)'
+            })
+
+        try:
+            b.set_current_table("atable2")
+            self.assertTrue(b._current_table == "atable2")
+
+            b.set_current_table("atable1")
+            self.assertTrue(b._current_table == "atable1")
+
+            b.set_current_table("atable3")
+            self.assertTrue(b._current_table == "atable3")
+
+            b.set_current_table("atable4")
+            self.assertTrue(b._current_table == "atable4")
+            
+            table = b.get_current_table()
+            self.assertTrue(table == "atable4")
+
+            b.reset_current_table()
+            self.assertTrue(b._current_table == None)
+
+        except:
+            self.assertTrue(False)
+              
+        for table in table_list:
+            database.drop_table(b._curs, table)
+    
+    def test_get_all_data(self):
+        b.import_data_json("./test_files/base_json_file_id.json", table_name_json, date_col='date')
+        try:
+            data =b.get_all_data(table_name_json)
+            self.assertTrue(data == [(1, '2021-01-20 00:00:00', 21, 22, 23, 0), (2, '2021-01-21 00:00:00', 22, 32, 32, 0)])
+        except:
+            self.assertTrue(False)
+        database.drop_table(b._curs, table_name_json)
+
     def test_kp_set_table(self):
         database.create_table(b._curs, table_name_json, {
             'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',

@@ -240,12 +240,11 @@ class BackendBase:
         col_names = data_dict.keys()
         for col in col_names:
             data_type = type(data_dict[col][0])
+            print(date_col, col)
             if date_col == col:
                 dct[col] = 'DATETIME'
             else:
                 dct[col] = type_dict[data_type]
-        #if not id_colum_name is None:
-            #print("Added Id column!")
         
         # Classification column
         dct[CLASSIFICATION_COLUMN_NAME] = "BIT"
