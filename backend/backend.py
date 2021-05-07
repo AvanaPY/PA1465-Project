@@ -99,7 +99,6 @@ class BackendBase:
         # Fast check to make sure the column counts are the same
         data_col_names = data.keys()
         
-        # TODO: FIX
         if len(database_col_names) != len(data_col_names):
             raise backend_errors.ColumnCountNotCorrectException('Invalid column count, make sure that every column in the database also exists in the JSON file.')
 
@@ -123,7 +122,7 @@ class BackendBase:
             # Column type checking
             if t is _all_types_not_equal:
                 raise backend_errors.ColumnTypesNotSameException(key, data[key])
-                
+
             # Database cross-checking by type
             wanted_type = database_col_types[i]
             if isinstance(wanted_type, tuple):
