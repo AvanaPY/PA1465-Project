@@ -20,6 +20,7 @@ def sql_type_to_python_type(str_type : str):
         'char': str,
         'text': str,
         'int': int,
+        'float': (float, int),
         'bit': int,
         'datetime':str
     }
