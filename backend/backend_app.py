@@ -34,7 +34,7 @@ def create_app(host, port):
 
         try:
             if filename.endswith('.json'):
-                app._backend.import_data_json(file_path, 'atable2')
+                app._backend.import_data_json(file_path, 'atable2', date_col='date')
             elif filename.endswith('.csv'):
                 app._backend.import_data_csv(file_path, 'atable2')
             else:

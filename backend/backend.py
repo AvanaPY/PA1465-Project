@@ -2,6 +2,7 @@ import json
 import csv
 import pandas as pd
 import mysql.connector.errors as merrors
+import datetime
 
 from database import *
 
@@ -17,10 +18,10 @@ class BackendBase:
         self._curs = self._my_db.cursor()
         self._current_table = None                                                          # The current table name that is being under consideration
                                                                                             # This is more a temporary solution and should be done on the front end instead
-        # try:
-        #     desc = drop_table(self._curs, 'atable')
-        # except:
-        #     pass
+        try:
+            drop_table(self._curs, 'atable')
+        except:
+            pass
 
     def _get_database_description_no_id_column(self, table_name):
         """
@@ -151,8 +152,7 @@ class BackendBase:
             dct = json.load(f)
 
         self.add_dict_to_database(dct, database_table, **kwargs)
-        
-            
+                   
     def import_data_csv(self, path_to_file, database_table, **kwargs):
         """
             Imports data from a csv file and converts it into dict
@@ -191,6 +191,12 @@ class BackendBase:
         for key in keys:
             if key.lower() == "id":
                 del data_dict[key]
+        
+        date_format = "%Y-%m-%d"
+        if date_col != None and datetime.datetime.strptime(data_dict[date_col][0], date_format):
+            for i, row in enumerate(data_dict[date_col]):
+                row += " 00:00:00"
+                data_dict[date_col][i] = row
 
         try:
             self._compatability_check(data_dict, database_table)
@@ -345,7 +351,7 @@ class BackendBase:
             print(f"Current device: {self._current_table}")
 
     def reset_current_table(self):
-         """ 
+        """ 
             Resets the current table name
 
             Args:
@@ -443,7 +449,6 @@ class BackendBase:
         except Exception as e:
             print(e)
         
-
     def _delete_data_point(self, id):
         """
             Delets a datapoint
