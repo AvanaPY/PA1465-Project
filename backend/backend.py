@@ -418,17 +418,20 @@ class BackendBase:
                 -
 
         """
-        cols = [data[key] for key in data.keys()]
-        if not CLASSIFICATION_COLUMN_NAME in cols or not PREDICTION_COLUMN_NAME in cols:
+        col_names = list(data.keys())
+        col_values = [data[key] for key in data.keys()]
+        if not CLASSIFICATION_COLUMN_NAME in col_names or not PREDICTION_COLUMN_NAME in col_names:
             classifications, prediction_values = [], []
-            for i in range(len(cols[0])):
+            for i in range(len(col_values[0])):
                 prediction, classification = 0, 0 # TODO: Use the AI Api to generate those
 
                 classifications.append(classification)
                 prediction_values.append(prediction)
             
-            data[CLASSIFICATION_COLUMN_NAME] = classifications
-            data[PREDICTION_COLUMN_NAME] = prediction_values
+            if not CLASSIFICATION_COLUMN_NAME in col_names:
+                data[CLASSIFICATION_COLUMN_NAME] = classifications
+            if not PREDICTION_COLUMN_NAME in col_names:
+                data[PREDICTION_COLUMN_NAME] = prediction_values
             
     
     def edit_classification(self, id):
