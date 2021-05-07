@@ -102,19 +102,18 @@ def loop_through_samples(samples_df, num_of_samples = 1, sample_size = 20, all =
                 if len(values) == INPUT_WIDTH:
                     df_data = ai.run_ai(model, own_df, return_full = "yes")
                 else:
-                    #new_row = ai.run_ai(model, own_df, return_full = "no")
+                    new_row = ai.run_ai(model, own_df, return_full = "no")
 
-                    ai.test_run_ai(model, own_df, return_full = "no")
+                    #ai.test_run_ai(model, own_df, return_full = "no")
                     
-                    """
+                    
                     if abs(new_row["values"] - new_row["predictions"]) > anom_range:
                         new_row["anomaly"] = "True"
                         new_row["color"] = "firebrick"
                     else:
                         new_row["color"] = "deepskyblue"
                     df_data = df_data.append(new_row, ignore_index=True)
-                    """
-        """           
+                           
         df_data_vis = df_data.copy()
         for i in range(SHIFT):
             df_data_vis.loc[df_data_vis.iloc[-1].name + 1,:] = np.nan #creates a new nan row
@@ -122,8 +121,7 @@ def loop_through_samples(samples_df, num_of_samples = 1, sample_size = 20, all =
 
         print(df_data_vis)
         visualize(df_data, SHIFT)
-        """
-    return #df_data   
+    return df_data   
 
 def anomaly_range(total_df):
     total_df["dif"] = total_df.eval("values-predictions").abs()

@@ -97,10 +97,17 @@ def run_ai(model, df_data, return_full = "no"):
     """
     input_data = df_data["values"]
 
-    own_data = tf.stack([value for value in input_data])
-    own_data = tf.stack([own_data] * 1)
+    input_data = [[value] for value in input_data] #[värde1, värde2] --> [[värde 1][värde 2]]
+    input_data = tf.stack([tf.stack(value) for value in input_data]) #[[värde 1][värde 2]] --> tf.stack([värde 1][värde 2])
+    input_data = tf.stack([input_data] * 1) #tf.stack([värde 1][värde 2]) --> tf.stack(tf.stack([värde 1][värde 2]))
+    #shape = [batch size, time steps, inputs] = [1, 2, 1] I vårt test fall
+
+    output = model.predict(input_data)
+
+    #own_data = tf.stack([value for value in input_data])
+    #own_data = tf.stack([own_data] * 1)
     #print("shape:", own_data.shape())
-    output = model(own_data)
+    #output = model(own_data)
     new_array = [n[0] for n in np.array(output)[0]]
     for i in range(len(new_array) - 1):
         new_array[i] = np.nan
@@ -118,10 +125,13 @@ def run_ai(model, df_data, return_full = "no"):
         return df_data
 
 def test_run_ai(model, df_data, return_full = "no"):
-    input_data = df_data["values"]
-    input_data = np.array(input_data)
-    input_data = [input_data] * 2
-    #input_data = [[data] for data in input_data]
+    own_data = df_data["values"]
+    own_data = [[value] for value in own_data] #[värde1, värde2] --> [[värde 1][värde 2]]
+    own_data = tf.stack([tf.stack(value) for value in own_data]) #[[värde 1][värde 2]] --> tf.stack([värde 1][värde 2])
+    own_data = tf.stack([own_data] * 1) #tf.stack([värde 1][värde 2]) --> tf.stack(tf.stack([värde 1][värde 2]))
+    print(own_data) #shape = [batch size, time steps, inputs] = [1, 2, 1] I vårt test fall
+    input_data = own_data
+
     print(input_data)
     output = model.predict(input_data)
     print("test output_data:", output)
