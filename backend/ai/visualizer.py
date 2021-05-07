@@ -25,15 +25,17 @@ def predict_json_file(data_file):
 
 def visualize(df_data, shifting):
     df_data_vis = df_data.copy()
+    
     for i in range(shifting):
         df_data_vis.loc[df_data_vis.iloc[-1].name + 1,:] = np.nan #creates a new nan row
     df_data_vis['predictions'] = df_data_vis['predictions'].shift(shifting) #shifts all predictions down
+    
     fig = go.Figure()
     
     fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["predictions"],
                     mode='markers+lines',
-                    name='predicted values',
-                    marker_color=df_data["color"]))
+                    name='predicted values'))
+                    #marker_color=df_data["color"]))
     fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["values"],
                     mode='markers+lines',
                     name='real values'))
@@ -127,6 +129,17 @@ def anomaly_range(total_df):
     total_df["dif"] = total_df.eval("values-predictions").abs()
     return total_df
 
+def create_anom_range():
+    pass
+
+def run_sample(model, normal_df, sample_size):
+    values_sample = generate_interval(1, sample_size, normal_df)[0]
+
+    output, anomaly = ai.test_run_ai(model, values_sample)
+
+    vis_dict = {"values": values_sample, "predictions":output}
+
+    return vis_dict
 
 if __name__ == "__main__":
     INPUT_WIDTH = 2
@@ -155,7 +168,8 @@ if __name__ == "__main__":
     
 
     w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT)
-    #print("w2:", list(w2.train)[0])
+    normal_df = w2.train_df
+
     if input("Do you want to use a previously saved version?[y/n]") == "n":
 
         model = ai.create_ai_model()
@@ -167,15 +181,6 @@ if __name__ == "__main__":
     else:
         model = ai.load_ai_model('backend/ai/saved_model/my_model')
 
-
-    #create a sample size from data
-    #feed the sample data-points one at a time into "values" as if they were inputed
-    n = len(df)
-    df_train = df = df[0:int(n*0.7)]
-    mean = df_train.mean() #meadian
-    std = df_train.std() #standard deviation (expecting every data being normal distributed)
-
-    normal_df = (df_train - mean) / std
     """
     total_df = loop_through_samples(normal_df, 1, 20, all = True)
 
@@ -195,8 +200,15 @@ if __name__ == "__main__":
     """
 
     while True:
-        loop_through_samples(normal_df, 1, 50, all = False, anom_range = 0.03) # fix until next time - colors and integrations
+        vis_dict = run_sample(model, normal_df, sample_size = 2)
+        result_df = pd.DataFrame.from_dict(vis_dict)
+        visualize(result_df, SHIFT)
+        #loop_through_samples(normal_df, 1, 50, all = False, anom_range = 0.03) # fix until next time - colors and integrations
         input("go again?[y/n]")
+
+
+
+
 
 
 

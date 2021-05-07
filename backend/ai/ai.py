@@ -124,17 +124,26 @@ def run_ai(model, df_data, return_full = "no"):
     else:
         return df_data
 
-def test_run_ai(model, df_data, return_full = "no"):
-    own_data = df_data["values"]
-    own_data = [[value] for value in own_data] #[värde1, värde2] --> [[värde 1][värde 2]]
-    own_data = tf.stack([tf.stack(value) for value in own_data]) #[[värde 1][värde 2]] --> tf.stack([värde 1][värde 2])
-    own_data = tf.stack([own_data] * 1) #tf.stack([värde 1][värde 2]) --> tf.stack(tf.stack([värde 1][värde 2]))
-    print(own_data) #shape = [batch size, time steps, inputs] = [1, 2, 1] I vårt test fall
-    input_data = own_data
+def test_run_ai(model, input_list, return_full = "no"):
+    input_data = [[value] for value in input_list] #[värde1, värde2] --> [[värde 1][värde 2]]
+    input_data = tf.stack([tf.stack(value) for value in input_data]) #[[värde 1][värde 2]] --> tf.stack([värde 1][värde 2])
+    input_data = tf.stack([input_data] * 1) #tf.stack([värde 1][värde 2]) --> tf.stack(tf.stack([värde 1][värde 2]))
+    #shape = [batch size, time steps, inputs] = [1, 2, 1] I vårt test fall
 
-    print(input_data)
     output = model.predict(input_data)
-    print("test output_data:", output)
+
+    output_array = [n[0] for n in np.array(output)[0]]
+
+    anomaly = []
+    for i in range(len(output_array)):
+        if abs(input_list[i] - output_array[i]) > 0.02:
+            anomaly.append(True)
+        else:
+            anomaly.append(False)
+
+
+
+    return output_array, anomaly
 
     
 def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['values']):
