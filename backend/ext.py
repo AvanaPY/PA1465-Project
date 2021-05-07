@@ -20,7 +20,8 @@ def sql_type_to_python_type(str_type : str):
         'char': str,
         'text': str,
         'int': int,
-        'bit': int
+        'bit': int,
+        'datetime':str
     }
     for t in type_table:
         if t in str_type.lower():

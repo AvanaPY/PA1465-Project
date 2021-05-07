@@ -200,6 +200,7 @@ class BackendBase:
             Raises:
                 Propagates any errors
         """
+        print(date_col)
         self.check_has_classifications(data_dict)
 
         keys = list(data_dict.keys())
@@ -217,7 +218,7 @@ class BackendBase:
             self._compatability_check(data_dict, database_table)
         
         except backend_errors.TableDoesNotExistException:
-            self.create_table_based_on_data_dict(database_table, data_dict, **kwargs)
+            self.create_table_based_on_data_dict(database_table, data_dict, date_col=date_col, **kwargs)
             self._compatability_check(data_dict, database_table)
         
         except:
@@ -243,6 +244,7 @@ class BackendBase:
             Raises:
                 None
         """
+        print(date_col)
         type_dict = {
             str: "VARCHAR(255)",
             int: "INT(6)"
@@ -255,7 +257,6 @@ class BackendBase:
         col_names = data_dict.keys()
         for col in col_names:
             data_type = type(data_dict[col][0])
-            print(date_col, col)
             if date_col == col:
                 dct[col] = 'DATETIME'
             else:
