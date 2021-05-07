@@ -169,7 +169,7 @@ if __name__ == "__main__":
     else:
         model = ai.load_ai_model('backend/ai/saved_model/my_model')
 
-    """
+
     #create a sample size from data
     #feed the sample data-points one at a time into "values" as if they were inputed
     n = len(df)
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     std = df_train.std() #standard deviation (expecting every data being normal distributed)
 
     normal_df = (df_train - mean) / std
-
+    """
     total_df = loop_through_samples(normal_df, 1, 20, all = True)
 
     df_data_shifted = total_df.copy()
