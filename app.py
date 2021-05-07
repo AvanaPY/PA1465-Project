@@ -10,8 +10,8 @@ parser.add_argument('--port', type=int, required=True,
 args = parser.parse_args()
 
 if __name__ == '__main__':
-    #app = create_app(args.ip, args.port)
-    #app.run()
+    app = create_app(args.ip, args.port)
+    app.run()
     # Either or
-    backend_app.console_program(args.ip, args.port)
+    #backend_app.console_program(args.ip, args.port)
     

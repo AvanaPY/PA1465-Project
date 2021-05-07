@@ -2,6 +2,7 @@ import backend
 import unittest
 import database
 import backend.errors as backend_errors
+from datetime import datetime
 
 b = backend.BackendBase()
 table_name_json = 'test_table_json'
@@ -71,9 +72,96 @@ class BackendUnitTest(unittest.TestCase):
 
         database.drop_table(b._curs, table_name_json)
 
-    def test_kp_set_table(self) :
+    def test_get_database_column_names(self):
+        b.import_data_json("./test_files/base_json_file_id.json", table_name_json)
+
+        try:
+            col_names = b.get_database_column_names(table_name_json)
+            self.assertTrue(col_names == ['id', 'date', 'sensor1', 'sensor2', 'sensor3', 'classification'])
+        except:
+            self.assertTrue(False)
+
+        database.drop_table(b._curs, table_name_json)
+
+    def test_import_data_datetime(self):
+        b.import_data_json("./test_files/base_json_file_id.json", table_name_json, date_col='date')
+
+        try:
+            data = database.get_data(curs=b._curs, table_name=table_name_json)
+            date = datetime.strptime(data[0][1], "%Y-%m-%d %H:%M:%S")
+            self.assertTrue(isinstance(date, datetime))
+        except:
+            self.assertTrue(False)
+
+    def test_get_tables(self):
+        table_list = ["atable1", "atable2", "atable3", "atable4"]
+        for table in table_list:
+            database.create_table(b._curs, table, {
+                'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
+                'name':'VARCHAR(255)',
+                'age':'INT(6)'
+            })
+
+        try:
+            tables = b.get_tables()
+            self.assertTrue([tables[0], tables[1], tables[2], tables[3]], table_list)
+        except:
+            self.assertTrue(False)
+              
+        for table in table_list:
+            database.drop_table(b._curs, table)
+    
+    def test_set_reset_current_table(self):
+        table_list = ["atable1", "atable2", "atable3", "atable4"]
+        for table in table_list:
+            database.create_table(b._curs, table, {
+                'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
+                'name':'VARCHAR(255)',
+                'age':'INT(6)'
+            })
+
+        try:
+            b.set_current_table("atable2")
+            self.assertTrue(b._current_table == "atable2")
+
+            b.set_current_table("atable1")
+            self.assertTrue(b._current_table == "atable1")
+
+            b.set_current_table("atable3")
+            self.assertTrue(b._current_table == "atable3")
+
+            b.set_current_table("atable4")
+            self.assertTrue(b._current_table == "atable4")
+            
+            table = b.get_current_table()
+            self.assertTrue(table == "atable4")
+
+            b.reset_current_table()
+            self.assertTrue(b._current_table == None)
+
+        except:
+            self.assertTrue(False)
+              
+        for table in table_list:
+            database.drop_table(b._curs, table)
+    
+    def test_get_all_data(self):
+        b.import_data_json("./test_files/base_json_file_id.json", table_name_json, date_col='date')
+        try:
+            data =b.get_all_data(table_name_json)
+            self.assertTrue(data == [(1, '2021-01-20 00:00:00', 21, 22, 23, 0), (2, '2021-01-21 00:00:00', 22, 32, 32, 0)])
+        except:
+            self.assertTrue(False)
+        database.drop_table(b._curs, table_name_json)
+    
+    def test_kp_set_table(self):
+        database.create_table(b._curs, table_name_json, {
+            'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
+            'name':'VARCHAR(255)',
+            'age':'INT(6)'
+        })
         test_inputs = [("fel_namn_1", True), 
-                       ("atable", False), 
+                       (table_name_json, False), 
                        ("fel_namn_2", True),
                        ("tãble", True),
                        (None, True),
@@ -84,9 +172,15 @@ class BackendUnitTest(unittest.TestCase):
                 b.set_current_table(item[0])
             except:
                 self.assertTrue(item[1])
+        database.drop_table(b._curs, table_name_json)
 
-    def test_kp_get_data_points(self) :
-        test_inputs = [("atable", True, False),
+    def test_kp_get_data_points(self):
+        database.create_table(b._curs, table_name_json, {
+            'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
+            'name':'VARCHAR(255)',
+            'age':'INT(6)'
+        })
+        test_inputs = [(table_name_json, True, False),
                        ("", False, True), 
                        (None, False, True)]
         for item in test_inputs :
@@ -95,9 +189,15 @@ class BackendUnitTest(unittest.TestCase):
                 self.assertTrue(item[1])
             except : 
                 self.assertTrue(item[2])
+        database.drop_table(b._curs, table_name_json)
 
-    def test_kp_edit_data_points(self) :
-        b.set_current_table("atable")
+    def test_kp_edit_data_points(self):
+        database.create_table(b._curs, table_name_json, {
+            'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
+            'name':'VARCHAR(255)',
+            'age':'INT(6)'
+        })
+        b.set_current_table(table_name_json)
         test_inputs = [("e 1 true", False),
                        ("e 9 true", True),
                        ("p 1 false", True),
@@ -123,8 +223,9 @@ class BackendUnitTest(unittest.TestCase):
                 except :
                     self.assertTrue(item[1])
         b.reset_current_table()
+        database.drop_table(b._curs, table_name_json)
 
-    def test_kp_get_table(self) :
+    '''def test_kp_get_table(self) :
         print(b.get_current_table())
         test_inputs = [None, "atable", "temptbl"]
         for item in test_inputs :
@@ -139,4 +240,29 @@ class BackendUnitTest(unittest.TestCase):
                     raise backend_errors.TableDoesNotExistException(item)
             except :
                 self.assertFalse(True)
-        b.reset_current_table()
+        b.reset_current_table()'''
+
+    # TODO: Test cases to create
+    def test_column_length_differ(self):
+        self.assertTrue(True)
+    
+    def test_column_types_not_same(self):
+        self.assertTrue(True)
+
+    def test_column_types_not_matching(self):
+        self.assertTrue(True)
+
+    def test_anomaly_alert(self):
+        self.assertTrue(True)
+
+    def test_insert_classification(self):
+        self.assertTrue(True)
+
+    def test_delete_data_point(self):
+        self.assertTrue(True)
+
+    def test_get_all_non_classified(self):
+        self.assertTrue(True)
+    
+    def test_get_anomalies(self):
+        self.assertTrue(True)

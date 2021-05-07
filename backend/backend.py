@@ -2,6 +2,7 @@ import json
 import csv
 import pandas as pd
 import mysql.connector.errors as merrors
+import datetime
 
 from database import *
 
@@ -17,12 +18,25 @@ class BackendBase:
         self._curs = self._my_db.cursor()
         self._current_table = None                                                          # The current table name that is being under consideration
                                                                                             # This is more a temporary solution and should be done on the front end instead
-        # try:
-        #     desc = drop_table(self._curs, 'atable')
-        # except:
-        #     pass
+        try:
+            drop_table(self._curs, 'atable')
+        except:
+            pass
 
     def _get_database_description_no_id_column(self, table_name):
+        """
+            Function for getting the information about a table
+
+            Args:
+                table_name: str
+            
+            Returns:
+                database_col_names: list of str - each string is a column name
+                database_col_types: list of str - each string is a column type
+
+            Raises:
+                Propagates any errors
+        """
         my_sql_command = f'DESCRIBE {table_name}'
         self._curs.execute(my_sql_command)
         desc = self._curs.fetchall()
@@ -34,6 +48,18 @@ class BackendBase:
         return database_col_names, database_col_types
 
     def get_database_column_names(self, table_name):
+        """
+            A function for gatting all the columns in the table
+
+            Args:
+                table_name: str
+            
+            Returns:
+                database_col_names: list of str - each string is a column name
+
+            Raises:
+                -
+        """
         my_sql_command = f'DESCRIBE {table_name}'
         self._curs.execute(my_sql_command)
         desc = self._curs.fetchall()
@@ -42,7 +68,8 @@ class BackendBase:
         return database_col_names
 
     def _compatability_check(self, data, table_name):
-        ''' Checks the compatibility of a json document against the database table.
+        ''' 
+            Checks the compatibility of a json document against the database table.
 
             A (probably) very over-engineered method that checks whether or not a json document is compatible with the database. 
             It achieves this by comparing the column names, types, and sizes to the database's own columns.
@@ -110,7 +137,7 @@ class BackendBase:
 
     def import_data_json(self, path_to_file, database_table, **kwargs):
         """
-            imports data from a json file and converts it into dict
+            Imports data from a json file and converts it into dict
 
             Args:
                 path_to_file: str
@@ -125,11 +152,10 @@ class BackendBase:
             dct = json.load(f)
 
         self.add_dict_to_database(dct, database_table, **kwargs)
-        
-            
+                   
     def import_data_csv(self, path_to_file, database_table, **kwargs):
         """
-            imports data from a csv file and converts it into dict
+            Imports data from a csv file and converts it into dict
 
             Args:
                 path_to_file: str
@@ -160,7 +186,8 @@ class BackendBase:
         pass
 
     def add_dict_to_database(self, data_dict, database_table, date_col=None, **kwargs):
-        """ Adds a dictionary to the database.
+        """ 
+            Adds a dictionary to the database.
 
             Args:
                 data_dict: dict - a dictionary containing the data from the import functions
@@ -179,6 +206,12 @@ class BackendBase:
         for key in keys:
             if key.lower() == "id":
                 del data_dict[key]
+        
+        date_format = "%Y-%m-%d"
+        if date_col != None and datetime.datetime.strptime(data_dict[date_col][0], date_format):
+            for i, row in enumerate(data_dict[date_col]):
+                row += " 00:00:00"
+                data_dict[date_col][i] = row
 
         try:
             self._compatability_check(data_dict, database_table)
@@ -222,12 +255,11 @@ class BackendBase:
         col_names = data_dict.keys()
         for col in col_names:
             data_type = type(data_dict[col][0])
+            print(date_col, col)
             if date_col == col:
                 dct[col] = 'DATETIME'
             else:
                 dct[col] = type_dict[data_type]
-        #if not id_colum_name is None:
-            #print("Added Id column!")
         
         # Classification column
         dct[CLASSIFICATION_COLUMN_NAME] = "BIT"
@@ -268,13 +300,14 @@ class BackendBase:
         return o
 
     def get_tables(self):
-        """ Description
+        """ 
+            A wrapping function for returning all the tables in the databasse
 
             Args:
-                
+                -
             
             Returns:
-                -
+                tables: a list of all tables in the database
 
             Raises:
                 No tables available error
@@ -286,11 +319,24 @@ class BackendBase:
             raise
 
     def get_all_data(self, table_name):
+        """ 
+            A wrapping function for returning all the data in the table
+
+            Args:
+                table_name: str
+            
+            Returns:
+                data: a list of touples containing the data of the database, where each touple is a row
+
+            Raises:
+                -
+        """
         data = get_data(self._curs, table_name)
         return data
 
     def set_current_table(self, table_name):
-        """ Sets the current table name
+        """ 
+            Sets the current table name
 
             Sets the current table name under consideration to a value.
 
@@ -301,7 +347,7 @@ class BackendBase:
                 -
 
             Raises:
-                -
+                backend.errors
         """
         tables = show_tables(self._curs)
 
@@ -318,14 +364,12 @@ class BackendBase:
             self._current_table = table_name
             print(f"Current device: {self._current_table}")
 
-    def reset_current_table(self) :
-        self._current_table = None
-
-    def get_current_table(self):
-        """ Description
+    def reset_current_table(self):
+        """ 
+            Resets the current table name
 
             Args:
-                
+                -
             
             Returns:
                 -
@@ -333,10 +377,26 @@ class BackendBase:
             Raises:
                 -
         """
+        self._current_table = None
+
+    def get_current_table(self):
+        """ 
+            Returns the current table saved in the backend
+
+            Args:
+                -
+            
+            Returns:
+                self._current_table: str
+
+            Raises:
+                -
+        """
         return self._current_table    
 
     def check_has_classifications(self, data):
-        """ Checks whether or not data has the classification column
+        """ 
+            Checks whether or not data has the classification column
 
             Checks if the data has a classification column, if it doesn't it adds the column and also classifies every "row" in the data.
 
@@ -363,46 +423,38 @@ class BackendBase:
                 classifications.append(classification)
             
             data[CLASSIFICATION_COLUMN_NAME] = classifications
-    def edit_classification(self, dp):
-        """ Edits a classification
+    
+    def edit_classification(self, id):
+        """ 
+            Edits a classification
             
             Args:
-                dp: ???
+                id: int - the id of the datapoint being edited
             Returns:
                 -
             Raises:
-                -
+                backend.errors
         """
         pass
-
+    
+    # TODO: Alert for anomaly function
     def scream(self):
         """
             Screams in python
         """
         print("REEEEEEEEE")
 
-    def helo(self):
-        """ Says hello
-
-            Args:
-                -
-            Returns:
-                -
-            Raises:
-                -
-        """
-        data = self._insert_classifications()
-        print(data)
-
     def _insert_classifications(self, id, classification):
-        """ Not sure
+        """ 
+            Inserts a classification into the table
 
             Args:
-                -
+                id: int - the id of the row of the datapoint being edited
+                classification: int - the classification of the datapoint, either 1 (True) or 0 (False) 
             Returns:
                 -
             Raises:
-                -
+                Any propagated errors
         """
         try :
             edit_data(self._curs, self._current_table, { "classification": classification }, { "id" : id })
@@ -411,16 +463,16 @@ class BackendBase:
         except Exception as e:
             print(e)
         
-
     def _delete_data_point(self, id):
-        """ Not sure
+        """
+            Delets a datapoint
 
             Args:
-                -
+                id: int - the id of the datapint being deleted
             Returns:
                 -
             Raises:
-                -
+                Any propagated errors
         """
         try :
             delete_data(self._curs, self._current_table, { "id" : id })
@@ -429,13 +481,15 @@ class BackendBase:
             print(e)
 
     def _get_all_non_classified(self, _table_name = None):
-        """ Returns all non-classified data points
+        """ 
+            Returns all non-classified data points
+            
             Args:
-                -
+                _table_name: str - Default None
             Returns:
-                -
+                data: a list of touples where each touple is a row in the databasae
             Raises:
-                -
+                Any propagated errors
         """
 
         table_name = ""
@@ -454,11 +508,13 @@ class BackendBase:
             print(str(e))
 
     def _get_all_anomalies(self):
-        """ Returns all non-classified data points
+        """ 
+            Returns all data points where the calssification column is 1
+            
             Args:
                 -
             Returns:
-                -
+                data: a list of touples where each touple is a row in the database
             Raises:
                 -
         """
