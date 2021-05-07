@@ -90,7 +90,7 @@ def loop_through_samples(samples_df, num_of_samples = 1, sample_size = 20, all =
         value = None
         values = []
         for index, a in enumerate(sample):
-            if index % 100 == 0:
+            if index % 100 == 0 and all == True:
                 print(index, "samples done of", len(sample))
         #while True:
             #value = float(input("vilket värde ska jag gissa på?"))
@@ -102,18 +102,28 @@ def loop_through_samples(samples_df, num_of_samples = 1, sample_size = 20, all =
                 if len(values) == INPUT_WIDTH:
                     df_data = ai.run_ai(model, own_df, return_full = "yes")
                 else:
-                    new_row = ai.run_ai(model, own_df, return_full = "no")
+                    #new_row = ai.run_ai(model, own_df, return_full = "no")
+
+                    ai.test_run_ai(model, own_df, return_full = "no")
+                    
+                    """
                     if abs(new_row["values"] - new_row["predictions"]) > anom_range:
-                        print("a true")
                         new_row["anomaly"] = "True"
-                        print("a", new_row["anomaly"])
                         new_row["color"] = "firebrick"
                     else:
                         new_row["color"] = "deepskyblue"
                     df_data = df_data.append(new_row, ignore_index=True)
-        print(df_data)
+                    """
+        """           
+        df_data_vis = df_data.copy()
+        for i in range(SHIFT):
+            df_data_vis.loc[df_data_vis.iloc[-1].name + 1,:] = np.nan #creates a new nan row
+        df_data_vis['predictions'] = df_data_vis['predictions'].shift(SHIFT) #shifts all predictions down
+
+        print(df_data_vis)
         visualize(df_data, SHIFT)
-    return df_data   
+        """
+    return #df_data   
 
 def anomaly_range(total_df):
     total_df["dif"] = total_df.eval("values-predictions").abs()
@@ -159,6 +169,7 @@ if __name__ == "__main__":
     else:
         model = ai.load_ai_model('backend/ai/saved_model/my_model')
 
+    """
     #create a sample size from data
     #feed the sample data-points one at a time into "values" as if they were inputed
     n = len(df)
@@ -177,15 +188,16 @@ if __name__ == "__main__":
 
     total_df = anomaly_range(df_data_shifted)
 
-    top_90_dif = total_df["dif"].quantile(q = 0.9)
-    print("total_df with a top 90 of",top_90_dif)
+    top_50_dif = float(total_df["dif"].quantile(q = 0.5))
+    print("total_df with a top 90 of",top_50_dif)
     print(total_df)
 
     plt.hist(total_df["dif"])
     plt.show()
+    """
 
     while True:
-        loop_through_samples(normal_df, 1, 20, all = False, anom_range = 0.1) # fix until next time - colors and integrations
+        loop_through_samples(normal_df, 1, 50, all = False, anom_range = 0.03) # fix until next time - colors and integrations
         input("go again?[y/n]")
 
 

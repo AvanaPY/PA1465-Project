@@ -99,6 +99,7 @@ def run_ai(model, df_data, return_full = "no"):
 
     own_data = tf.stack([value for value in input_data])
     own_data = tf.stack([own_data] * 1)
+    #print("shape:", own_data.shape())
     output = model(own_data)
     new_array = [n[0] for n in np.array(output)[0]]
     for i in range(len(new_array) - 1):
@@ -115,6 +116,16 @@ def run_ai(model, df_data, return_full = "no"):
         return df_data_last_row
     else:
         return df_data
+
+def test_run_ai(model, df_data, return_full = "no"):
+    input_data = df_data["values"]
+    input_data = np.array(input_data)
+    input_data = [input_data] * 2
+    #input_data = [[data] for data in input_data]
+    print(input_data)
+    output = model.predict(input_data)
+    print("test output_data:", output)
+
     
 def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['values']):
     n = len(df)
