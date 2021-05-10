@@ -225,7 +225,8 @@ class BackendBase:
                 del data_dict[key]
         
         date_format = "%Y-%m-%d"
-        if date_col != None and datetime.datetime.strptime(data_dict[date_col][0], date_format):
+        if date_col != None and datetime.datetime.strptime(data_dict[date_col][0], date_format): # TODO: Move the format check in the loop instead to check for
+                                                                                                 # formatting on each datapoint instead of just the first
             for i, row in enumerate(data_dict[date_col]):
                 row += " 00:00:00"
                 data_dict[date_col][i] = row
@@ -355,8 +356,9 @@ class BackendBase:
             date_column_index = columns.index(DATETIME_COLUMN_NAME)
             for i in range(len(data)):
                 row = list(data[i])
-                row[date_column_index] = row[date_column_index].strftime(WANTED_DATETIME_FORMAT)
-                data[i] = tuple(row)
+                if isinstance(row[date_column_index], datetime.datetime):
+                    row[date_column_index] = row[date_column_index].strftime(WANTED_DATETIME_FORMAT)
+                    data[i] = tuple(row)
         return data 
 
     def set_current_table(self, table_name):
