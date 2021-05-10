@@ -526,18 +526,23 @@ class BackendBase:
 
         table_name = ""
 
-        if _table_name == None:
-            table_name = self.get_current_table
-        else:
-            table_name = _table_name
+        # if _table_name == None:
+        #     table_name = self.get_current_table
+        # else:
+        #     table_name = _table_name
 
         try:
-            my_sql_command = f'SELECT * FROM {table_name} WHERE classification IS NULL;'
-            self._curs.execute(my_sql_command)
-            data = self._curs.fetchall()
+            data = get_data(self._curs, table_name, column_dictionary={
+                CLASSIFICATION_COLUMN_NAME: 0
+            })
+            # my_sql_command = f'SELECT * FROM {table_name} WHERE classification IS NULL;'
+            # print(my_sql_command)
+            # self._curs.execute(my_sql_command)
+            # data = self._curs.fetchall()
+            print(data)
             return data
         except Exception as e:
-            print(str(e))
+            print("Error in _get_all_non_classified(): ", str(e))
 
     def _get_all_anomalies(self):
         """ 
