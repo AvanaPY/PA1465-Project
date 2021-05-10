@@ -254,7 +254,14 @@ class BackendBase:
         except Exception as e:
             raise
 
-    def _create_table_dict(self, data_dict, date_col=None, id_colum_name=None):
+    def _create_table_dict(self, data_dict, date_col=None, id_colum_name=None): #TODO: Replace date_col with DATETIME_COLUMN_NAME instead
+                                                                                # Because it's better that we reserve the name than give them
+                                                                                # the option to destroy our backend
+                                                                                # because I (Emil) don't want to bother writing very advanced
+                                                                                # code that will check that much
+                                                                                # so it's better to just not let them have fun
+                                                                                # 10/10 would code again
+                                                                                # yeet :tboof:
         """
             Creates a table type dict based on a data dictionary
 
