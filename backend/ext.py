@@ -44,7 +44,7 @@ def all_type_equal_or_none(type_lst):
         Raises:
             Nothing
     """
-    all_same = all([a == type_lst[0] for a in type_lst])
+    all_same = all([(a == type_lst[0] or a is type(None)) for a in type_lst])
     if all_same:
         return type_lst[0]
     else:
