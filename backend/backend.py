@@ -13,6 +13,8 @@ CLASSIFICATION_COLUMN_NAME = 'classification'
 PREDICTION_COLUMN_NAME = 'prediction'
 ID_COLUMN_NAME = 'id'
 
+WANTED_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
 class BackendBase:
     def __init__(self, config_file_name="config.ini", section="mysql"):
         self._my_db, self._db_config = create_sql_connection(config_file_name, section)
@@ -181,8 +183,10 @@ class BackendBase:
         }
         data = self.get_all_data(database_table)
         for i in range(len(data)):
-            for key, j in zip(columns, data[i]):
-                json_data[key].append(j)
+            for key, value in zip(columns, data[i]):
+                if isinstance(value, datetime.datetime):
+                    value = value.strftime(WANTED_DATETIME_FORMAT)
+                json_data[key].append(value)
         with open(path_to_file, 'w') as f:
             json.dump(json_data, f)
 
