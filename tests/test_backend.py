@@ -10,13 +10,11 @@ table_name_csv  = 'test_table_csv'
 
 try:
     database.drop_table(b._curs, table_name_json)
-    print(f'Dropped table {table_name_json}')
 except:
     pass
 
 try:
     database.drop_table(b._curs, table_name_csv)
-    print(f'Dropped table {table_name_csv}')
 except:
     pass
 
@@ -224,11 +222,17 @@ class BackendUnitTest(unittest.TestCase):
                     self.assertTrue(item[1])
         b.reset_current_table()
         database.drop_table(b._curs, table_name_json)
-        
+
     # TODO: Test cases to create
     def test_column_length_differ(self):
-        self.assertTrue(True)
-    
+        try:
+            b.import_data_json("./test_files/test_json_file_column_lengths_differ.json", table_name_json)
+            database.drop_table(b._curs, table_name_json)
+        except backend_errors.ColumnLengthsDifferException:
+            self.assertTrue(True)
+        except:
+            self.assertTrue(False)
+
     def test_column_types_not_same(self):
         self.assertTrue(True)
 
