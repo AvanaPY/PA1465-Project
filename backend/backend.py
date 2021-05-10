@@ -387,7 +387,7 @@ class BackendBase:
             raise backend_errors.TableDoesNotExistException(table_name)
         else :
             self._current_table = table_name
-            print(f"Current device: {self._current_table}")
+            #print(f"Current device: {self._current_table}")
 
     def reset_current_table(self):
         """ 
@@ -488,8 +488,8 @@ class BackendBase:
         """
         try :
             edit_data(self._curs, self._current_table, { "classification": classification }, { "id" : id })
-            print(get_data(self._curs, self._current_table, { "id" : id }))
-            print("Successful")
+            #print(get_data(self._curs, self._current_table, { "id" : id }))
+            #print("Successful")
         except Exception as e:
             print(e)
         
@@ -506,7 +506,7 @@ class BackendBase:
         """
         try :
             delete_data(self._curs, self._current_table, { "id" : id })
-            print("Successful")
+            #print("Successful")
         except Exception as e:
             print(e)
 
