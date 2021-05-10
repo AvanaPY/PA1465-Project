@@ -36,14 +36,17 @@ def visualize(df_data, shifting):
     
     fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["predictions"],
                     mode='markers+lines',
-                    name='predicted values'))
-                    #marker_color=df_data["color"]))
+                    name='predicted values',
+                    marker_color=df_data["anom"]))
     fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["values"],
                     mode='markers+lines',
                     name='real values'))
-    fig.add_trace(go.Scatter(x=df_data_vis.index, y=abs(df_data_vis["dif"]),
-                    mode='markers+lines',
-                    name='abs difference'))
+    #fig.add_trace(go.Scatter(x=df_data_vis.index, y=abs(df_data_vis["dif"]),
+    #                mode='markers+lines',
+    #                name='abs difference'))
+    #fig.add_trace(go.Scatter(x=df_data_vis.index, y=abs(df_data_vis["anom"]),
+    #                mode='markers+lines',
+    #                name='anomaly'))
     
     #pio.write_html(fig, file=’index.html’, auto_open=True) 
     
@@ -140,16 +143,42 @@ def anomaly_range(total_df):
     return total_df
 
 def run_sample(model, normal_df, sample_size, shift):
+    """
+        Args::
+            model: Ai model to use
+            normal_df: 
+            label_width: how many predictions the ai does (one at a time)
+            shift: how far in the future the prediction(s) are
+            label_columns: a list containing what values that should be predicted from the input dataset
+
+        Returns::
+            w2: a window object containing training, validation and test data.
+
+        Raises::
+        --
+    """
     values_sample = generate_interval(1, sample_size, normal_df)[0]
 
-    output, anomaly = ai.test_run_ai(model, values_sample, shift = shift)
+    output, anomaly = ai.run_ai(model, values_sample, shift = shift)
 
     only_value_sample = generate_interval(1, sample_size, normal_df, sample_columns = ["values"])[0][0]
     difference = output - only_value_sample
-    vis_dict = {"values": only_value_sample, "predictions": output, "dif": difference}
+    vis_dict = {"values": only_value_sample, "predictions": output, "dif": difference, "anom": anomaly}
     return vis_dict
 
 def import_tf_special_dataset():
+    """
+        Downloads and formats a tensorflow weather dataset
+
+        Args::
+            --
+
+        Returns::
+            df: a dataframe containing all the formated data from the datasource
+
+        Raises::
+        --
+    """
     #Tesorflow dataset input
     zip_path = tf.keras.utils.get_file(
         origin='https://storage.googleapis.com/tensorflow/tf-keras-datasets/jena_climate_2009_2016.csv.zip',
@@ -205,16 +234,17 @@ def import_tf_special_dataset():
     hours_per_year = 24*365.2524
     years_per_dataset = n_samples_h/(hours_per_year)
 
+    df = df.rename(columns={'T (degC)': "values"})
+
     return df
 
 if __name__ == "__main__":
     INPUT_WIDTH = 10
     SHIFT = 10
-    LABEL_WIDTH = INPUT_WIDTH #20
+    LABEL_WIDTH = INPUT_WIDTH 
 
     df = import_tf_special_dataset()
-    #df.columns[1] = "values"
-    df = df.rename(columns={'T (degC)': "values"})
+
     """
     with open("backend/ai/Raspberry_data/temp_dataset_3.json", "r") as f:
         open_file = json.load(f)
@@ -257,8 +287,9 @@ if __name__ == "__main__":
         #vis_dict = run_sample(model, normal_df, sample_size = 10000 , shift= SHIFT) #sample_size = INPUT_WIDTH + SHIFT
         vis_dict = run_sample(model, normal_df, sample_size = len(normal_df) , shift = SHIFT)
         result_df = pd.DataFrame.from_dict(vis_dict)
-        #print(result_df)
-        visualize(result_df, 0)# SHIFT)
+        print(result_df)
+
+        visualize(result_df, 0)
         #loop_through_samples(normal_df, 1, 50, all = False, anom_range = 0.03) # fix until next time - colors and integrations
         if input("go again?[y/n][g for graf]") == "g":
             error = result_df["predictions"] - result_df["values"]

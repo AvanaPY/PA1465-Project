@@ -6,6 +6,18 @@ import math
 import json
 
 def create_ai_model():
+    """
+        Creates an AI model
+
+        Args::
+            --
+
+        Returns::
+            Tensorflow AI model
+
+        Raises::
+            --
+    """
 
     model = tf.keras.models.Sequential([
         tf.keras.layers.LSTM(30, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
@@ -21,70 +33,51 @@ def create_ai_model():
     model.compile(loss=tf.losses.MeanSquaredError(),
                     optimizer=tf.optimizers.Adam(),
                     metrics=[tf.metrics.MeanAbsoluteError()])
-    """
-        Creates an AI model
-
-        Args::
-            --
-
-        Returns::
-            Tensorflow AI model
-
-        Raises::
-            --
-    """
     return model
 
-def load_ai_model(load_weights_path):
-    model = tf.keras.models.load_model(load_weights_path)
+def load_ai_model(load_ai_path):
     """
-        Loads the AI model's weights from a file
+        Loads the AI model from a file
 
     Args::
-        model: A tensorflow AI model
-        load_weights_path: str object representing the file path to load the weights from
+        load_ai_path: str object representing the file path to load the ai from
 
     Returns::
         Tensorflow AI model
 
     Raises::
-        Any errors tensorflow might've raised when loading weights
+        Any errors tensorflow might've raised when loading the ai model
     """
+    model = tf.keras.models.load_model(load_ai_path)
     return model
 
-def save_ai_model(model, save_weights_path):
+def save_ai_model(model, save_ai_path):
+    """
+        Saves the AI model into a file
+
+    Args::
+        model: A tensorflow AI model
+        save_ai_path: str object representing the file path to save the ai model to.
+
+    Returns::
+        Tensorflow AI model
+
+    Raises::
+        Any errors tensorflow might've raised when saving the ai model
+    """
     model.save(save_weights_path)
-    """
-        Saves the AI model's weights into a file
-
-    Args::
-        model: A tensorflow AI model
-        save_weights_path: str object representing the file path to save the weights to
-
-    Returns::
-        Tensorflow AI model
-
-    Raises::
-        Any errors tensorflow might've raised when loading weights
-    """
     return model
 
 def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5):
-
-    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                    patience=patience,
-                                                    mode='min')
-
-    history = model.fit(train_data, epochs=max_epochs,
-                      validation_data=validation_data,
-                      callbacks=[early_stopping])
-    return history
     """
         Trains an AI model
 
         Args::
-            model:: A tensorflow AI model
-            data:: Some data you can train the AI on, I don't know
+            model: A tensorflow AI model
+            train_data: training data from window object
+            validation_data: validation data from window object
+            patience: how many Epocs to train without val_loss decreasing before stopping
+            max_epochs: how many Epocs to train maximum
 
         Returns::
             --
@@ -93,10 +86,18 @@ def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5):
            --
     """
 
-def run_ai(model, df_data, return_full = "no"):
-    """
-    df_data has "dates" and "values"
-    """
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
+                                                    patience=patience,
+                                                    mode='min')
+
+    history = model.fit(train_data, epochs=max_epochs,
+                      validation_data=validation_data,
+                      callbacks=[early_stopping])
+
+    #used to be history
+    return
+
+def test_run_ai(model, df_data, return_full = "no"):
     input_data = df_data["values"]
 
     input_data = [[value] for value in input_data] #[värde1, värde2] --> [[värde 1][värde 2]]
@@ -126,9 +127,26 @@ def run_ai(model, df_data, return_full = "no"):
     else:
         return df_data
 
-def test_run_ai(model, input_list, return_full = "no", shift = 1):
+def run_ai(model, input_list, shift = 1, lower_sensitivityIQR = 1.5, upper_sensitivityIQR = 1.5):
+    """
+        Runs the Ai
+
+        Args::
+            model: A tensorflow AI model
+            input_list: A list containing datapoints. Each datapoint is a list with inputs (input list will be shortened to compensate for shift to make sure that all predicted values have a real value to compare to)
+            shift: How long in the future to predict (in datapoints) (1 = the next value, 2 = the next next value from the input(s))
+
+        Returns::
+            output_array: array with predictions (shifted)
+            anomaly: list containing True / False for each prediction (shifted)
+
+        Raises::
+           --
+    """
+
     #for i in input_list:
     #    print(i)
+    input_data_og = input_list
     input_data = input_list[:-1 * shift]
     #print(input_data)
 
@@ -143,20 +161,52 @@ def test_run_ai(model, input_list, return_full = "no", shift = 1):
 
     output_array = [np.nan] * shift + [n[0] for n in np.array(output)[0]]
 
-    anomaly = []
-    """
+    difference_dic = {"difference" : []}
+
+    real_values = [datapoint[1] for datapoint in input_data_og]
     for i in range(len(output_array)):
-        if abs(input_list[i] - output_array[i]) > 0.02:
-            anomaly.append(True)
+        difference_dic["difference"].append(real_values[i] - output_array[i])
+
+    difference_df = pd.DataFrame(difference_dic)
+
+    Q1 = difference_df["difference"].quantile(0.05)
+    Q3 = difference_df["difference"].quantile(0.95)
+
+    IQR = Q3 - Q1
+
+    lower_whisker = Q1 #* lower_sensitivityIQR#- lower_sensitivityIQR
+    upper_whisker = Q3 #* upper_sensitivityIQR#+ upper_sensitivityIQR
+    #print("low:", lower_whisker)
+    #print("high:", upper_whisker)
+
+    anomaly = []
+    for value in difference_df["difference"]:
+        if value <= lower_whisker or value >= upper_whisker:
+            anomaly.append(1)
+            #anomaly.append(True)
         else:
-            anomaly.append(False)
-    """
-
-
+            #anomaly.append(False)
+            anomaly.append(0)
 
     return output_array, anomaly
 
 def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['values']):
+    """
+        Creates a window object for storing training, validation and test data
+
+        Args::
+            df: dataframe to format into training/validation and test data [only values allowed]
+            input_width: how many datapoints (in timeunits) the model takes in in each training
+            label_width: how many predictions the ai does (one at a time)
+            shift: how far in the future the prediction(s) are
+            label_columns: a list containing what values that should be predicted from the input dataset
+
+        Returns::
+            w2: a window object containing training, validation and test data.
+
+        Raises::
+        --
+    """
     n = len(df)
     train_df = df[0:int(n*0.7)] #trainging data = first 70%
     val_df = df[int(n*0.7):int(n*0.9)] #validation = 90-70 = 20%
