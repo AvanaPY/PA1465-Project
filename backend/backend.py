@@ -364,16 +364,31 @@ class BackendBase:
                 -
         """
         data = get_data(self._curs, table_name)
-
         if convert_datetime:
-            columns = self.get_database_column_names(table_name)
-            date_column_index = columns.index(DATETIME_COLUMN_NAME)
-            for i in range(len(data)):
-                row = list(data[i])
-                if isinstance(row[date_column_index], datetime.datetime):
-                    row[date_column_index] = row[date_column_index].strftime(WANTED_DATETIME_FORMAT)
-                    data[i] = tuple(row)
+            self._convert_row_datetime(table_name, data)
         return data 
+
+    def _convert_row_datetime(self, table_name, data):
+        """ Converts the "date" column in the data from datetime.datetime objects to string values.
+
+            Args:
+                table_name - str
+                data : list[tuple]
+
+            Returns:
+                -
+
+            Raises:
+                -
+        """
+        columns = self.get_database_column_names(table_name)
+        date_column_index = columns.index(DATETIME_COLUMN_NAME)
+        for i in range(len(data)):
+            row = list(data[i])
+            if isinstance(row[date_column_index], datetime.datetime):
+                row[date_column_index] = row[date_column_index].strftime(WANTED_DATETIME_FORMAT)
+                data[i] = tuple(row)
+
 
     def set_current_table(self, table_name):
         """ 
@@ -526,7 +541,7 @@ class BackendBase:
         except Exception as e:
             print(e)
 
-    def _get_all_non_classified(self, _table_name = None):
+    def _get_all_non_classified(self, table_name, NON_CLASSIFIED_VALUE=None, convert_datetime=False):
         """ 
             Returns all non-classified data points
             
@@ -538,7 +553,7 @@ class BackendBase:
                 Any propagated errors
         """
 
-        table_name = ""
+        #table_name = ""
 
         # if _table_name == None:
         #     table_name = self.get_current_table
@@ -547,13 +562,10 @@ class BackendBase:
 
         try:
             data = get_data(self._curs, table_name, column_dictionary={
-                CLASSIFICATION_COLUMN_NAME: 0
+                CLASSIFICATION_COLUMN_NAME: NON_CLASSIFIED_VALUE
             })
-            # my_sql_command = f'SELECT * FROM {table_name} WHERE classification IS NULL;'
-            # print(my_sql_command)
-            # self._curs.execute(my_sql_command)
-            # data = self._curs.fetchall()
-            print(data)
+            if convert_datetime:
+                self._convert_row_datetime(table_name, data)
             return data
         except Exception as e:
             print("Error in _get_all_non_classified(): ", str(e))
