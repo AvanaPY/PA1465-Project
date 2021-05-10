@@ -8,10 +8,12 @@ import json
 def create_ai_model():
 
     model = tf.keras.models.Sequential([
-        tf.keras.layers.LSTM(10, return_sequences=True),#, dropout=0.5, recurrent_dropout=0.1),
-        tf.keras.layers.LSTM(20, return_sequences=True),#, dropout=0.5, recurrent_dropout=0.1),
-        tf.keras.layers.LSTM(10, return_sequences=True),#, dropout=0.5, recurrent_dropout=0.1),
-        tf.keras.layers.Dense(units=20),
+        tf.keras.layers.LSTM(30, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
+        tf.keras.layers.LSTM(70, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
+        tf.keras.layers.LSTM(30, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
+        #tf.keras.layers.LSTM(10, return_sequences=True),#, dropout=0.5, recurrent_dropout=0.1),
+        tf.keras.layers.Dense(units=50),
+        tf.keras.layers.Dense(units=30),
         tf.keras.layers.Dense(units=10),
         tf.keras.layers.Dense(units=1)
     ])
@@ -124,28 +126,36 @@ def run_ai(model, df_data, return_full = "no"):
     else:
         return df_data
 
-def test_run_ai(model, input_list, return_full = "no"):
-    input_data = [[value] for value in input_list] #[värde1, värde2] --> [[värde 1][värde 2]]
-    input_data = tf.stack([tf.stack(value) for value in input_data]) #[[värde 1][värde 2]] --> tf.stack([värde 1][värde 2])
+def test_run_ai(model, input_list, return_full = "no", shift = 1):
+    #for i in input_list:
+    #    print(i)
+    input_data = input_list[:-1 * shift]
+    #print(input_data)
+
+    #input list should be in shape of nr_of_batches[nr_of_timesteps[values, b], b]
+    #print(input_list)
+    #input_data = [[value] for value in input_list[:-1 * shift]] #[värde1, värde2] --> [[värde 1][värde 2]]
+    #input_data = tf.stack([tf.stack(value) for value in input_data]) #[[värde 1][värde 2]] --> tf.stack([värde 1][värde 2])
     input_data = tf.stack([input_data] * 1) #tf.stack([värde 1][värde 2]) --> tf.stack(tf.stack([värde 1][värde 2]))
     #shape = [batch size, time steps, inputs] = [1, 2, 1] I vårt test fall
 
     output = model.predict(input_data)
 
-    output_array = [n[0] for n in np.array(output)[0]]
+    output_array = [np.nan] * shift + [n[0] for n in np.array(output)[0]]
 
     anomaly = []
+    """
     for i in range(len(output_array)):
         if abs(input_list[i] - output_array[i]) > 0.02:
             anomaly.append(True)
         else:
             anomaly.append(False)
+    """
 
 
 
     return output_array, anomaly
 
-    
 def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['values']):
     n = len(df)
     train_df = df[0:int(n*0.7)] #trainging data = first 70%

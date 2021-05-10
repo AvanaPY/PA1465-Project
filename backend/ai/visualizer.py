@@ -9,6 +9,8 @@ import math
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import plotly.io as pio
+import os
+import datetime
 
 import random
 
@@ -39,6 +41,9 @@ def visualize(df_data, shifting):
     fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["values"],
                     mode='markers+lines',
                     name='real values'))
+    fig.add_trace(go.Scatter(x=df_data_vis.index, y=abs(df_data_vis["dif"]),
+                    mode='markers+lines',
+                    name='abs difference'))
     
     #pio.write_html(fig, file=’index.html’, auto_open=True) 
     
@@ -61,19 +66,24 @@ def fill_missing_avg(dataset):
         index += 1
     return dataset
 
-def generate_interval(number, size, dataset):
+def generate_interval(number, size, dataset, sample_columns = False):
     intervals = []
     for i in range(number):
         upperdata = len(dataset["values"]) - size
 
         random_bound = random.randint(0, upperdata)
-        upper_bound = random_bound
-        lower_bound = random_bound - size
+        lower_bound = random_bound
+        upper_bound = random_bound + size
 
-        interval_data = dataset["values"][lower_bound:upper_bound]
+        if sample_columns != False:
+            interval_data = []
+            for column in sample_columns:
+                interval_data.append(dataset[column][lower_bound:upper_bound])
+        else:
+            interval_data = dataset[:][lower_bound:upper_bound]
+        #interval_data = dataset["values"][lower_bound:upper_bound]
         interval = np.array(interval_data)
         intervals.append(interval)
-
     return intervals
 
 def loop_through_samples(samples_df, num_of_samples = 1, sample_size = 20, all = False, anom_range = 1):
@@ -129,28 +139,87 @@ def anomaly_range(total_df):
     total_df["dif"] = total_df.eval("values-predictions").abs()
     return total_df
 
-def create_anom_range():
-    pass
-
-def run_sample(model, normal_df, sample_size):
+def run_sample(model, normal_df, sample_size, shift):
     values_sample = generate_interval(1, sample_size, normal_df)[0]
 
-    output, anomaly = ai.test_run_ai(model, values_sample)
+    output, anomaly = ai.test_run_ai(model, values_sample, shift = shift)
 
-    vis_dict = {"values": values_sample, "predictions":output}
-
+    only_value_sample = generate_interval(1, sample_size, normal_df, sample_columns = ["values"])[0][0]
+    difference = output - only_value_sample
+    vis_dict = {"values": only_value_sample, "predictions": output, "dif": difference}
     return vis_dict
 
-if __name__ == "__main__":
-    INPUT_WIDTH = 2
-    SHIFT = 1
-    LABEL_WIDTH = 1
+def import_tf_special_dataset():
+    #Tesorflow dataset input
+    zip_path = tf.keras.utils.get_file(
+        origin='https://storage.googleapis.com/tensorflow/tf-keras-datasets/jena_climate_2009_2016.csv.zip',
+        fname='jena_climate_2009_2016.csv.zip',
+        extract=True)
+    csv_path, _ = os.path.splitext(zip_path)
 
+    df = pd.read_csv(csv_path)
+    # slice [start:stop:step], starting from index 5 take every 6th record.
+    df = df[5::6]
+
+    date_time = pd.to_datetime(df.pop('Date Time'), format='%d.%m.%Y %H:%M:%S')
+
+    wv = df['wv (m/s)']
+    bad_wv = wv == -9999.0
+    wv[bad_wv] = 0.0
+
+    max_wv = df['max. wv (m/s)']
+    bad_max_wv = max_wv == -9999.0
+    max_wv[bad_max_wv] = 0.0
+
+    # The above inplace edits are reflected in the DataFrame
+    df['wv (m/s)'].min()
+
+    wv = df.pop('wv (m/s)')
+    max_wv = df.pop('max. wv (m/s)')
+
+    # Convert to radians.
+    wd_rad = df.pop('wd (deg)')*np.pi / 180
+
+    # Calculate the wind x and y components.
+    df['Wx'] = wv*np.cos(wd_rad)
+    df['Wy'] = wv*np.sin(wd_rad)
+
+    # Calculate the max wind x and y components.
+    df['max Wx'] = max_wv*np.cos(wd_rad)
+    df['max Wy'] = max_wv*np.sin(wd_rad)
+
+    timestamp_s = date_time.map(datetime.datetime.timestamp)
+
+    day = 24*60*60
+    year = (365.2425)*day
+
+    df['Day sin'] = np.sin(timestamp_s * (2 * np.pi / day))
+    df['Day cos'] = np.cos(timestamp_s * (2 * np.pi / day))
+    df['Year sin'] = np.sin(timestamp_s * (2 * np.pi / year))
+    df['Year cos'] = np.cos(timestamp_s * (2 * np.pi / year))
+
+    fft = tf.signal.rfft(df['T (degC)'])
+    f_per_dataset = np.arange(0, len(fft))
+
+    n_samples_h = len(df['T (degC)'])
+    hours_per_year = 24*365.2524
+    years_per_dataset = n_samples_h/(hours_per_year)
+
+    return df
+
+if __name__ == "__main__":
+    INPUT_WIDTH = 10
+    SHIFT = 10
+    LABEL_WIDTH = INPUT_WIDTH #20
+
+    df = import_tf_special_dataset()
+    #df.columns[1] = "values"
+    df = df.rename(columns={'T (degC)': "values"})
     """
     with open("backend/ai/Raspberry_data/temp_dataset_3.json", "r") as f:
         open_file = json.load(f)
-        dates = list(open_file.keys())[:30000]
-        values = list(open_file.values())[:30000]
+        dates = list(open_file.keys())[:3000]
+        values = list(open_file.values())[:3000]
         for index, value in enumerate(values):
             #values[index] = index % 10
             values[index] = round(np.sin(((index * 17 % 360) * np.pi) / 180), 1)
@@ -160,51 +229,43 @@ if __name__ == "__main__":
     df.pop("dates")
     """
     
+    """
     with open("backend/ai/SMHI_Data.csv", "r") as f:
         open_file = pd.read_csv(f)
+    open_file = open_file[-5000:] #enbart de 5000 sista värderna (för att testa om den kan bli superbra även om den overfittas)
     df = pd.DataFrame(open_file["Lufttemperatur"])
     df = fill_missing_avg(df)
-    df.columns = ["values"]
-    
+    df["values2"] = df["Lufttemperatur"].copy()
+    df.columns = ["values", "values2"]
+    """
 
     w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT)
-    normal_df = w2.train_df
+    normal_df = w2.val_df
 
     if input("Do you want to use a previously saved version?[y/n]") == "n":
 
         model = ai.create_ai_model()
 
-        ai.train_ai(model, w2.train, w2.val, max_epochs = 10)
+        ai.train_ai(model, w2.train, w2.val, max_epochs = 100)
 
         if input("do you want to save?[y/n]") == "y":
             ai.save_ai_model(model, 'backend/ai/saved_model/my_model')
     else:
         model = ai.load_ai_model('backend/ai/saved_model/my_model')
 
-    """
-    total_df = loop_through_samples(normal_df, 1, 20, all = True)
-
-    df_data_shifted = total_df.copy()
-    for i in range(SHIFT):
-        df_data_shifted.loc[df_data_shifted.iloc[-1].name + 1,:] = np.nan #creates a new nan row
-    df_data_shifted['predictions'] = df_data_shifted['predictions'].shift(SHIFT) #shifts all predictions down
-
-    total_df = anomaly_range(df_data_shifted)
-
-    top_50_dif = float(total_df["dif"].quantile(q = 0.5))
-    print("total_df with a top 90 of",top_50_dif)
-    print(total_df)
-
-    plt.hist(total_df["dif"])
-    plt.show()
-    """
-
     while True:
-        vis_dict = run_sample(model, normal_df, sample_size = 2)
+        #vis_dict = run_sample(model, normal_df, sample_size = 10000 , shift= SHIFT) #sample_size = INPUT_WIDTH + SHIFT
+        vis_dict = run_sample(model, normal_df, sample_size = len(normal_df) , shift = SHIFT)
         result_df = pd.DataFrame.from_dict(vis_dict)
-        visualize(result_df, SHIFT)
+        #print(result_df)
+        visualize(result_df, 0)# SHIFT)
         #loop_through_samples(normal_df, 1, 50, all = False, anom_range = 0.03) # fix until next time - colors and integrations
-        input("go again?[y/n]")
+        if input("go again?[y/n][g for graf]") == "g":
+            error = result_df["predictions"] - result_df["values"]
+            plt.hist(error, bins = 100)
+            plt.show()
+            input("press any key to go again")
+
 
 
 
