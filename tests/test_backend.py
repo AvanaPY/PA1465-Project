@@ -42,9 +42,9 @@ class BackendUnitTest(unittest.TestCase):
 
     def test_import_json_w_id_column(self):
         try:
-            b.import_data_json('./test_files/base_json_file_id.json', table_name_json, id_colum_name='id')
-            data = database.get_data(b._curs, table_name_json)
-            self.assertTrue(data == [(1, '2021-01-20', 21, 22, 23, 0), (2, '2021-01-21', 22, 32, 32, 0)])
+            b.import_data_json('./test_files/base_json_file_id.json', table_name_json, id_colum_name='id', date_col='date')
+            data = b.get_all_data(table_name_json, convert_datetime=True)
+            self.assertTrue(data == [(1, '2021-01-20 00:00:00', 21, 22, 23, 0, 0.0), (2, '2021-01-21 00:00:00', 22, 32, 32, 0, 0.0)])
 
             database.drop_table(b._curs, table_name_json)
         except Exception as e:
@@ -77,7 +77,7 @@ class BackendUnitTest(unittest.TestCase):
 
         try:
             col_names = b.get_database_column_names(table_name_json)
-            self.assertTrue(col_names == ['id', 'date', 'sensor1', 'sensor2', 'sensor3', 'classification'])
+            self.assertTrue(col_names == ['id', 'date', 'sensor1', 'sensor2', 'sensor3', 'classification', 'prediction'])
         except:
             self.assertTrue(False)
 
@@ -87,7 +87,7 @@ class BackendUnitTest(unittest.TestCase):
         b.import_data_json("./test_files/base_json_file_id.json", table_name_json, date_col='date')
 
         try:
-            data = database.get_data(curs=b._curs, table_name=table_name_json)
+            data = b.get_all_data(table_name_json, convert_datetime=True)
             date = datetime.strptime(data[0][1], "%Y-%m-%d %H:%M:%S")
             self.assertTrue(isinstance(date, datetime))
         except:
@@ -148,8 +148,8 @@ class BackendUnitTest(unittest.TestCase):
     def test_get_all_data(self):
         b.import_data_json("./test_files/base_json_file_id.json", table_name_json, date_col='date')
         try:
-            data =b.get_all_data(table_name_json)
-            self.assertTrue(data == [(1, '2021-01-20 00:00:00', 21, 22, 23, 0), (2, '2021-01-21 00:00:00', 22, 32, 32, 0)])
+            data = b.get_all_data(table_name_json, convert_datetime=True)
+            self.assertTrue(data == [(1, '2021-01-20 00:00:00', 21, 22, 23, 0, 0.0), (2, '2021-01-21 00:00:00', 22, 32, 32, 0, 0.0)])
         except:
             self.assertTrue(False)
         database.drop_table(b._curs, table_name_json)
@@ -224,24 +224,7 @@ class BackendUnitTest(unittest.TestCase):
                     self.assertTrue(item[1])
         b.reset_current_table()
         database.drop_table(b._curs, table_name_json)
-
-    '''def test_kp_get_table(self) :
-        print(b.get_current_table())
-        test_inputs = [None, "atable", "temptbl"]
-        for item in test_inputs :
-            try: 
-                b.set_current_table(item)
-            except:
-                pass
-            result = b.get_current_table()
-            try :
-                print(f"{result} == {item}")
-                if (result != item) :
-                    raise backend_errors.TableDoesNotExistException(item)
-            except :
-                self.assertFalse(True)
-        b.reset_current_table()'''
-
+        
     # TODO: Test cases to create
     def test_column_length_differ(self):
         self.assertTrue(True)
