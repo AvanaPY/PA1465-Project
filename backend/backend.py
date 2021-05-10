@@ -142,6 +142,13 @@ class BackendBase:
         table_types = self._create_table_dict(data, **kwargs)
         create_table(self._curs, table_name, table_types)
 
+    def delete_table(self, table_name):
+        try:
+            drop_table(self._curs, table_name)
+        except Exception as e:
+            print(f'backend.delete_table | Failed to delete table {table_name}: {str(e)}')
+            pass
+
     def import_data_json(self, path_to_file, database_table, **kwargs):
         """
             Imports data from a json file and converts it into dict
