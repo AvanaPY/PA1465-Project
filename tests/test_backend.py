@@ -9,34 +9,31 @@ table_name_json = 'test_table_json'
 table_name_csv  = 'test_table_csv'
 
 try:
-    database.drop_table(b._curs, table_name_json)
+    b.delete_table(table_name_json)
 except:
     pass
 
 try:
-    database.drop_table(b._curs, table_name_csv)
+    b.delete_table(table_name_csv)
 except:
     pass
 
 class BackendUnitTest(unittest.TestCase):
     def test_import_json(self):
+        b.import_data_json('./test_files/base_json_file.json', table_name_json)
         try:
-            b.import_data_json('./test_files/base_json_file.json', table_name_json)
             b.import_data_json('./test_files/new_json_file.json', table_name_json)
-
-
-            database.drop_table(b._curs, table_name_json)
         except Exception as e:
             self.assertFalse(True)
+        b.delete_table(table_name_json)
 
     def test_import_csv(self):
+        b.import_data_csv('./test_files/base_csv_file.csv', table_name_csv)
         try:
-            b.import_data_csv('./test_files/base_csv_file.csv', table_name_csv)
             b.import_data_csv('./test_files/new_csv_file.csv', table_name_csv)
-
-            database.drop_table(b._curs, table_name_csv)
         except Exception as e:
             self.assertFalse(True)
+        b.delete_table(table_name_csv)
 
     def test_import_json_w_id_column(self):
         try:
@@ -44,9 +41,9 @@ class BackendUnitTest(unittest.TestCase):
             data = b.get_all_data(table_name_json, convert_datetime=True)
             self.assertTrue(data == [(1, '2021-01-20 00:00:00', 21, 22, 23, 0, 0.0), (2, '2021-01-21 00:00:00', 22, 32, 32, 0, 0.0)])
 
-            database.drop_table(b._curs, table_name_json)
         except Exception as e:
             self.assertFalse(True)
+        b.delete_table(table_name_json)
 
     def test_import_json_invalid_column_count(self):
         b.import_data_json('./test_files/base_json_file_id.json', table_name_json, id_colum_name='id')
@@ -58,7 +55,7 @@ class BackendUnitTest(unittest.TestCase):
         except Exception as e:
             self.assertTrue(False)
 
-        database.drop_table(b._curs, table_name_json)
+        b.delete_table(table_name_json)
 
     def test_import_json_invalid_column_name(self):
         b.import_data_json('./test_files/base_json_file_id.json', table_name_json, id_colum_name='id')
@@ -68,7 +65,7 @@ class BackendUnitTest(unittest.TestCase):
         except Exception as e:
             self.assertTrue(type(e) == backend_errors.InvalidColumnNameException)
 
-        database.drop_table(b._curs, table_name_json)
+        b.delete_table(table_name_json)
 
     def test_get_database_column_names(self):
         b.import_data_json("./test_files/base_json_file_id.json", table_name_json)
@@ -79,7 +76,7 @@ class BackendUnitTest(unittest.TestCase):
         except:
             self.assertTrue(False)
 
-        database.drop_table(b._curs, table_name_json)
+        b.delete_table(table_name_json)
 
     def test_import_data_datetime(self):
         b.import_data_json("./test_files/base_json_file_id.json", table_name_json, date_col='date')
@@ -90,6 +87,7 @@ class BackendUnitTest(unittest.TestCase):
             self.assertTrue(isinstance(date, datetime))
         except:
             self.assertTrue(False)
+        b.delete_table(table_name_json)
 
     def test_get_tables(self):
         table_list = ["atable1", "atable2", "atable3", "atable4"]
@@ -150,7 +148,7 @@ class BackendUnitTest(unittest.TestCase):
             self.assertTrue(data == [(1, '2021-01-20 00:00:00', 21, 22, 23, 0, 0.0), (2, '2021-01-21 00:00:00', 22, 32, 32, 0, 0.0)])
         except:
             self.assertTrue(False)
-        database.drop_table(b._curs, table_name_json)
+        b.delete_table(table_name_json)
     
     # def test_kp_set_table(self):
     #     database.create_table(b._curs, table_name_json, {
@@ -170,7 +168,7 @@ class BackendUnitTest(unittest.TestCase):
     #             b.set_current_table(item[0])
     #         except:
     #             self.assertTrue(item[1])
-    #     database.drop_table(b._curs, table_name_json)
+    #     b.delete_table(table_name_json)
 
     # def test_kp_get_data_points(self):
     #     database.create_table(b._curs, table_name_json, {
@@ -187,7 +185,7 @@ class BackendUnitTest(unittest.TestCase):
     #             self.assertTrue(item[1])
     #         except : 
     #             self.assertTrue(item[2])
-    #     database.drop_table(b._curs, table_name_json)
+    #     b.delete_table(table_name_json)
 
     # def test_kp_edit_data_points(self):
     #     database.create_table(b._curs, table_name_json, {
@@ -221,23 +219,34 @@ class BackendUnitTest(unittest.TestCase):
     #             except :
     #                 self.assertTrue(item[1])
     #     b.reset_current_table()
-    #     database.drop_table(b._curs, table_name_json)
+    #     b.delete_table(table_name_json)
 
     # TODO: Test cases to create
     def test_column_length_differ(self):
         try:
             b.import_data_json("./test_files/test_json_file_column_lengths_differ.json", table_name_json)
-            database.drop_table(b._curs, table_name_json)
         except backend_errors.ColumnLengthsDifferException:
             self.assertTrue(True)
         except:
             self.assertTrue(False)
 
     def test_column_types_not_same(self):
-        self.assertTrue(True)
+        try:
+            b.import_data_json("./test_files/test_json_file_column_types_differ.json", table_name_json)
+        except backend_errors.ColumnTypesNotSameException:
+            self.assertTrue(True)
+        except:
+            self.assertTrue(False)
 
     def test_column_types_not_matching(self):
-        self.assertTrue(True)
+        b.import_data_json("./test_files/base_json_file_id.json", 'random_json_table_name_fuck_off_please_work')
+        try:
+            b.import_data_json("./test_files/test_json_file_column_types_not_matching.json", 'random_json_table_name_fuck_off_please_work')
+        except backend_errors.ColumnTypesNotMatchingException:
+            self.assertTrue(True)
+        except:
+            self.assertTrue(False)
+        b.delete_table('random_json_table_name_fuck_off_please_work')
 
     def test_anomaly_alert(self):
         self.assertTrue(True)
@@ -249,7 +258,13 @@ class BackendUnitTest(unittest.TestCase):
         self.assertTrue(True)
 
     def test_get_all_non_classified(self):
-        self.assertTrue(True)
+        b.import_data_json("./test_files/test_json_file_with_non_classified.json", 'random_json_table_name_fuck_off_please_work2', date_col='date')
+        try:
+            data = b._get_all_non_classified('random_json_table_name_fuck_off_please_work2', convert_datetime=True)
+            self.assertTrue(data==[(3, '2021-01-22 00:00:00', 21, 32, 22, None, 0.0)])
+        except:
+            self.assertTrue(False)
+        b.delete_table('random_json_table_name_fuck_off_please_work2')
     
     def test_get_anomalies(self):
         self.assertTrue(True)

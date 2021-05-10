@@ -10,7 +10,8 @@ curs = my_db.cursor()
 try:
     drop_table(curs, 'testing_table')
 except Exception as e:
-    print(f'Could not drop table: {e}')
+    pass
+    #print(f'Could not drop table: {e}')
 
 class DatabaseUnitTest(unittest.TestCase):
     def test_create_drop_table(self):
