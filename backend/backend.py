@@ -187,7 +187,15 @@ class BackendBase:
             json.dump(json_data, f)
 
     def export_data_csv(self, path_to_file, database_table, **kwargs):
-        pass
+        data = self.get_all_data(database_table)
+        cols = self.get_database_column_names(database_table)
+        with open(path_to_file, 'w+', newline='') as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=cols)
+            writer.writeheader()
+            for row in data:
+                writer.writerow({
+                    key:value for key, value in zip(cols, row)
+                })
 
     def add_dict_to_database(self, data_dict, database_table, date_col=None, **kwargs):
         """ 
