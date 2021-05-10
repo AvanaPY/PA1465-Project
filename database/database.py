@@ -9,8 +9,9 @@ def skip_none_dictionary(dictionary):
             dictionary.pop(key)
 
 def column_dictionary_to_sql_and_join(dictionary, join_key=' AND '):
-    safe_query_list = [f'{key}=%({key})s' for key in dictionary]     # Safe query
-    WHERE_LOOK = join_key.join(safe_query_list)          
+    comparers = [" IS " if dictionary[key] is None else "=" for key in dictionary]
+    safe_query_list = [f'{key}{comparer}%({key})s' for key, comparer in zip(dictionary, comparers)]     # Safe query
+    WHERE_LOOK = join_key.join(safe_query_list)
     return WHERE_LOOK 
 
 def create_sql_connection(filename="config.ini", section="mysql"):
@@ -152,7 +153,7 @@ def get_data(curs, table_name, column_dictionary=None, order_by=None, order_by_a
             Any errors that occured from MySQLConnection
     """
     if column_dictionary:
-        skip_none_dictionary(column_dictionary)
+        #skip_none_dictionary(column_dictionary)
         WHERE_LOOK = column_dictionary_to_sql_and_join(column_dictionary)  # Join into an AND list
         my_sql_command = f"SELECT * FROM {table_name} WHERE {WHERE_LOOK}"
     else:
@@ -166,7 +167,6 @@ def get_data(curs, table_name, column_dictionary=None, order_by=None, order_by_a
     if limit_row_count > 0:
         limit_string = f' LIMIT {limit_offset}, {limit_row_count}' 
         my_sql_command += limit_string
-
     curs.execute(my_sql_command, column_dictionary)
     return curs.fetchall()
 
