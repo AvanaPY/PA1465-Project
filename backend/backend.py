@@ -9,6 +9,7 @@ from database import *
 from .ext import sql_type_to_python_type, all_type_equal_or_none, _all_types_not_equal
 import backend.errors as backend_errors
 
+DATETIME_COLUMN_NAME = 'date' # TODO: Check if this exists in imported data
 CLASSIFICATION_COLUMN_NAME = 'classification'
 PREDICTION_COLUMN_NAME = 'prediction'
 ID_COLUMN_NAME = 'id'
@@ -334,7 +335,7 @@ class BackendBase:
         except:
             raise
 
-    def get_all_data(self, table_name):
+    def get_all_data(self, table_name, convert_datetime=False):
         """ 
             A wrapping function for returning all the data in the table
 
@@ -348,7 +349,15 @@ class BackendBase:
                 -
         """
         data = get_data(self._curs, table_name)
-        return data
+
+        if convert_datetime:
+            columns = self.get_database_column_names(table_name)
+            date_column_index = columns.index(DATETIME_COLUMN_NAME)
+            for i in range(len(data)):
+                row = list(data[i])
+                row[date_column_index] = row[date_column_index].strftime(WANTED_DATETIME_FORMAT)
+                data[i] = tuple(row)
+        return data 
 
     def set_current_table(self, table_name):
         """ 
