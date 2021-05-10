@@ -169,8 +169,9 @@ def run_ai(model, input_list, shift = 1, lower_sensitivityIQR = 1.5, upper_sensi
 
     difference_df = pd.DataFrame(difference_dic)
 
-    Q1 = difference_df["difference"].quantile(0.05)
-    Q3 = difference_df["difference"].quantile(0.95)
+    anomaly_limit = 0.1 #worst 10% predictions = anomaly
+    Q1 = difference_df["difference"].quantile(anomaly_limit / 2)
+    Q3 = difference_df["difference"].quantile(1 - (anomaly_limit / 2))
 
     IQR = Q3 - Q1
 
