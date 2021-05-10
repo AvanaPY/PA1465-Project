@@ -152,76 +152,76 @@ class BackendUnitTest(unittest.TestCase):
             self.assertTrue(False)
         database.drop_table(b._curs, table_name_json)
     
-    def test_kp_set_table(self):
-        database.create_table(b._curs, table_name_json, {
-            'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
-            'name':'VARCHAR(255)',
-            'age':'INT(6)'
-        })
-        test_inputs = [("fel_namn_1", True), 
-                       (table_name_json, False), 
-                       ("fel_namn_2", True),
-                       ("tãble", True),
-                       (None, True),
-                       ("ö▲ü!", True)]
-        for item in test_inputs :
-            try :
-                b.get_tables()
-                b.set_current_table(item[0])
-            except:
-                self.assertTrue(item[1])
-        database.drop_table(b._curs, table_name_json)
+    # def test_kp_set_table(self):
+    #     database.create_table(b._curs, table_name_json, {
+    #         'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
+    #         'name':'VARCHAR(255)',
+    #         'age':'INT(6)'
+    #     })
+    #     test_inputs = [("fel_namn_1", True), 
+    #                    (table_name_json, False), 
+    #                    ("fel_namn_2", True),
+    #                    ("tãble", True),
+    #                    (None, True),
+    #                    ("ö▲ü!", True)]
+    #     for item in test_inputs :
+    #         try :
+    #             b.get_tables()
+    #             b.set_current_table(item[0])
+    #         except:
+    #             self.assertTrue(item[1])
+    #     database.drop_table(b._curs, table_name_json)
 
-    def test_kp_get_data_points(self):
-        database.create_table(b._curs, table_name_json, {
-            'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
-            'name':'VARCHAR(255)',
-            'age':'INT(6)'
-        })
-        test_inputs = [(table_name_json, True, False),
-                       ("", False, True), 
-                       (None, False, True)]
-        for item in test_inputs :
-            try :
-                b._get_all_non_classified(item[0])
-                self.assertTrue(item[1])
-            except : 
-                self.assertTrue(item[2])
-        database.drop_table(b._curs, table_name_json)
+    # def test_kp_get_data_points(self):
+    #     database.create_table(b._curs, table_name_json, {
+    #         'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
+    #         'name':'VARCHAR(255)',
+    #         'age':'INT(6)'
+    #     })
+    #     test_inputs = [(table_name_json, True, False),
+    #                    ("", False, True), 
+    #                    (None, False, True)]
+    #     for item in test_inputs :
+    #         try :
+    #             b._get_all_non_classified(item[0])
+    #             self.assertTrue(item[1])
+    #         except : 
+    #             self.assertTrue(item[2])
+    #     database.drop_table(b._curs, table_name_json)
 
-    def test_kp_edit_data_points(self):
-        database.create_table(b._curs, table_name_json, {
-            'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
-            'name':'VARCHAR(255)',
-            'age':'INT(6)'
-        })
-        b.set_current_table(table_name_json)
-        test_inputs = [("e 1 true", False),
-                       ("e 9 true", True),
-                       ("p 1 false", True),
-                       ("p 9 true", True),
-                       ("r 7", False)]
-        for item in test_inputs :
-            edit_args = item[0].split(" ")
-            if edit_args[0] == "e" :
-                classification = False
-                if edit_args[2] == "true" or edit_args[2] == "t" or edit_args[2] == "1" :
-                    classification = True
-                elif edit_args[2] == "false" or edit_args[2] == "f" or edit_args[2] == "0" :
-                    classification = False
-                else :
-                    break
-                try :
-                    b._insert_classifications(int(edit_args[1]), classification)
-                except :
-                    self.assertTrue(item[1])
-            elif edit_args[0] == "r" :
-                try :
-                    b._delete_data_point(int(edit_args[1]))
-                except :
-                    self.assertTrue(item[1])
-        b.reset_current_table()
-        database.drop_table(b._curs, table_name_json)
+    # def test_kp_edit_data_points(self):
+    #     database.create_table(b._curs, table_name_json, {
+    #         'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
+    #         'name':'VARCHAR(255)',
+    #         'age':'INT(6)'
+    #     })
+    #     b.set_current_table(table_name_json)
+    #     test_inputs = [("e 1 true", False),
+    #                    ("e 9 true", True),
+    #                    ("p 1 false", True),
+    #                    ("p 9 true", True),
+    #                    ("r 7", False)]
+    #     for item in test_inputs :
+    #         edit_args = item[0].split(" ")
+    #         if edit_args[0] == "e" :
+    #             classification = False
+    #             if edit_args[2] == "true" or edit_args[2] == "t" or edit_args[2] == "1" :
+    #                 classification = True
+    #             elif edit_args[2] == "false" or edit_args[2] == "f" or edit_args[2] == "0" :
+    #                 classification = False
+    #             else :
+    #                 break
+    #             try :
+    #                 b._insert_classifications(int(edit_args[1]), classification)
+    #             except :
+    #                 self.assertTrue(item[1])
+    #         elif edit_args[0] == "r" :
+    #             try :
+    #                 b._delete_data_point(int(edit_args[1]))
+    #             except :
+    #                 self.assertTrue(item[1])
+    #     b.reset_current_table()
+    #     database.drop_table(b._curs, table_name_json)
 
     # TODO: Test cases to create
     def test_column_length_differ(self):
