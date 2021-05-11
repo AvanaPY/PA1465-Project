@@ -127,7 +127,7 @@ def test_run_ai(model, df_data, return_full = "no"):
     else:
         return df_data
 
-def run_ai(model, input_list, shift = 1, lower_sensitivityIQR = 1.5, upper_sensitivityIQR = 1.5):
+def run_ai(model, input_list, shift = 1, lower_sensitivity = 1.5, upper_sensitivity = 1.5):
     """
         Runs the Ai
 
@@ -169,16 +169,15 @@ def run_ai(model, input_list, shift = 1, lower_sensitivityIQR = 1.5, upper_sensi
 
     difference_df = pd.DataFrame(difference_dic)
 
-    anomaly_limit = 0.1 #worst 10% predictions = anomaly
-    Q1 = difference_df["difference"].quantile(anomaly_limit / 2)
-    Q3 = difference_df["difference"].quantile(1 - (anomaly_limit / 2))
+    Q1 = difference_df["difference"].quantile(0.25)
+    Q3 = difference_df["difference"].quantile(0.75)
 
     IQR = Q3 - Q1
 
-    lower_whisker = Q1 #* lower_sensitivityIQR#- lower_sensitivityIQR
-    upper_whisker = Q3 #* upper_sensitivityIQR#+ upper_sensitivityIQR
-    #print("low:", lower_whisker)
-    #print("high:", upper_whisker)
+    lower_whisker = Q1 - lower_sensitivity * IQR    #- lower_sensitivityIQR
+    upper_whisker = Q3 + upper_sensitivity * IQR  #+ upper_sensitivityIQR
+    print("low:", lower_whisker)
+    print("high:", upper_whisker)
 
     anomaly = []
     for value in difference_df["difference"]:

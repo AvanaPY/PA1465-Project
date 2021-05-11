@@ -292,8 +292,8 @@ if __name__ == "__main__":
         visualize(result_df, 0)
         #loop_through_samples(normal_df, 1, 50, all = False, anom_range = 0.03) # fix until next time - colors and integrations
         if input("go again?[y/n][g for graf]") == "g":
-            error = result_df["predictions"] - result_df["values"]
-            plt.hist(error, bins = 100)
+            fig, ax = plt.subplots()
+            N, bins, patches = plt.hist(result_df["dif"], bins = 100)
             plt.show()
             input("press any key to go again")
 
