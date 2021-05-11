@@ -17,7 +17,11 @@ Create a config.ini file in the root directory with this content
 host = localhost
 database = python_mysql
 user = root
-password =
+password = hurrdurr
+
+[app]
+ip=localhost
+port=hurrdurr
 ```
 
 # Starting up a database
