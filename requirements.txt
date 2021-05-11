@@ -1,8 +1,9 @@
 coverage
-flask
 mysql
 mysql-connector-python
 pip-chill
 seaborn
 sklearn
+cycler
+flask
 tensorflow
