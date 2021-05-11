@@ -9,10 +9,37 @@ from .backend import BackendBase
 import pandas.errors as pandas_errors
 import backend.errors as backend_errors
 
+from configparser import ConfigParser
+
 BASE_DIR = os.path.dirname(__file__)
 TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 
-def create_app(host, port):
+def create_app(filename='config.ini', section='app'):
+    """
+        Creates an app
+
+        Args:
+            filename: str - Path to config file
+            section: str - Section in config file
+
+        Returns:
+            App
+
+        Raises:
+            -
+    """
+
+    confparser = ConfigParser()
+    confparser.read(filename)
+    config = {}
+    if confparser.has_section(section):
+        items = confparser.items(section)
+        for item in items:
+            config[item[0]] = item[1]
+
+    host = config['ip']
+    port = int(config['port'])
+
     app = App(host=host, port=port)
     app.debug = True
     @app.route('/')
@@ -45,10 +72,7 @@ def create_app(host, port):
         else:
             status = 'ok'
             message = 'Dataset has been received'
-        
         os.remove(file_path)
-
-        #app._backend.helo()
 
         return jsonify({
             "status": status,
@@ -121,5 +145,5 @@ class App(Flask):
         self._port = port
         self._backend = BackendBase()
 
-    def run(self):
+    def run(self, **kwargs):
         super().run(host=self._host, port=self._port)
