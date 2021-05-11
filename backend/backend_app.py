@@ -1,3 +1,4 @@
+from logging import exception
 import os
 from flask import Flask
 from flask import render_template
@@ -14,7 +15,7 @@ from configparser import ConfigParser
 BASE_DIR = os.path.dirname(__file__)
 TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 
-def create_app(filename='config.ini', section='app'):
+def create_app(confparser, app_debug=False, section='app'):
     """
         Creates an app
 
@@ -28,20 +29,33 @@ def create_app(filename='config.ini', section='app'):
         Raises:
             -
     """
+    host, port = 'localhost', 5000 # Default values
 
-    confparser = ConfigParser()
-    confparser.read(filename)
-    config = {}
-    if confparser.has_section(section):
-        items = confparser.items(section)
-        for item in items:
-            config[item[0]] = item[1]
+    if not confparser is None:
+        config = {}
+        if confparser.has_section(section):
+            items = confparser.items(section)
+            for item in items:
+                config[item[0]] = item[1]
+        else:
+            raise Exception('Section {0} not found in the config file'.format(section))
 
-    host = config['ip']
-    port = int(config['port'])
+        try:
+            host = config['ip']
+            port = int(config['port'])
+        except KeyError as e:
+            raise Exception(f'Error when reading config file: {e.args[0]} not in config file in section {section}!')
+        except ValueError as e:
+            raise Exception(f'Error when reading config file: "{config["port"]}" is not a valid port value!')
 
-    app = App(host=host, port=port)
-    app.debug = True
+    app = App(host=host, port=port, confparser=confparser)
+    app.debug = app_debug
+
+    #############################
+    #                           #
+    #        APP ROUTING        #
+    #                           #
+    #############################
     @app.route('/')
     def _home():
         return render_template("home.html")
@@ -139,11 +153,11 @@ def console_program(host, port):
                 run = False
 
 class App(Flask):
-    def __init__(self, host, port):
+    def __init__(self, host, port, confparser):
         super().__init__(__name__)
         self._host = host
         self._port = port
-        self._backend = BackendBase()
+        self._backend = BackendBase(confparser=confparser)
 
     def run(self, **kwargs):
         super().run(host=self._host, port=self._port)

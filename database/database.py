@@ -13,7 +13,7 @@ def column_dictionary_to_sql_and_join(dictionary, join_key=' AND '):
     WHERE_LOOK = join_key.join(safe_query_list)
     return WHERE_LOOK 
 
-def create_sql_connection(filename="config.ini", section="mysql"):
+def create_sql_connection(confparser, section='mysql'):
     """
         Creates a MySQLConnection instance connected to the database
 
@@ -28,7 +28,14 @@ def create_sql_connection(filename="config.ini", section="mysql"):
         Raises:
             None
     """
-    db_config = read_db_config(filename=filename, section=section)
+    db_config = {}
+    if confparser.has_section(section):
+        items = confparser.items(section)
+        for item in items:
+            db_config[item[0]] = item[1]
+    else:
+        raise Exception('Section {0} not found in the config file'.format(section,))
+
     my_db = MySQLConnection(autocommit=True, **db_config)
     return my_db, db_config
 

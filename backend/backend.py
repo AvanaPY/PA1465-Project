@@ -17,8 +17,8 @@ ID_COLUMN_NAME = 'id'
 WANTED_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 class BackendBase:
-    def __init__(self, config_file_name="config.ini", section="mysql"):
-        self._my_db, self._db_config = create_sql_connection(config_file_name, section)
+    def __init__(self, confparser, database_section='mysql'):
+        self._my_db, self._db_config = create_sql_connection(confparser=confparser, section=database_section)
         self._curs = self._my_db.cursor()
         self._current_table = None                                                          # The current table name that is being under consideration
                                                                                             # This is more a temporary solution and should be done on the front end instead

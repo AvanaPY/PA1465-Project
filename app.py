@@ -9,8 +9,13 @@ from backend import backend_app
 #                 help='The port to run the Flask server on')
 # args = parser.parse_args()
 
+from configparser import ConfigParser
+
+parser = ConfigParser()
+parser.read('./config.ini')
+
 if __name__ == '__main__':
-    app = create_app('./config.ini')
+    app = create_app(confparser=parser, section='app')
     app.run()
     # Either or
     #backend_app.console_program(args.ip, args.port)
