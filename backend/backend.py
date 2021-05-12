@@ -4,6 +4,8 @@ import pandas as pd
 import mysql.connector.errors as merrors
 import datetime
 
+from ai import *
+
 from database import *
 
 from .ext import sql_type_to_python_type, all_type_equal_or_none, _all_types_not_equal
@@ -585,3 +587,9 @@ class BackendBase:
         self._curs.execute(my_sql_command)
         data = self._curs.fetchall()
         return data
+
+    def get_predictions(self):
+        #self.model #is a thing tbc
+        #self.input #is maby a thing
+        run_ai(model, input_list)
+
