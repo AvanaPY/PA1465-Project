@@ -66,7 +66,15 @@ def save_ai_model(model, save_ai_path):
         Any errors tensorflow might've raised when saving the ai model
     """
     model.save(save_ai_path)
-    return model
+
+    # TODO: Save meta-data about AI in a json file
+    # Save things such as input size in datapoints, 
+    # output size, how many steps it predicts forward
+    # in a .json file
+    # expected_input_size = 0
+    # expected_output = 0
+    
+    return model #, expected_input_size, expected_output
 
 def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5):
     """
