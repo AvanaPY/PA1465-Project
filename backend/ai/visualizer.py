@@ -245,6 +245,7 @@ if __name__ == "__main__":
     LABEL_WIDTH = INPUT_WIDTH 
 
     df = import_tf_special_dataset()
+    df = df[["p (mbar)",  "values", "Tpot (K)"]]
 
     """
     with open("backend/ai/Raspberry_data/temp_dataset_3.json", "r") as f:
