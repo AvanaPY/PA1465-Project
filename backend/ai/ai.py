@@ -4,6 +4,7 @@ import tensorflow as tf
 import seaborn as sns
 import math
 import json
+import os
 
 def create_ai_model():
     """
@@ -18,7 +19,6 @@ def create_ai_model():
         Raises::
             --
     """
-
     model = tf.keras.models.Sequential([
         tf.keras.layers.LSTM(30, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
         tf.keras.layers.LSTM(70, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
@@ -65,7 +65,7 @@ def save_ai_model(model, save_ai_path):
     Raises::
         Any errors tensorflow might've raised when saving the ai model
     """
-    model.save(save_weights_path)
+    model.save(save_ai_path)
     return model
 
 def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5):
@@ -345,9 +345,15 @@ if __name__ == "__main__":
         performance['LSTM'] = model.evaluate(w2.test, verbose=0)
 
         if input("do you want to save?[y/n]") == "y":
-            save_ai_model(model, 'backend/ai/saved_model/my_model')
+            name = input("what name should the model use?")
+            input_path = 'backend/ai/saved_models/' + name
+
+            save_ai_model(model, input_path)
     else:
-        model = load_ai_model('backend/ai/saved_model/my_model')
+        print()
+        name = input("what model should we use?")
+        input_path = 'backend/ai/saved_models/' + name
+        model = load_ai_model(input_path)
 
 
     value = None

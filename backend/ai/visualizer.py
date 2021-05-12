@@ -239,6 +239,7 @@ def import_tf_special_dataset():
     return df
 
 if __name__ == "__main__":
+    tf.get_logger().setLevel('ERROR')
     INPUT_WIDTH = 10
     SHIFT = 10
     LABEL_WIDTH = INPUT_WIDTH 
@@ -269,19 +270,47 @@ if __name__ == "__main__":
     df.columns = ["values", "values2"]
     """
 
-    w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT)
-    normal_df = w2.val_df
 
-    if input("Do you want to use a previously saved version?[y/n]") == "n":
+
+    path = 'backend/ai/saved_models/'
+    directory_contents = os.listdir(path)
+    print()
+    print("Saved models: [input width, shift, label width]")
+    for enum, direc in enumerate(directory_contents):
+        print(enum + 1, " | [", direc, "]", sep = "")
+    print()
+    use_saved_input = input("Do you want to use a previously saved version?[y/n]")
+    
+    if use_saved_input == "n":
+
+        INPUT_WIDTH = int(input("Imput width: "))
+        SHIFT = int(input("shift: "))
+        LABEL_WIDTH = int(input("Label width: "))
+        w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT)
+        normal_df = w2.val_df
 
         model = ai.create_ai_model()
 
         ai.train_ai(model, w2.train, w2.val, max_epochs = 100)
 
         if input("do you want to save?[y/n]") == "y":
-            ai.save_ai_model(model, 'backend/ai/saved_model/my_model')
+            name = str(INPUT_WIDTH) + ", " + str(SHIFT) + ", " + str(LABEL_WIDTH)
+            input_path = 'backend/ai/saved_models/' + name
+
+            ai.save_ai_model(model, input_path)
     else:
-        model = ai.load_ai_model('backend/ai/saved_model/my_model')
+        name = int(input("model number to use: "))
+        input_path = 'backend/ai/saved_models/' + directory_contents[name - 1]
+        model = ai.load_ai_model(input_path)
+        model_info_list = [int(i) for i in list(directory_contents[name - 1].split(", "))]
+        
+        print("info:", model_info_list)
+        INPUT_WIDTH = model_info_list[0]
+        SHIFT = model_info_list[1]
+        LABEL_WIDTH = model_info_list[2]
+        w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT)
+        normal_df = w2.val_df
+
 
     while True:
         #vis_dict = run_sample(model, normal_df, sample_size = 10000 , shift= SHIFT) #sample_size = INPUT_WIDTH + SHIFT
