@@ -4,7 +4,7 @@ import pandas as pd
 import mysql.connector.errors as merrors
 import datetime
 
-from ai import *
+from .ai import *
 
 from database import *
 
@@ -588,8 +588,32 @@ class BackendBase:
         data = self._curs.fetchall()
         return data
 
-    def get_predictions(self):
+    def strip_columns_from_data_rows(self, table_name : str, data : list, cols_to_strip : list):
+        """
+            SUPPOSE THAT `data` IS COLUMN-WISE ORDERED ACCORDING TO THE GOD DAMN DATABASE
+        """
+        data_cols = self.get_database_column_names(table_name)
+
+        for i, row in enumerate(data):
+            row = list(row)
+            for d, col in zip(row[:], data_cols):
+                if col in cols_to_strip:
+                    row.remove(d)
+            data[i] = row
+
+
+    def classify_datapoint(self, table_name, datapoint):
         #self.model #is a thing tbc
         #self.input #is maby a thing
-        run_ai(model, input_list)
+
+        n = 4 # Amount of datapoints the AI will use
+        n_last_datapoints = get_data(self._curs, table_name, order_by=[DATETIME_COLUMN_NAME], order_by_asc_desc='DESC', limit_row_count=n)
+        n_last_datapoints = list(reversed(n_last_datapoints))
+
+        self.strip_columns_from_data_rows(table_name, n_last_datapoints, 
+                                          [ID_COLUMN_NAME, DATETIME_COLUMN_NAME, PREDICTION_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME])
+
+        input_list = [*n_last_datapoints, datapoint]
+        print(input_list)
+        # run_ai(model, input_list)
 
