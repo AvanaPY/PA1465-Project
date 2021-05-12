@@ -49,7 +49,14 @@ def load_ai_model(load_ai_path):
         Any errors tensorflow might've raised when loading the ai model
     """
     model = tf.keras.models.load_model(load_ai_path)
-    return model
+
+    ai_name = list(load_ai_path.split("/"))[-1]
+    model_info_list = [int(i) for i in list(ai_name.split(", "))]
+        
+    INPUT_WIDTH = model_info_list[0]
+    SHIFT = model_info_list[1]
+    LABEL_WIDTH = model_info_list[2]
+    return model, INPUT_WIDTH, SHIFT, LABEL_WIDTH
 
 def save_ai_model(model, save_ai_path):
     """

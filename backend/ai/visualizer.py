@@ -301,13 +301,9 @@ if __name__ == "__main__":
     else:
         name = int(input("model number to use: "))
         input_path = 'backend/ai/saved_models/' + directory_contents[name - 1]
-        model = ai.load_ai_model(input_path)
-        model_info_list = [int(i) for i in list(directory_contents[name - 1].split(", "))]
+        model, INPUT_WIDTH, SHIFT, LABEL_WIDTH = ai.load_ai_model(input_path)
         
-        print("info:", model_info_list)
-        INPUT_WIDTH = model_info_list[0]
-        SHIFT = model_info_list[1]
-        LABEL_WIDTH = model_info_list[2]
+        print("info:", INPUT_WIDTH, SHIFT, LABEL_WIDTH)
         w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT)
         normal_df = w2.val_df
 
