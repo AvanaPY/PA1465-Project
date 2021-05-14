@@ -142,7 +142,7 @@ def test_run_ai(model, df_data, return_full = "no"):
     else:
         return df_data
 
-def run_ai(model, input_list, shift = 1, lower_sensitivity = 1.5, upper_sensitivity = 1.5):
+def run_ai(model, input_list, shift = 1, label_width = 1, lower_sensitivity = 1.5, upper_sensitivity = 1.5, verbose = 0):
     """
         Runs the Ai
 
@@ -162,6 +162,8 @@ def run_ai(model, input_list, shift = 1, lower_sensitivity = 1.5, upper_sensitiv
     #for i in input_list:
     #    print(i)
     input_data_og = input_list
+    total_size = len(input_list[0])
+
     input_data = input_list[:-1 * shift]
     #print(input_data)
 
@@ -173,12 +175,18 @@ def run_ai(model, input_list, shift = 1, lower_sensitivity = 1.5, upper_sensitiv
     #shape = [batch size, time steps, inputs] = [1, 2, 1] I vårt test fall
 
     output = model.predict(input_data)
-
-    output_array = [np.nan] * shift + [n[0] for n in np.array(output)[0]]
+    non_output_size = total_size - label_width + shift
+    print("out", output)
+    output = [n[0] for n in np.array(output[0])]
+    real_output = output[non_output_size - shift:]
+    print(np.array(real_output), np.array(real_output))
+    output_array = [np.nan] * non_output_size + [n for n in np.array(real_output)]
+    #output_array = [np.nan] * shift + [n[0] for n in np.array(output)[0]]
 
     difference_dic = {"difference" : []}
 
     real_values = [datapoint[1] for datapoint in input_data_og]
+    print(real_values, output_array)
     for i in range(len(output_array)):
         difference_dic["difference"].append(real_values[i] - output_array[i])
 
@@ -191,8 +199,9 @@ def run_ai(model, input_list, shift = 1, lower_sensitivity = 1.5, upper_sensitiv
 
     lower_whisker = Q1 - lower_sensitivity * IQR    #- lower_sensitivityIQR
     upper_whisker = Q3 + upper_sensitivity * IQR  #+ upper_sensitivityIQR
-    print("low:", lower_whisker)
-    print("high:", upper_whisker)
+    if verbose == 1:
+        print("low:", lower_whisker)
+        print("high:", upper_whisker)
 
     anomaly = []
     for value in difference_df["difference"]:

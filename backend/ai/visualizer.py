@@ -179,6 +179,33 @@ def import_tf_special_dataset():
         Raises::
         --
     """
+
+
+    """
+    with open("backend/ai/Raspberry_data/temp_dataset_3.json", "r") as f:
+        open_file = json.load(f)
+        dates = list(open_file.keys())[:3000]
+        values = list(open_file.values())[:3000]
+        for index, value in enumerate(values):
+            #values[index] = index % 10
+            values[index] = round(np.sin(((index * 17 % 360) * np.pi) / 180), 1)
+            #values[index] = np.sin(((index * 17 % 360) * np.pi) / 180)
+    new_dict = {"dates": dates, "values": values}
+    df = pd.DataFrame(new_dict)
+    df.pop("dates")
+    """
+    
+    """
+    with open("backend/ai/SMHI_Data.csv", "r") as f:
+        open_file = pd.read_csv(f)
+    open_file = open_file[-5000:] #enbart de 5000 sista värderna (för att testa om den kan bli superbra även om den overfittas)
+    df = pd.DataFrame(open_file["Lufttemperatur"])
+    df = fill_missing_avg(df)
+    df["values2"] = df["Lufttemperatur"].copy()
+    df.columns = ["values", "values2"]
+    """
+
+
     #Tesorflow dataset input
     zip_path = tf.keras.utils.get_file(
         origin='https://storage.googleapis.com/tensorflow/tf-keras-datasets/jena_climate_2009_2016.csv.zip',
@@ -247,32 +274,6 @@ if __name__ == "__main__":
     df = import_tf_special_dataset()
     df = df[["p (mbar)",  "values", "Tpot (K)"]]
 
-    """
-    with open("backend/ai/Raspberry_data/temp_dataset_3.json", "r") as f:
-        open_file = json.load(f)
-        dates = list(open_file.keys())[:3000]
-        values = list(open_file.values())[:3000]
-        for index, value in enumerate(values):
-            #values[index] = index % 10
-            values[index] = round(np.sin(((index * 17 % 360) * np.pi) / 180), 1)
-            #values[index] = np.sin(((index * 17 % 360) * np.pi) / 180)
-    new_dict = {"dates": dates, "values": values}
-    df = pd.DataFrame(new_dict)
-    df.pop("dates")
-    """
-    
-    """
-    with open("backend/ai/SMHI_Data.csv", "r") as f:
-        open_file = pd.read_csv(f)
-    open_file = open_file[-5000:] #enbart de 5000 sista värderna (för att testa om den kan bli superbra även om den overfittas)
-    df = pd.DataFrame(open_file["Lufttemperatur"])
-    df = fill_missing_avg(df)
-    df["values2"] = df["Lufttemperatur"].copy()
-    df.columns = ["values", "values2"]
-    """
-
-
-
     path = 'backend/ai/saved_models/'
     directory_contents = os.listdir(path)
     print()
@@ -311,7 +312,8 @@ if __name__ == "__main__":
 
     while True:
         #vis_dict = run_sample(model, normal_df, sample_size = 10000 , shift= SHIFT) #sample_size = INPUT_WIDTH + SHIFT
-        vis_dict = run_sample(model, normal_df, sample_size = len(normal_df) , shift = SHIFT)
+        #vis_dict = run_sample(model, normal_df, sample_size = len(normal_df) , shift = SHIFT)
+        vis_dict = run_sample(model, normal_df, sample_size = INPUT_WIDTH + SHIFT , shift = SHIFT)
         result_df = pd.DataFrame.from_dict(vis_dict)
         print(result_df)
 
