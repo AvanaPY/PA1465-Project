@@ -10,7 +10,7 @@ import datetime
 import numpy as np
 import math
 
-from .ai import *
+from ai import *
 
 from database import *
 
@@ -31,7 +31,7 @@ class BackendBase:
         self._current_table = None                                                          # The current table name that is being under consideration
                                                                                             # This is more a temporary solution and should be done on the front end instead
         
-        self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./backend/ai/saved_models/{ai_model}')
+        self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./ai/saved_models/{ai_model}')
         
     def _get_database_description_no_id_column(self, table_name):
         """
@@ -260,7 +260,7 @@ class BackendBase:
         except Exception as e:
             raise
 
-    def _create_table_dict(self, data_dict, date_col=None, id_colum_name=None): #TODO: Replace date_col with DATETIME_COLUMN_NAME instead
+    def _create_table_dict(self, data_dict, date_col=None, id_colum_name=None, **kwargs): #TODO: Replace date_col with DATETIME_COLUMN_NAME instead
                                                                                 # Because it's better that we reserve the name than give them
                                                                                 # the option to destroy our backend
                                                                                 # because I (Emil) don't want to bother writing very advanced
