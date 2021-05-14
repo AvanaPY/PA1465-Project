@@ -283,12 +283,12 @@ class BackendBase:
         """
         type_dict = {
             str: "VARCHAR(255)",
-            int: "INT(64)",
-            float: "FLOAT(64)"
+            int: "INT",
+            float: "FLOAT"
         }
         
         dct = {
-            "id": 'INT(6) PRIMARY KEY AUTO_INCREMENT'
+            "id": 'INT PRIMARY KEY AUTO_INCREMENT'
         }
 
         col_names = data_dict.keys()
@@ -637,3 +637,26 @@ class BackendBase:
         preds = [(None if np.isnan(i) else i) for i in preds]
         
         return preds, classifications
+
+    def train_ai(self, table_name, target_column='sensor1'): #TODO: Jävlar vad du gnäller om TODOs samuel
+        cols = self.get_database_column_names(table_name)
+        col2idx = {k:i for i, k in enumerate(cols)}
+
+        data_cols = [c for c in cols if c not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, PREDICTION_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME)]
+
+        data = self.get_all_data(table_name)
+        data_dct = {}
+
+        for col in data_cols:
+            col_id = col2idx[col]
+
+            col_vals = [data[i][col_id] for i in range(len(data))]
+            data_dct[col] = col_vals
+
+        df = pd.DataFrame.from_dict(data_dct)
+
+        window = ai.create_window(df, input_width=self._ai_input_size, 
+                                    label_width=1, 
+                                    shift=self._ai_shift_size,
+                                    label_columns=[target_column])
+        ai.train_ai(self._ai_model, window.train, window.val, max_epochs=100)
