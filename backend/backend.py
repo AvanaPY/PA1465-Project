@@ -7,12 +7,14 @@ import csv
 import pandas as pd
 import mysql.connector.errors as merrors
 import datetime
+import numpy as np
+import math
 
 from .ai import *
 
 from database import *
 
-from .ext import sql_type_to_python_type, all_type_equal_or_none, _all_types_not_equal
+from .ext import sql_type_to_python_type, all_type_equal_or_none, _all_types_not_equal, get_data_column_types
 import backend.errors as backend_errors
 
 DATETIME_COLUMN_NAME = 'date' # TODO: Check if this exists in imported data
@@ -233,7 +235,7 @@ class BackendBase:
             Raises:
                 Propagates any errors
         """
-        self.check_has_classifications(data_dict)
+        self.check_has_classifications(database_table, data_dict)
 
         keys = list(data_dict.keys())
         for key in keys:
@@ -286,7 +288,8 @@ class BackendBase:
         """
         type_dict = {
             str: "VARCHAR(255)",
-            int: "INT(6)"
+            int: "INT(64)",
+            float: "FLOAT(64)"
         }
         
         dct = {
@@ -294,8 +297,9 @@ class BackendBase:
         }
 
         col_names = data_dict.keys()
+        data_column_types = get_data_column_types(data_dict, ignore_none=True)
         for col in col_names:
-            data_type = type(data_dict[col][0])
+            data_type = data_column_types[col]
             if date_col == col:
                 dct[col] = 'DATETIME'
             else:
@@ -427,7 +431,6 @@ class BackendBase:
             raise backend_errors.TableDoesNotExistException(table_name)
         else :
             self._current_table = table_name
-            #print(f"Current device: {self._current_table}")
 
     def reset_current_table(self):
         """ 
@@ -459,7 +462,7 @@ class BackendBase:
         """
         return self._current_table    
 
-    def check_has_classifications(self, data):
+    def check_has_classifications(self, table_name : str, data : dict):
         """ 
             Checks whether or not data has classification data.
 
@@ -479,19 +482,19 @@ class BackendBase:
 
         """
         col_names = list(data.keys())
-        col_values = [data[key] for key in data.keys()]
+        col_values = [data[key] for key in data.keys() if key not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME, PREDICTION_COLUMN_NAME)]
         if not CLASSIFICATION_COLUMN_NAME in col_names or not PREDICTION_COLUMN_NAME in col_names:
-            classifications, prediction_values = [], []
+            rows = []
             for i in range(len(col_values[0])):
-                prediction, classification = 0, 0 # TODO: Use the AI Api to generate those
+                row = [values[i] for values in col_values]
+                rows.append(row)
 
-                classifications.append(classification)
-                prediction_values.append(prediction)
+            predictions, classifications = self.classify_datapoints(table_name, rows, use_historical=False)
             
             if not CLASSIFICATION_COLUMN_NAME in col_names:
                 data[CLASSIFICATION_COLUMN_NAME] = classifications
             if not PREDICTION_COLUMN_NAME in col_names:
-                data[PREDICTION_COLUMN_NAME] = prediction_values
+                data[PREDICTION_COLUMN_NAME] = predictions
             
     
     def edit_classification(self, id):
@@ -528,10 +531,8 @@ class BackendBase:
         """
         try :
             edit_data(self._curs, self._current_table, { "classification": classification }, { "id" : id })
-            #print(get_data(self._curs, self._current_table, { "id" : id }))
-            #print("Successful")
         except Exception as e:
-            print(e)
+            print(e) # TODO: Get a proper god damn error owo
         
     def _delete_data_point(self, id):
         """
@@ -546,9 +547,8 @@ class BackendBase:
         """
         try :
             delete_data(self._curs, self._current_table, { "id" : id })
-            #print("Successful")
         except Exception as e:
-            print(e)
+            print(e) # TODO: Same shit here, proper error
 
     def _get_all_non_classified(self, table_name, NON_CLASSIFIED_VALUE=None, convert_datetime=False):
         """ 
@@ -577,7 +577,7 @@ class BackendBase:
                 self._convert_row_datetime(table_name, data)
             return data
         except Exception as e:
-            print("Error in _get_all_non_classified(): ", str(e))
+            print("Error in _get_all_non_classified(): ", str(e)) # TODO: Make this an exception instead of print fooken pepega
 
     def _get_all_anomalies(self):
         """ 
@@ -608,18 +608,30 @@ class BackendBase:
                     row.remove(d)
             data[i] = row
 
-    def classify_datapoint(self, table_name, datapoint):
+    def classify_datapoints(self, table_name : str, datapoints : list, use_historical : bool=True):
         #self.model #is a thing tbc
         #self.input #is maby a thing
 
-        n = self._ai_input_size + self._ai_shift_size - 1 # Amount of datapoints the AI will use
-        n_last_datapoints = get_data(self._curs, table_name, order_by=[DATETIME_COLUMN_NAME], order_by_asc_desc='DESC', limit_row_count=n)
-        n_last_datapoints = list(reversed(n_last_datapoints))
+        if use_historical:
+            n = self._ai_input_size # Amount of datapoints the AI will use
+            n_last_datapoints = get_data(self._curs, table_name, order_by=[DATETIME_COLUMN_NAME], order_by_asc_desc='DESC', limit_row_count=n)
+            n_last_datapoints = list(reversed(n_last_datapoints))
 
-        self.strip_columns_from_data_rows(table_name, n_last_datapoints, 
-                                          [ID_COLUMN_NAME, DATETIME_COLUMN_NAME, PREDICTION_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME])
+            self.strip_columns_from_data_rows(table_name, n_last_datapoints, 
+                                            [ID_COLUMN_NAME, DATETIME_COLUMN_NAME, PREDICTION_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME])
 
-        input_list = [*n_last_datapoints, datapoint]
+            input_list = [*n_last_datapoints, *datapoints]
+        else:
+            input_list = [*datapoints]
+            if len(input_list) < self._ai_input_size + self._ai_shift_size:
+                raise Exception(f'Invalid input list size!') # TODO: Create own errors in an ai.errors file
+
         preds, classifications = run_ai(self._ai_model, input_list)
-        pred, classification = preds[-1], classifications[-1]
-        return pred, classification
+        preds = [np.float32(i).item() for i in preds]
+
+        if use_historical:
+            preds, classifications = preds[self._ai_input_size:], classifications[self._ai_input_size:]
+
+        preds = [(None if np.isnan(i) else i) for i in preds]
+        
+        return preds, classifications

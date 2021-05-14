@@ -44,8 +44,25 @@ def all_type_equal_or_none(type_lst):
         Raises:
             Nothing
     """
-    all_same = all([(a == type_lst[0] or a is type(None)) for a in type_lst])
+    first_non_none_type = [a for a in type_lst if a is not type(None)][0]
+    types = [(a == first_non_none_type or a is type(None)) for a in type_lst]
+    all_same = all(types)
     if all_same:
-        return type_lst[0]
+        return first_non_none_type
     else:
         return _all_types_not_equal
+
+
+def get_data_column_types(data, ignore_none=False):
+    col_types = {}
+
+    for key in data:
+        types = [type(i) for i in data[key]]
+        types = [i for i in types if i is not type(None)]
+        t = all_type_equal_or_none(types)
+        if t is not _all_types_not_equal:
+            col_types[key] = t
+        else:
+            raise Exception(f'Invalid column type wtf') # TODO: Create own exception
+
+    return col_types
