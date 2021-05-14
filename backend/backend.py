@@ -1,3 +1,7 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Remove tensorflow debugging
+import tensorflow as tf
+
 import json
 import csv
 import pandas as pd
@@ -19,11 +23,14 @@ ID_COLUMN_NAME = 'id'
 WANTED_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 class BackendBase:
-    def __init__(self, confparser, database_section='mysql'):
+    def __init__(self, confparser, database_section='mysql', ai_model='3, 1, 1'):
         self._my_db, self._db_config = create_sql_connection(confparser=confparser, section=database_section)
         self._curs = self._my_db.cursor()
         self._current_table = None                                                          # The current table name that is being under consideration
                                                                                             # This is more a temporary solution and should be done on the front end instead
+        
+        self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./backend/ai/saved_models/{ai_model}')
+        
         try:
             drop_table(self._curs, 'atable')
         except:
@@ -601,12 +608,11 @@ class BackendBase:
                     row.remove(d)
             data[i] = row
 
-
     def classify_datapoint(self, table_name, datapoint):
         #self.model #is a thing tbc
         #self.input #is maby a thing
 
-        n = 4 # Amount of datapoints the AI will use
+        n = self._ai_input_size + self._ai_shift_size - 1 # Amount of datapoints the AI will use
         n_last_datapoints = get_data(self._curs, table_name, order_by=[DATETIME_COLUMN_NAME], order_by_asc_desc='DESC', limit_row_count=n)
         n_last_datapoints = list(reversed(n_last_datapoints))
 
@@ -614,6 +620,6 @@ class BackendBase:
                                           [ID_COLUMN_NAME, DATETIME_COLUMN_NAME, PREDICTION_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME])
 
         input_list = [*n_last_datapoints, datapoint]
-        print(input_list)
-        # run_ai(model, input_list)
-
+        preds, classifications = run_ai(self._ai_model, input_list)
+        pred, classification = preds[-1], classifications[-1]
+        return pred, classification
