@@ -33,11 +33,6 @@ class BackendBase:
         
         self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./backend/ai/saved_models/{ai_model}')
         
-        try:
-            drop_table(self._curs, 'atable')
-        except:
-            pass
-
     def _get_database_description_no_id_column(self, table_name):
         """
             Function for getting the information about a table
@@ -235,7 +230,7 @@ class BackendBase:
             Raises:
                 Propagates any errors
         """
-        self.check_has_classifications(database_table, data_dict)
+        self.check_has_classifications(database_table, data_dict, **kwargs)
 
         keys = list(data_dict.keys())
         for key in keys:
@@ -462,7 +457,7 @@ class BackendBase:
         """
         return self._current_table    
 
-    def check_has_classifications(self, table_name : str, data : dict):
+    def check_has_classifications(self, table_name : str, data : dict, **kwargs):
         """ 
             Checks whether or not data has classification data.
 
@@ -489,7 +484,7 @@ class BackendBase:
                 row = [values[i] for values in col_values]
                 rows.append(row)
 
-            predictions, classifications = self.classify_datapoints(table_name, rows, use_historical=False)
+            predictions, classifications = self.classify_datapoints(table_name, rows, use_historical=kwargs.get('use_historical', False))
             
             if not CLASSIFICATION_COLUMN_NAME in col_names:
                 data[CLASSIFICATION_COLUMN_NAME] = classifications
@@ -614,7 +609,14 @@ class BackendBase:
 
         if use_historical:
             n = self._ai_input_size # Amount of datapoints the AI will use
-            n_last_datapoints = get_data(self._curs, table_name, order_by=[DATETIME_COLUMN_NAME], order_by_asc_desc='DESC', limit_row_count=n)
+            try:
+                n_last_datapoints = get_data(self._curs, table_name, order_by=[DATETIME_COLUMN_NAME], order_by_asc_desc='DESC', limit_row_count=n)
+            except merrors.ProgrammingError as e:
+                if e.errno == 1146:
+                    raise backend_errors.TableDoesNotExistException(table_name)
+                raise e
+            except:
+                raise
             n_last_datapoints = list(reversed(n_last_datapoints))
 
             self.strip_columns_from_data_rows(table_name, n_last_datapoints, 
