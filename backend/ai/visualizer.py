@@ -263,6 +263,8 @@ def import_tf_special_dataset():
 
     df = df.rename(columns={'T (degC)': "values"})
 
+    df = df[["p (mbar)",  "values", "Tpot (K)"]] #uses only the three first columns
+
     return df
 
 if __name__ == "__main__":
@@ -272,7 +274,6 @@ if __name__ == "__main__":
     LABEL_WIDTH = INPUT_WIDTH 
 
     df = import_tf_special_dataset()
-    df = df[["p (mbar)",  "values", "Tpot (K)"]]
 
     path = 'backend/ai/saved_models/'
     directory_contents = os.listdir(path)
