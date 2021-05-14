@@ -176,17 +176,17 @@ def run_ai(model, input_list, shift = 1, label_width = 1, lower_sensitivity = 1.
 
     output = model.predict(input_data)
     non_output_size = total_size - label_width + shift
-    print("out", output)
+    #print("out", output)
     output = [n[0] for n in np.array(output[0])]
     real_output = output[non_output_size - shift:]
-    print(np.array(real_output), np.array(real_output))
+    #print(np.array(real_output), np.array(real_output))
     output_array = [np.nan] * non_output_size + [n for n in np.array(real_output)]
     #output_array = [np.nan] * shift + [n[0] for n in np.array(output)[0]]
 
     difference_dic = {"difference" : []}
 
     real_values = [datapoint[1] for datapoint in input_data_og]
-    print(real_values, output_array)
+    #print(real_values, output_array)
     for i in range(len(output_array)):
         difference_dic["difference"].append(real_values[i] - output_array[i])
 
