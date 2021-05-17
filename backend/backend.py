@@ -28,9 +28,7 @@ class BackendBase:
     def __init__(self, confparser, database_section='mysql', ai_model='3, 1, 1'):
         self._my_db, self._db_config = create_sql_connection(confparser=confparser, section=database_section)
         self._curs = self._my_db.cursor()
-        self._current_table = None                                                          # The current table name that is being under consideration
-                                                                                            # This is more a temporary solution and should be done on the front end instead
-        
+
         # self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./ai/saved_models/{ai_model}')
         
     def _get_database_description_no_id_column(self, table_name):
@@ -385,66 +383,6 @@ class BackendBase:
                 row[date_column_index] = row[date_column_index].strftime(WANTED_DATETIME_FORMAT)
                 data[i] = tuple(row)
 
-
-    def set_current_table(self, table_name):
-        """ 
-            Sets the current table name
-
-            Sets the current table name under consideration to a value.
-
-            Args:
-                table_name: str
-            
-            Returns:
-                -
-
-            Raises:
-                backend.errors
-        """
-        tables = show_tables(self._curs)
-
-
-        table_exists = False
-
-        for table in tables :
-            if table[0] == table_name :
-                table_exists = True
-
-        if table_exists == False :
-            raise backend_errors.TableDoesNotExistException(table_name)
-        else :
-            self._current_table = table_name
-
-    def reset_current_table(self):
-        """ 
-            Resets the current table name
-
-            Args:
-                -
-            
-            Returns:
-                -
-
-            Raises:
-                -
-        """
-        self._current_table = None
-
-    def get_current_table(self):
-        """ 
-            Returns the current table saved in the backend
-
-            Args:
-                -
-            
-            Returns:
-                self._current_table: str
-
-            Raises:
-                -
-        """
-        return self._current_table    
-
     def check_has_classifications(self, table_name : str, data : dict, **kwargs):
         """ 
             Checks whether or not data has classification data.
@@ -520,11 +458,12 @@ class BackendBase:
         """
         print("REEEEEEEEE")
 
-    def _insert_classifications(self, id, classification):
+    def _insert_classifications(self, table_name : str, id : int , classification : bool):
         """ 
             Inserts a classification into the table
 
             Args:
+                table_name : str - table name
                 id: int - the id of the row of the datapoint being edited
                 classification: int - the classification of the datapoint, either 1 (True) or 0 (False) 
             Returns:
@@ -533,15 +472,16 @@ class BackendBase:
                 Any propagated errors
         """
         try :
-            edit_data(self._curs, self._current_table, { "classification": classification }, { "id" : id })
+            edit_data(self._curs, table_name, { "classification": classification }, { "id" : id })
         except Exception as e:
             print(e) # TODO: Get a proper god damn error owo
         
-    def _delete_data_point(self, id):
+    def _delete_data_point(self, table_name : str, id : int):
         """
             Delets a datapoint
 
             Args:
+                table_name : str - table name
                 id: int - the id of the datapint being deleted
             Returns:
                 -
@@ -549,7 +489,7 @@ class BackendBase:
                 Any propagated errors
         """
         try :
-            delete_data(self._curs, self._current_table, { "id" : id })
+            delete_data(self._curs, table_name, { "id" : id })
         except Exception as e:
             print(e) # TODO: Same shit here, proper error
 
@@ -565,13 +505,6 @@ class BackendBase:
                 Any propagated errors
         """
 
-        #table_name = ""
-
-        # if _table_name == None:
-        #     table_name = self.get_current_table
-        # else:
-        #     table_name = _table_name
-
         try:
             data = get_data(self._curs, table_name, column_dictionary={
                 CLASSIFICATION_COLUMN_NAME: NON_CLASSIFIED_VALUE,
@@ -583,7 +516,7 @@ class BackendBase:
             raise
             # TODO: Make this a proper exception instead
 
-    def _get_all_anomalies(self):
+    def _get_all_anomalies(self, table_name):
         """ 
             Returns all data points where the calssification column is 1
             
@@ -594,7 +527,7 @@ class BackendBase:
             Raises:
                 -
         """
-        my_sql_command = f'SELECT * FROM {self._current_table} WHERE classification = 1;'
+        my_sql_command = f'SELECT * FROM {table_name} WHERE classification = 1;'
         self._curs.execute(my_sql_command)
         data = self._curs.fetchall()
         return data
