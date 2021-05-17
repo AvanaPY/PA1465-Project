@@ -255,14 +255,7 @@ class BackendBase:
         except Exception as e:
             raise
 
-    def _create_table_dict(self, data_dict, date_col=None, id_colum_name=None, **kwargs): #TODO: Replace date_col with DATETIME_COLUMN_NAME instead
-                                                                                # Because it's better that we reserve the name than give them
-                                                                                # the option to destroy our backend
-                                                                                # because I (Emil) don't want to bother writing very advanced
-                                                                                # code that will check that much
-                                                                                # so it's better to just not let them have fun
-                                                                                # 10/10 would code again
-                                                                                # yeet :tboof:
+    def _create_table_dict(self, data_dict, **kwargs):
         """
             Creates a table type dict based on a data dictionary
 
@@ -290,7 +283,7 @@ class BackendBase:
         data_column_types = get_data_column_types(data_dict, ignore_none=True)
         for col in col_names:
             data_type = data_column_types[col]
-            if date_col == col:
+            if col == DATETIME_COLUMN_NAME:
                 dct[col] = 'DATETIME'
             else:
                 dct[col] = type_dict[data_type]
@@ -503,11 +496,9 @@ class BackendBase:
                 except:
                     try:
                         dt_obj = datetime.datetime.strptime(v, date_format)
-                        data[DATETIME_COLUMN_NAME][i] = datetime.datetime.strftime(dt_obj, WANTED_DATETIME_FORMAT)
                     except:
-                        raise
-
-        print(data)
+                        dt_obj = datetime.datetime.now()
+                    data[DATETIME_COLUMN_NAME][i] = datetime.datetime.strftime(dt_obj, WANTED_DATETIME_FORMAT)
 
     def edit_classification(self, id):
         """ 
@@ -562,7 +553,7 @@ class BackendBase:
         except Exception as e:
             print(e) # TODO: Same shit here, proper error
 
-    def _get_all_non_classified(self, table_name, NON_CLASSIFIED_VALUE=None, convert_datetime=False):
+    def _get_all_non_classified(self, table_name, NON_CLASSIFIED_VALUE=None, convert_datetime=False, **kwargs):
         """ 
             Returns all non-classified data points
             
@@ -583,13 +574,14 @@ class BackendBase:
 
         try:
             data = get_data(self._curs, table_name, column_dictionary={
-                CLASSIFICATION_COLUMN_NAME: NON_CLASSIFIED_VALUE
+                CLASSIFICATION_COLUMN_NAME: NON_CLASSIFIED_VALUE,
             })
             if convert_datetime:
                 self._convert_row_datetime(table_name, data)
             return data
         except Exception as e:
-            print("Error in _get_all_non_classified(): ", str(e)) # TODO: Make this an exception instead of print fooken pepega
+            raise
+            # TODO: Make this a proper exception instead
 
     def _get_all_anomalies(self):
         """ 
@@ -643,7 +635,7 @@ class BackendBase:
         else:
             input_list = [*datapoints]
             if len(input_list) < self._ai_input_size + self._ai_shift_size:
-                raise Exception(f'Invalid input list size!') # TODO: Create own errors in an ai.errors file
+                raise backend_errors.InputListSizeNotMachingException(len(input_list), self._ai_input_size + self._ai_shift_size) 
 
         preds, classifications = run_ai(self._ai_model, input_list)
         preds = [np.float32(i).item() for i in preds]

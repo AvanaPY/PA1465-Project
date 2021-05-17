@@ -1,3 +1,4 @@
+import backend.errors as backend_errors
 _all_types_not_equal = object()
 
 def sql_type_to_python_type(str_type : str):
@@ -52,8 +53,7 @@ def all_type_equal_or_none(type_lst):
     else:
         return _all_types_not_equal
 
-
-def get_data_column_types(data, ignore_none=False):
+def get_data_column_types(data):
     col_types = {}
 
     for key in data:
@@ -63,6 +63,5 @@ def get_data_column_types(data, ignore_none=False):
         if t is not _all_types_not_equal:
             col_types[key] = t
         else:
-            raise Exception(f'Invalid column type wtf') # TODO: Create own exception
-
+            raise backend_errors.InvalidColumnTypeException(types)
     return col_types
