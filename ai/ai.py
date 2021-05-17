@@ -180,8 +180,8 @@ def run_ai(model, input_list, input_width = 2, shift = 1, label_width = 1, lower
     #one_d_output = [n[0] for n in output]
     #real_output = one_d_output[non_output_size - shift:]
     real_real_output = output[non_output_size - shift:]
-    print("non output size:", non_output_size)
-    print("rro:", real_real_output)
+    #print("non output size:", non_output_size)
+    #print("rro:", real_real_output)
 
     output_array = []
     anomaly = []
@@ -220,8 +220,8 @@ def run_ai(model, input_list, input_width = 2, shift = 1, label_width = 1, lower
                 #anomaly.append(False)
                 anomaly[j].append(0)
 
-        print("o", output_array, "a", anomaly)
-    print("output", output_array, anomaly)
+        #print("o", output_array, "a", anomaly)
+    #print("output", output_array, anomaly)
     return output_array, anomaly
 
 def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['values']):
