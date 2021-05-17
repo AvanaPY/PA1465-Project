@@ -6,6 +6,9 @@ import math
 import json
 import os
 
+ANOM_VALUE_TRUE = 1
+ANOM_VALUE_FALSE = 0
+
 def create_ai_model(output_dim = 1):
     """
         Creates an AI model
@@ -214,11 +217,11 @@ def run_ai(model, input_list, input_width = 2, shift = 1, label_width = 1, lower
         anomaly.append([])
         for value in difference_df["difference"]:
             if value <= lower_whisker or value >= upper_whisker:
-                anomaly[j].append(1)
+                anomaly[j].append(ANOM_VALUE_TRUE)
                 #anomaly.append(True)
             else:
                 #anomaly.append(False)
-                anomaly[j].append(0)
+                anomaly[j].append(ANOM_VALUE_FALSE)
 
         #print("o", output_array, "a", anomaly)
     #print("output", output_array, anomaly)
