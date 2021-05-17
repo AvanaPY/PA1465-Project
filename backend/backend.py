@@ -246,6 +246,9 @@ class BackendBase:
         
         except:
             raise
+
+        data_dict = self._sort_data_dictionary(data_dict)
+
         try:
             inv_dct = self._invert_dictionary(data_dict)
             for row in inv_dct:
@@ -253,6 +256,28 @@ class BackendBase:
         except Exception as e:
             raise
 
+    def _sort_data_dictionary(self, data_dict : dict):
+        """
+            Sorts a dictionary into the desired structure
+
+            Args:
+                data_dict : dict
+
+            Returns:
+                -
+
+            Raises:
+                -
+        """
+        sorted_data = {}
+        for key in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, PREDICTION_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME):
+            if key in data_dict:
+                sorted_data[key] = data_dict.get(key)
+
+        for key in data_dict:
+            if key not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, PREDICTION_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME):
+                sorted_data[key] = data_dict.get(key)
+        return sorted_data
     def _create_table_dict(self, data_dict, **kwargs):
         """
             Creates a table type dict based on a data dictionary
@@ -278,7 +303,7 @@ class BackendBase:
         }
 
         col_names = data_dict.keys()
-        data_column_types = get_data_column_types(data_dict, ignore_none=True)
+        data_column_types = get_data_column_types(data_dict)
         for col in col_names:
             data_type = data_column_types[col]
             if col == DATETIME_COLUMN_NAME:
@@ -357,10 +382,15 @@ class BackendBase:
             Raises:
                 -
         """
-        data = get_data(self._curs, table_name)
-        if convert_datetime:
-            self._convert_row_datetime(table_name, data)
-        return data 
+        try:
+            data = get_data(self._curs, table_name)
+            if convert_datetime:
+                self._convert_row_datetime(table_name, data)
+            return data 
+        except merrors.ProgrammingError as e:
+            if e.errno == 1146:
+                raise backend_errors.TableDoesNotExistException(table_name)
+            raise
 
     def _convert_row_datetime(self, table_name, data):
         """ Converts the "date" column in the data from datetime.datetime objects to string values.
@@ -437,19 +467,6 @@ class BackendBase:
                     except:
                         dt_obj = datetime.datetime.now()
                     data[DATETIME_COLUMN_NAME][i] = datetime.datetime.strftime(dt_obj, WANTED_DATETIME_FORMAT)
-
-    def edit_classification(self, id):
-        """ 
-            Edits a classification
-            
-            Args:
-                id: int - the id of the datapoint being edited
-            Returns:
-                -
-            Raises:
-                backend.errors
-        """
-        pass
     
     # TODO: Alert for anomaly function
     def scream(self):
@@ -458,9 +475,36 @@ class BackendBase:
         """
         print("REEEEEEEEE")
 
-    def _insert_classifications(self, table_name : str, id : int , classification : bool):
+    def edit_column_value(self, table_name : str, id : int, column_name : str, new_column_value):
         """ 
-            Inserts a classification into the table
+            Edits the value in a database
+
+            Args:
+                table_name : str - table name
+                id: int - the id of the row of the datapoint being edited
+                column_name : str - Name of the column
+                new_column_value: any - Value to insert into the table
+            Returns:
+                -
+            Raises:
+                Any propagated errors
+        """
+        try :
+            edit_data(self._curs, table_name,
+                { column_name : new_column_value },
+                { ID_COLUMN_NAME: id }
+            )
+        except merrors.ProgrammingError as e:
+            if e.errno == 1146:
+                raise backend_errors.TableDoesNotExistException(table_name)
+            else:
+                raise
+        except:
+            raise
+
+    def edit_classification(self, table_name : str, id : int , classification : bool):
+        """ 
+            Edits a classification in the table
 
             Args:
                 table_name : str - table name
@@ -471,10 +515,7 @@ class BackendBase:
             Raises:
                 Any propagated errors
         """
-        try :
-            edit_data(self._curs, table_name, { "classification": classification }, { "id" : id })
-        except Exception as e:
-            print(e) # TODO: Get a proper god damn error owo
+        self.edit_column_value(table_name, id, CLASSIFICATION_COLUMN_NAME, classification)
         
     def _delete_data_point(self, table_name : str, id : int):
         """

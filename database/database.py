@@ -214,7 +214,7 @@ def edit_data(curs, table_name, new_column_values, column_constraints):
     """
 
     SET_VALUES = 'name=%(set_name)s, age=%(set_age)s'
-    safe_query_list = [f'{key}=%(set_{key})s' for key in new_column_values]     # Safe query
+    safe_query_list = [f'{key} = %(set_{key})s' for key in new_column_values]     # Safe query
     SET_VALUES = ', '.join(safe_query_list)          
 
     WHERE_LOOK = column_dictionary_to_sql_and_join(column_constraints, ', ')
@@ -222,5 +222,5 @@ def edit_data(curs, table_name, new_column_values, column_constraints):
     major_dictionary = {**column_constraints}
     for key in new_column_values:
         major_dictionary[f'set_{key}'] = new_column_values[key]
-    my_sql_command = f'UPDATE {table_name} SET {SET_VALUES} WHERE ({WHERE_LOOK})'
+    my_sql_command = f'UPDATE {table_name} SET {SET_VALUES} WHERE {WHERE_LOOK}'
     curs.execute(my_sql_command, major_dictionary)
