@@ -160,6 +160,8 @@ def run_sample(model, normal_df, sample_size, shift):
     values_sample = generate_interval(1, sample_size, normal_df)[0]
 
     output, anomaly = ai.run_ai(model, values_sample, shift = shift)
+    output = output[0] #väljer bara de första dimentioner av output
+    anomaly = anomaly[0] #väljer bara de första dimentioner av output
 
     only_value_sample = generate_interval(1, sample_size, normal_df, sample_columns = ["values"])[0][0]
     difference = output - only_value_sample
@@ -275,7 +277,7 @@ if __name__ == "__main__":
 
     df = import_tf_special_dataset()
 
-    path = 'backend/ai/saved_models/'
+    path = 'ai/saved_models/'
     directory_contents = os.listdir(path)
     print()
     print("Saved models: [input width, shift, label width]")
@@ -289,37 +291,35 @@ if __name__ == "__main__":
         INPUT_WIDTH = int(input("Imput width: "))
         SHIFT = int(input("shift: "))
         LABEL_WIDTH = int(input("Label width: "))
-        w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT)
+        w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT, label_columns=["p (mbar)",  "values", "Tpot (K)"])
         normal_df = w2.val_df
 
-        model = ai.create_ai_model()
+        #output dimention = 3
+        model = ai.create_ai_model(output_dim=len(df.columns))
 
-        ai.train_ai(model, w2.train, w2.val, max_epochs = 100)
+        ai.train_ai(model, w2.train, w2.val, max_epochs = 5)
 
         if input("do you want to save?[y/n]") == "y":
             name = str(INPUT_WIDTH) + ", " + str(SHIFT) + ", " + str(LABEL_WIDTH)
-            input_path = 'backend/ai/saved_models/' + name
+            input_path = 'ai/saved_models/' + name
 
             ai.save_ai_model(model, input_path)
     else:
         name = int(input("model number to use: "))
-        input_path = 'backend/ai/saved_models/' + directory_contents[name - 1]
+        input_path = 'ai/saved_models/' + directory_contents[name - 1]
         model, INPUT_WIDTH, SHIFT, LABEL_WIDTH = ai.load_ai_model(input_path)
         
         print("info:", INPUT_WIDTH, SHIFT, LABEL_WIDTH)
-        w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT)
+        w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT, label_columns=["p (mbar)",  "values", "Tpot (K)"])
         normal_df = w2.val_df
 
 
     while True:
-        #vis_dict = run_sample(model, normal_df, sample_size = 10000 , shift= SHIFT) #sample_size = INPUT_WIDTH + SHIFT
-        #vis_dict = run_sample(model, normal_df, sample_size = len(normal_df) , shift = SHIFT)
-        vis_dict = run_sample(model, normal_df, sample_size = INPUT_WIDTH + SHIFT , shift = SHIFT)
+        vis_dict = run_sample(model, normal_df, sample_size = INPUT_WIDTH + SHIFT, shift = SHIFT)
         result_df = pd.DataFrame.from_dict(vis_dict)
         print(result_df)
 
         visualize(result_df, 0)
-        #loop_through_samples(normal_df, 1, 50, all = False, anom_range = 0.03) # fix until next time - colors and integrations
         if input("go again?[y/n][g for graf]") == "g":
             fig, ax = plt.subplots()
             N, bins, patches = plt.hist(result_df["dif"], bins = 100)
