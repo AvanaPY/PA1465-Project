@@ -710,7 +710,7 @@ class BackendBase:
 
         return preds, final_cls
 
-    def train_ai(self, table_name, target_column='sensor1'): #TODO: Jävlar vad du gnäller om TODOs samuel
+    def train_ai(self, table_name, target_columns=['sensor1']): #TODO: Jävlar vad du gnäller om TODOs samuel
         """ 
             Trains AI model with target_column data. It's possible to save the newly trained model through this function.
             
