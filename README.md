@@ -149,4 +149,21 @@ A python bolean representing if you want to convert dates into DateTime objects;
 
 A python integer representing the row you want to access in the database.
 
+## Constants
+### DATETIME_COLUMN_NAME = 'date'
+
+A python string representing the name of the column considered the column containing the date data. Default: `date`
+
+### CLASSIFICATION_COLUMN_NAME = 'classification'
+
+A python string representing the name of the column considered the column containing the classification data. Default: `classification`
+
+### PREDICTION_COLUMN_NAME = 'prediction'
+
+A python string representing the name of the column considered the column containing the prediction data. Default: `prediction`
+
+### ID_COLUMN_NAME = 'id'
+
+A python string representing the name of the column considered the column containing the id data. Default: `id`
+
 # AI
