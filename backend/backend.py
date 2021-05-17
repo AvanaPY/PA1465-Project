@@ -17,7 +17,7 @@ from database import *
 from .ext import sql_type_to_python_type, all_type_equal_or_none, _all_types_not_equal, get_data_column_types
 import backend.errors as backend_errors
 
-DATETIME_COLUMN_NAME = 'date' # TODO: Check if this exists in imported data
+DATETIME_COLUMN_NAME = 'date'
 CLASSIFICATION_COLUMN_NAME = 'classification'
 PREDICTION_COLUMN_NAME = 'prediction'
 ID_COLUMN_NAME = 'id'
@@ -31,7 +31,7 @@ class BackendBase:
         self._current_table = None                                                          # The current table name that is being under consideration
                                                                                             # This is more a temporary solution and should be done on the front end instead
         
-        self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./ai/saved_models/{ai_model}')
+        # self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./ai/saved_models/{ai_model}')
         
     def _get_database_description_no_id_column(self, table_name):
         """
@@ -231,18 +231,13 @@ class BackendBase:
                 Propagates any errors
         """
         self.check_has_classifications(database_table, data_dict, **kwargs)
+        self.check_has_datetime_column(database_table, data_dict, **kwargs)
 
         keys = list(data_dict.keys())
         for key in keys:
             if key.lower() == "id":
                 del data_dict[key]
-        
-        date_format = "%Y-%m-%d"
-        if date_col != None and datetime.datetime.strptime(data_dict[date_col][0], date_format): # TODO: Move the format check in the loop instead to check for
-                                                                                                 # formatting on each datapoint instead of just the first
-            for i, row in enumerate(data_dict[date_col]):
-                row += " 00:00:00"
-                data_dict[date_col][i] = row
+
 
         try:
             self._compatability_check(data_dict, database_table)
@@ -484,14 +479,36 @@ class BackendBase:
                 row = [values[i] for values in col_values]
                 rows.append(row)
 
-            predictions, classifications = self.classify_datapoints(table_name, rows, use_historical=kwargs.get('use_historical', False))
-            
+            # predictions, classifications = self.classify_datapoints(table_name, rows, use_historical=kwargs.get('use_historical', False))
+            predictions, classifications = [0] * len(rows), [0] * len(rows)
+
             if not CLASSIFICATION_COLUMN_NAME in col_names:
                 data[CLASSIFICATION_COLUMN_NAME] = classifications
             if not PREDICTION_COLUMN_NAME in col_names:
                 data[PREDICTION_COLUMN_NAME] = predictions
             
-    
+    def check_has_datetime_column(self, table_name : str, data : dict, **kwargs):
+        if DATETIME_COLUMN_NAME not in data:
+            data_points = len(list(data.values())[0])
+            t = datetime.datetime.now()
+            t = t.strftime(WANTED_DATETIME_FORMAT)
+
+            data[DATETIME_COLUMN_NAME] = [t for _ in range(data_points)]
+        
+        else:
+            date_format = "%Y-%m-%d"
+            for i, v in enumerate(data[DATETIME_COLUMN_NAME]):
+                try:
+                    dt_obj = datetime.datetime.strptime(v, WANTED_DATETIME_FORMAT)
+                except:
+                    try:
+                        dt_obj = datetime.datetime.strptime(v, date_format)
+                        data[DATETIME_COLUMN_NAME][i] = datetime.datetime.strftime(dt_obj, WANTED_DATETIME_FORMAT)
+                    except:
+                        raise
+
+        print(data)
+
     def edit_classification(self, id):
         """ 
             Edits a classification
