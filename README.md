@@ -112,3 +112,58 @@ Whether to order the query in any specific manner.
 Whether or not the SQL query should limit its length.
 * limit_offset: int specifies the offset in the starting row.
 * limit_row_count: int specifies the maximum number of rows it should return.
+
+# Backend API
+
+## Backend functions
+* delete_table `(table_name)`
+* import_data_json `(path_to_file, database_table, **kwargs)`
+* import_data_csv `(path_to_file, database_table, **kwargs)`
+* export_data_json `(path_to_file, database_table, **kwargs)`
+* export_data_csv `(path_to_file, database_table, **kwargs)`
+* add_dict_to_database `(data_dict, database_table, date_col=None, **kwargs)`
+* get_tables: None
+* get_all_data `(table_name, convert_datetime)`
+* edit_classification `(id)`
+* train_ai `(table_name, target_column='sensor1')`
+
+## table_name and database_table
+
+A python string representing the name of the table you want to access.
+
+## data_dict
+
+A python dictionry containing the data from the import functions
+
+## target_columns
+
+A python list of strings representing the names of the columns you want to train the AI to predict.
+
+## convert_datetime
+
+A python bolean representing if you want to convert dates into DateTime objects;
+* `True`: Yes to conversion
+* `False`: No to conversion (Default)
+
+## id
+
+A python integer representing the row you want to access in the database.
+
+## Constants
+### DATETIME_COLUMN_NAME = 'date'
+
+A python string representing the name of the column considered the column containing the date data. Default: `date`
+
+### CLASSIFICATION_COLUMN_NAME = 'classification'
+
+A python string representing the name of the column considered the column containing the classification data. Default: `classification`
+
+### PREDICTION_COLUMN_NAME = 'prediction'
+
+A python string representing the name of the column considered the column containing the prediction data. Default: `prediction`
+
+### ID_COLUMN_NAME = 'id'
+
+A python string representing the name of the column considered the column containing the id data. Default: `id`
+
+# AI
