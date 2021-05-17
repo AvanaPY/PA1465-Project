@@ -56,6 +56,168 @@ python test.py
 ```
 and it should work without problems.
 
+
+# Readme and user manual for AI prediction
+
+This guide aims to guide users and developers on how various aspects of the program functions and goes into more details in how specific functions operate. This guide is aimed at a broad audience while including technical information. 
+
+## How to run the program:
+
+Please follow the appropriate subtitle regarding which steps to follow.
+
+### Docker version:
+
+- Start...
+
+**The following steps need to be done before the program can begin detecting anomalies.** 
+
+## Database:
+
+### Config.ini
+
+Create a config.ini file in the root directory with this content
+
+```
+
+[mysql]
+
+host = [localhost](http://localhost) #exchange this if the database is not localy hosted. 
+
+database = python_mysql #exchange this with your own database
+
+user = root #exchange this with your own username
+
+password = password #exchange this with your own password
+
+[app]
+
+ip=localhost #exchange this with the appropriate ip. 
+
+port=port #exchange this with the appropriate port
+
+```
+
+### Starting up a database
+
+You can test-run the `database.py` file if you start up a mysql docker container and run the file. # No you can't
+
+Pull the mysql docker image with
+
+```
+
+docker pull mysql
+
+```
+
+Run the docker image with
+
+```
+
+docker run --name mysql -e MYSQL_ROOT_PASSWORD=123 -d -p 3306:3306 mysql:latest
+
+```
+
+Let this be your config.ini file
+
+```
+
+[mysql]
+
+host = localhost
+
+database = mysql
+
+user = root
+
+password = 123
+
+```
+
+### Upload data to database
+
+Run `wsgy.py`(http://app.py) in terminal by typing:
+
+```
+python wsgy.py
+```
+
+in the terminal you should see that that the webserver is running.
+
+Open your webbrowser of choice and go to:
+
+```
+localhost:1234
+```
+
+in order to open app. 
+
+Press the upload button and select a file for upload.
+
+# Technical requirements:
+
+These requirements are included in the docker image.
+
+* **Python**
+
+This program requires python 3.8.3 as of the time or the latest version that is supported by Tensorflow.
+
+* **Coverage - For testing purposes**
+
+To check test coverage. 
+
+* **MySQL**
+
+For database of the MySQL type.
+
+* **MySQL Connector for python**
+
+Interacting with database via Python.
+
+* **Pip Chill** 
+
+Not needed?
+
+* **Seaborn** 
+
+For plotting purposes
+
+* **SKLearn**
+
+For AI part.
+
+* **Cycler**
+
+Part of Matplotlib
+
+* **Flask**
+
+For web app
+
+* **Tensorflow**
+
+For AI model. 
+
+These requirements can be installed by typing in the terminal:
+
+```
+pip install -r requirements.txt
+```
+
+# Testing:
+
+## Testing the database
+
+Then run
+
+```
+
+python run_tests.py
+
+```
+
+and it should work without problems.
+
+
 # Database API
 
 ## API Functions
@@ -161,16 +323,16 @@ Edits the datapoint with id `id` in the database using the data in `column_dicti
 # Backend API
 
 ## Backend functions
-* delete_table `(table_name)` &#8594;
-* import_data_json `(path_to_file, database_table, **kwargs)` &#8594;
-* import_data_csv `(path_to_file, database_table, **kwargs)` &#8594;
-* export_data_json `(path_to_file, database_table, **kwargs)` &#8594;
-* export_data_csv `(path_to_file, database_table, **kwargs)` &#8594;
-* add_dict_to_database `(data_dict, database_table, date_col=None, **kwargs)` &#8594;
-* get_tables: `tables` &#8594;
-* get_all_data `(table_name, convert_datetime)` &#8594;
-* edit_classification `(id)` &#8594;
-* train_ai `(table_name, target_column='sensor1')` &#8594;
+* delete_table `(table_name)` &#8594; None
+* import_data_json `(path_to_file, database_table, **kwargs)` &#8594; None
+* import_data_csv `(path_to_file, database_table, **kwargs)` &#8594; None
+* export_data_json `(path_to_file, database_table, **kwargs)` &#8594; None
+* export_data_csv `(path_to_file, database_table, **kwargs)` &#8594; None
+* add_dict_to_database `(data_dict, database_table, date_col=None, **kwargs)` &#8594; None
+* get_tables: &#8594; `tables`
+* get_all_data `(table_name, convert_datetime)` &#8594; None
+* edit_classification `(id)` &#8594; None
+* train_ai `(table_name, target_column='sensor1')` &#8594; None
 
 ## Variables
 
@@ -253,7 +415,7 @@ Returns all data in `table_name`, with the option to convert the data from the `
 
 ### edit_classification
 
-Edits the classification whoose row id is `id`.
+Edits the classification whose row id is `id`.
 
 ### train_ai
 
