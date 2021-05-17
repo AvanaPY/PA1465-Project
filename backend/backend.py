@@ -640,14 +640,7 @@ class BackendBase:
 
         preds, classifications = run_ai(self._ai_model, input_list)
 
-        # if use_historical:
-        #     preds, classifications = preds[self._ai_input_size:], classifications[self._ai_input_size:]
-
-        #preds = preds[self._ai_input_size + self._ai_shift_size - self._ai_output_size:]
-
-        final_preds = [[None if np.isnan(i) else np.float32(i).item() for i in pred_list] for pred_list in preds]
-        #final_preds = [col[self._ai_input_size + self._ai_shift_size - self._ai_output_size:] for col in preds]
-        # final_cls = [col[self._ai_input_size + self._ai_shift_size - self._ai_output_size:] for col in classifications]
+        preds = [[None if np.isnan(i) else np.float32(i).item() for i in pred_list] for pred_list in preds]
 
         col_len = len(classifications[0])
         final_cls = [[] for _ in range(col_len)]
@@ -656,13 +649,40 @@ class BackendBase:
             for j in range(len(classifications)):
                 final_cls[i].append(classifications[j][i])
         
+
+
         final_cls = [int(any(i)) for i in final_cls]
 
         if 1 in final_cls:
-            # TODO: Log the stuff
-            pass
+            
+            flipped_preds = [[] for _ in range(col_len)]
 
-        return final_preds, final_cls#, preds, classifications
+            for i in range(col_len):
+                for j in range(len(preds)):
+                    flipped_preds[i].append(preds[j][i])
+
+            with open('jsonlog.json', 'w+') as f:
+                try:
+                    fl = json.load(f)
+                except:
+                    fl = []
+                
+                now = datetime.datetime.strftime(datetime.datetime.now(), WANTED_DATETIME_FORMAT)
+
+                indices = [i for i, a in enumerate(final_cls) if a == 1]
+                for index in indices:
+                    i = input_list[index-5:index+1]
+                    c = final_cls[index-5:index+1]
+                    p = flipped_preds[index-5:index+1]
+                    fl.append({
+                        "time": now,
+                        "input": i,
+                        "classification": c,
+                        "predictions": p
+                    })
+                json.dump(fl, f)
+
+        return preds, final_cls
 
     def train_ai(self, table_name, target_columns=['sensor1']): #TODO: Jävlar vad du gnäller om TODOs samuel
         cols = self.get_database_column_names(table_name)
