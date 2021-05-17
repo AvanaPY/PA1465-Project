@@ -19,18 +19,18 @@ import backend.errors as backend_errors
 
 DATETIME_COLUMN_NAME = 'date'
 CLASSIFICATION_COLUMN_NAME = 'classification'
-PREDICTION_COLUMN_NAME = 'prediction'
+PREDICTION_COLUMN_NAME = 'PREDICTION'
 ID_COLUMN_NAME = 'id'
 
 WANTED_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 class BackendBase:
-    def __init__(self, confparser, database_section='mysql', ai_model='3, 1, 1'):
+    def __init__(self, confparser, database_section='mysql', ai_model='2, 1, 1'):
         self._my_db, self._db_config = create_sql_connection(confparser=confparser, section=database_section)
         self._curs = self._my_db.cursor()
 
         self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./ai/saved_models/{ai_model}')
-        
+
     def _get_database_description_no_id_column(self, table_name):
         """
             Function for getting the information about a table
@@ -75,6 +75,11 @@ class BackendBase:
         database_col_names = list((a[0] for a in desc))
         return database_col_names
 
+    def get_prediction_column_names(self, table_name):
+        cols = self.get_database_column_names(table_name)
+        pred_cols = [col for col in cols if PREDICTION_COLUMN_NAME in col]
+        return pred_cols
+        
     def _compatability_check(self, data, table_name):
         ''' 
             Checks the compatibility of a json document against the database table.
@@ -236,7 +241,7 @@ class BackendBase:
             if key.lower() == "id":
                 del data_dict[key]
 
-
+        data_dict = self._sort_data_dictionary(data_dict)
         try:
             self._compatability_check(data_dict, database_table)
         
@@ -246,8 +251,6 @@ class BackendBase:
         
         except:
             raise
-
-        data_dict = self._sort_data_dictionary(data_dict)
 
         try:
             inv_dct = self._invert_dictionary(data_dict)
@@ -260,6 +263,10 @@ class BackendBase:
         """
             Sorts a dictionary into the desired structure
 
+            Sorted into order of:
+
+            ID, Date, Classification, Sensor1, Sensor2... predictionSensor1, predictionSensor2...
+
             Args:
                 data_dict : dict
 
@@ -270,13 +277,20 @@ class BackendBase:
                 -
         """
         sorted_data = {}
-        for key in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, PREDICTION_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME):
+        for key in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME):
             if key in data_dict:
-                sorted_data[key] = data_dict.get(key)
+                sorted_data[key] = data_dict[key]
 
-        for key in data_dict:
-            if key not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, PREDICTION_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME):
-                sorted_data[key] = data_dict.get(key)
+        sensor_keys = [key for key in data_dict if (key not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME) and PREDICTION_COLUMN_NAME not in key)]
+
+        for key in sensor_keys:
+            sorted_data[key] = data_dict[key]
+
+        prediction_keys = [key for key in data_dict if PREDICTION_COLUMN_NAME in key]
+
+        for key in prediction_keys:
+            sorted_data[key] = data_dict[key]
+
         return sorted_data
 
     def _create_table_dict(self, data_dict, **kwargs):
@@ -296,7 +310,8 @@ class BackendBase:
         type_dict = {
             str: "VARCHAR(255)",
             int: "INT",
-            float: "FLOAT"
+            float: "FLOAT",
+            bool: int
         }
         
         dct = {
@@ -314,7 +329,11 @@ class BackendBase:
         
         # Classification column
         dct[CLASSIFICATION_COLUMN_NAME] = 'bit'
-        dct[PREDICTION_COLUMN_NAME] = 'FLOAT(6)'
+        
+        prediction_column_names = [key for key in dct if PREDICTION_COLUMN_NAME in key]
+
+        for pkey in prediction_column_names:
+            dct[pkey] = 'FLOAT(6)'
 
         return dct
 
@@ -433,22 +452,27 @@ class BackendBase:
                 -
 
         """
-        col_names = list(data.keys())
-        col_values = [data[key] for key in data.keys() if key not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME, PREDICTION_COLUMN_NAME)]
-        if not CLASSIFICATION_COLUMN_NAME in col_names or not PREDICTION_COLUMN_NAME in col_names:
-            rows = []
-            for i in range(len(col_values[0])):
-                row = [values[i] for values in col_values]
-                rows.append(row)
+        col_names = list(data.keys())       # All columns in data
 
-            # predictions, classifications = self.classify_datapoints(table_name, rows, use_historical=kwargs.get('use_historical', False)) #TODO: Remember to change this shit back
-            predictions, classifications = [0] * len(rows), [0] * len(rows)
+        non_reserved_column_names = [key for key in col_names if key not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME)] # All user-defined columns
+        sensor_keys = [key for key in non_reserved_column_names if PREDICTION_COLUMN_NAME not in key]                                           # All columns that refer to sensors
+        sensor_values = [data[key] for key in data.keys() if key in sensor_keys]
+        
+        rows = []
+        for i in range(len(sensor_values[0])):
+            row = [values[i] for values in sensor_values]
+            rows.append(row)
 
-            if not CLASSIFICATION_COLUMN_NAME in col_names:
-                data[CLASSIFICATION_COLUMN_NAME] = classifications
-            if not PREDICTION_COLUMN_NAME in col_names:
-                data[PREDICTION_COLUMN_NAME] = predictions
-            
+        predictions, classifications = self.classify_datapoints(table_name, rows, use_historical=kwargs.get('use_historical', False))
+
+        if not CLASSIFICATION_COLUMN_NAME in col_names:
+            data[CLASSIFICATION_COLUMN_NAME] = classifications
+
+        prediction_column_names = [PREDICTION_COLUMN_NAME + key for key in sensor_keys]
+
+        for i, pkey in enumerate(prediction_column_names):
+            data[pkey] = predictions[i]
+
     def check_has_datetime_column(self, table_name : str, data : dict, **kwargs):
         if DATETIME_COLUMN_NAME not in data:
             data_points = len(list(data.values())[0])
@@ -600,10 +624,13 @@ class BackendBase:
                 raise e
             except:
                 raise
+
             n_last_datapoints = list(reversed(n_last_datapoints))
 
+            prediction_columns = self.get_prediction_column_names(table_name)
+
             self.strip_columns_from_data_rows(table_name, n_last_datapoints, 
-                                            [ID_COLUMN_NAME, DATETIME_COLUMN_NAME, PREDICTION_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME])
+                                            [ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME, *prediction_columns])
 
             input_list = [*n_last_datapoints, *datapoints]
         else:
@@ -612,24 +639,39 @@ class BackendBase:
                 raise backend_errors.InputListSizeNotMachingException(len(input_list), self._ai_input_size + self._ai_shift_size) 
 
         preds, classifications = run_ai(self._ai_model, input_list)
-        preds = [np.float32(i).item() for i in preds]
 
-        if use_historical:
-            preds, classifications = preds[self._ai_input_size:], classifications[self._ai_input_size:]
+        # if use_historical:
+        #     preds, classifications = preds[self._ai_input_size:], classifications[self._ai_input_size:]
 
-        preds = [(None if np.isnan(i) else i) for i in preds]
+        #preds = preds[self._ai_input_size + self._ai_shift_size - self._ai_output_size:]
+
+        final_preds = [[None if np.isnan(i) else np.float32(i).item() for i in pred_list] for pred_list in preds]
+        #final_preds = [col[self._ai_input_size + self._ai_shift_size - self._ai_output_size:] for col in preds]
+        # final_cls = [col[self._ai_input_size + self._ai_shift_size - self._ai_output_size:] for col in classifications]
+
+        col_len = len(classifications[0])
+        final_cls = [[] for _ in range(col_len)]
+
+        for i in range(col_len):
+            for j in range(len(classifications)):
+                final_cls[i].append(classifications[j][i])
         
-        if 1 in classifications:
+        final_cls = [int(any(i)) for i in final_cls]
+
+        if 1 in final_cls:
             # TODO: Log the stuff
             pass
 
-        return preds, classifications
+        return final_preds, final_cls#, preds, classifications
 
-    def train_ai(self, table_name, target_column='sensor1'): #TODO: Jävlar vad du gnäller om TODOs samuel
+    def train_ai(self, table_name, target_columns=['sensor1']): #TODO: Jävlar vad du gnäller om TODOs samuel
         cols = self.get_database_column_names(table_name)
         col2idx = {k:i for i, k in enumerate(cols)}
 
-        data_cols = [c for c in cols if c not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, PREDICTION_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME)]
+
+        pred_cols = self.get_prediction_column_names(table_name)
+
+        data_cols = [c for c in cols if c not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME, *pred_cols)]
 
         data = self.get_all_data(table_name)
         data_dct = {}
@@ -645,5 +687,5 @@ class BackendBase:
         window = ai.create_window(df, input_width=self._ai_input_size, 
                                     label_width=1, 
                                     shift=self._ai_shift_size,
-                                    label_columns=[target_column])
+                                    label_columns=target_columns)
         ai.train_ai(self._ai_model, window.train, window.val, max_epochs=100)
