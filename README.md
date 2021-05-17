@@ -122,7 +122,7 @@ Whether or not the SQL query should limit its length.
 * export_data_json `(path_to_file, database_table, **kwargs)`
 * export_data_csv `(path_to_file, database_table, **kwargs)`
 * add_dict_to_database `(data_dict, database_table, date_col=None, **kwargs)`
-* get_tables: None
+* get_tables: `tables`
 * get_all_data `(table_name, convert_datetime)`
 * edit_classification `(id)`
 * train_ai `(table_name, target_column='sensor1')`
@@ -149,6 +149,10 @@ A python bolean representing if you want to convert dates into DateTime objects;
 
 A python integer representing the row you want to access in the database.
 
+## tables
+
+A python list of strings containing the names of all tables available in the database
+
 ## Constants
 ### DATETIME_COLUMN_NAME = 'date'
 
@@ -167,3 +171,85 @@ A python string representing the name of the column considered the column contai
 A python string representing the name of the column considered the column containing the id data. Default: `id`
 
 # AI
+
+## AI Functions
+* load_ai_model `(load_ai_path)`: `model`, `INPUT_WIDTH`, `SHIFT`, `LABEL_WIDTH`
+* train_ai `(model, train_data, validation_data, patience = 2, max_epochs = 5)`: None
+* run_ai `(model, input_list, shift = 1, label_width = 1, lower_sensitivity = 1.5, upper_sensitivity = 1.5, verbose = 0)`: `output_array`, `anomaly`
+* create_window `(df, input_width=6, label_width=1, shift=1, label_columns=['values'])`: `w2`
+
+## load_ai_path
+
+A python string representing the file path to where the Ai is loaded from.
+
+## model
+
+A Tensorflow AI model object.
+
+## train_data
+
+Training data connected to the window object.
+
+## validation_data
+
+Validation data connected to the window object.
+
+## patience
+
+A python integer representing how many epochs to allow the training to proceed in spite of val-loss decreasing. Default: `2`
+
+## max_epochs
+
+A python integer representing the maximum amount of epochs the Ai model will be trained with. Default: `5`
+
+## input_list
+
+A list of lists containting the input to be predicted on. Each nestled list is a datapoint. `input_list` needs to be at least `INPUT_WIDTH` * `SHIFT` long, where the last datapoint is the one being predicted upon and tested for anomalies.
+
+## shift
+
+A python integer representing how many datapoints ahead the prediction will be. Default: `1`
+
+## label_width
+
+A python integer representing how many redictions the AI will do at a time. Default: `1`
+
+## lower_sensitivity
+
+A python float representing the lower definition of accepted values. Default: `1.5`
+
+## upper_sensitivity
+
+A python float representing the upper definition of accepted values. Default: `1.5`
+
+## verbose
+
+Debugging variable; 
+* If `1`: print debugging info
+* If `0`: do not print debugging info
+
+## df
+
+A pandas dataframe that will be turned into training and validation data for the AI model to train on.
+
+## input_width
+
+A python integer representing the amountsd of inputs the AI model will accept when predicting and test for anomalies. Default: `6`
+
+## label_columns
+
+A python list containing the names of the columns that will be predicted upon.
+
+## output_array
+
+A python list containing the values the AI predicted, shifted according to the AI's `shift` value.
+
+## anomaly
+
+A python list containing wether the datapoints are anomalies or not. Each prediction is either a `0` or a `1`;
+* `0`: Datapoint is not an anomaly
+* `1`: Datapoint is an anomaly
+
+## w2
+
+A `window` object contining a training, a validation and a test dataset for the AI train on.
