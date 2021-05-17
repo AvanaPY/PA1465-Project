@@ -160,7 +160,7 @@ class BackendBase:
 
     def import_data_json(self, path_to_file, database_table, **kwargs):
         """
-            Imports data from a json file and converts it into dict
+            Imports data from a json file and converts it into dict.
 
             Args:
                 path_to_file: str
@@ -194,6 +194,19 @@ class BackendBase:
         self.add_dict_to_database(dct, database_table, **kwargs)
     
     def export_data_json(self, path_to_file, database_table, **kwargs):
+        """
+            Exports data as a json file
+
+            Args:
+                path_to_file: str
+                database_table: str
+            
+            Returns:
+                Nothing 
+
+            Raises:
+                Propagates any errors
+        """
         columns = self.get_database_column_names(database_table)
         json_data = {
             key: [] for key in columns
@@ -208,6 +221,20 @@ class BackendBase:
             json.dump(json_data, f)
 
     def export_data_csv(self, path_to_file, database_table, **kwargs):
+        """
+            Exports data as a csv file
+
+            Args:
+                path_to_file: str
+                database_table: str
+            
+            Returns:
+                Nothing 
+
+            Raises:
+                Propagates any errors
+        """
+
         data = self.get_all_data(database_table)
         cols = self.get_database_column_names(database_table)
         with open(path_to_file, 'w+', newline='') as csv_file:
@@ -307,6 +334,7 @@ class BackendBase:
             Raises:
                 None
         """
+
         type_dict = {
             str: "VARCHAR(255)",
             int: "INT",
@@ -649,8 +677,6 @@ class BackendBase:
             for j in range(len(classifications)):
                 final_cls[i].append(classifications[j][i])
         
-
-
         final_cls = [int(any(i)) for i in final_cls]
 
         if 1 in final_cls:
@@ -684,7 +710,19 @@ class BackendBase:
 
         return preds, final_cls
 
-    def train_ai(self, table_name, target_columns=['sensor1']): #TODO: Jävlar vad du gnäller om TODOs samuel
+    def train_ai(self, table_name, target_column='sensor1'): #TODO: Jävlar vad du gnäller om TODOs samuel
+        """ 
+            Trains AI model with target_column data. It's possible to save the newly trained model through this function.
+            
+            Args:
+                table_name: str
+                target_column: str
+            Returns:
+                -
+            Raises:
+                -
+        """
+
         cols = self.get_database_column_names(table_name)
         col2idx = {k:i for i, k in enumerate(cols)}
 

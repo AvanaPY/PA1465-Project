@@ -84,7 +84,7 @@ def show_databases(curs):
     for x in curs:
         print(x)
 
-def show_tables(curs):
+def show_tables(cursor):
     """
         Prints out all tables in the MySQL database
 
@@ -98,9 +98,9 @@ def show_tables(curs):
             Propagates any exceptions from cursor.execute
     """
     my_sql_command = 'SHOW TABLES'
-    curs.execute(my_sql_command)
-    result = curs.fetchall()
-    return result
+    cursor.execute(my_sql_command)
+    tables = cursor.fetchall()
+    return tables
 
 def drop_table(curs, table_name):
     

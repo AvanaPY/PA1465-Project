@@ -53,7 +53,20 @@ def all_type_equal_or_none(type_lst):
     else:
         return _all_types_not_equal
 
-def get_data_column_types(data):
+
+def get_data_column_types(data, ignore_none=False):
+    """ 
+    Checks if all values in the dictionaries keys values are the same type.
+
+    Args:
+        type_lst: dict{ }
+    
+    Returns:
+        col_types: type
+
+    Raises:
+        "Invalid column type wtf" if type mismatch
+    """
     col_types = {}
 
     for key in data:
