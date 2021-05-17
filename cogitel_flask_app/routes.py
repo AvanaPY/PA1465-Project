@@ -9,7 +9,6 @@ BASE_DIR = os.path.dirname(__file__)
 def _home():
     return render_template("home.html")
 
-
 @app.route('/upload/dataset', methods=['POST'])
 def upload_dataset():
     ok = True

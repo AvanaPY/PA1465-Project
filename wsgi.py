@@ -15,10 +15,12 @@ if __name__ == '__main__':
     #backend_app.console_program(args.ip, args.port)
     
     app._backend.import_data_json('./test_files/base_json_file_id.json', 'atable')
-    app._backend.edit_classification('atable', 1, 1)
+    preds, clas = app._backend. classify_datapoints('atable', [(32, 32, 32), (11, 11, 11), (1000, 100, -100)])
+    print(clas)
+    # app._backend.edit_classification('atable', 1, 1)
     
-    data = app._backend.get_all_data('atable', convert_datetime=True)
-    print(data)
+    # data = app._backend.get_all_data('atable', convert_datetime=True)
+    # print(data)
     # data = {
     #     'date': ["2021-01-20"] * 10_000,
     #     'sensor1': np.random.normal(loc=50, scale=5, size=10_000).astype(float).tolist(),

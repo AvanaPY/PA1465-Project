@@ -29,7 +29,7 @@ class BackendBase:
         self._my_db, self._db_config = create_sql_connection(confparser=confparser, section=database_section)
         self._curs = self._my_db.cursor()
 
-        # self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./ai/saved_models/{ai_model}')
+        self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./ai/saved_models/{ai_model}')
         
     def _get_database_description_no_id_column(self, table_name):
         """
@@ -278,6 +278,7 @@ class BackendBase:
             if key not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, PREDICTION_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME):
                 sorted_data[key] = data_dict.get(key)
         return sorted_data
+
     def _create_table_dict(self, data_dict, **kwargs):
         """
             Creates a table type dict based on a data dictionary
@@ -440,7 +441,7 @@ class BackendBase:
                 row = [values[i] for values in col_values]
                 rows.append(row)
 
-            # predictions, classifications = self.classify_datapoints(table_name, rows, use_historical=kwargs.get('use_historical', False))
+            # predictions, classifications = self.classify_datapoints(table_name, rows, use_historical=kwargs.get('use_historical', False)) #TODO: Remember to change this shit back
             predictions, classifications = [0] * len(rows), [0] * len(rows)
 
             if not CLASSIFICATION_COLUMN_NAME in col_names:
@@ -470,8 +471,7 @@ class BackendBase:
     
     # TODO: Alert for anomaly function
     def scream(self):
-        """
-            Screams in python
+        """ Screams in python
         """
         print("REEEEEEEEE")
 
@@ -619,6 +619,10 @@ class BackendBase:
 
         preds = [(None if np.isnan(i) else i) for i in preds]
         
+        if 1 in classifications:
+            # TODO: Log the stuff
+            pass
+
         return preds, classifications
 
     def train_ai(self, table_name, target_column='sensor1'): #TODO: Jävlar vad du gnäller om TODOs samuel
