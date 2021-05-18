@@ -25,11 +25,11 @@ ID_COLUMN_NAME = 'id'
 WANTED_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 class BackendBase:
-    def __init__(self, confparser, database_section='mysql', ai_model='2, 1, 1, 2'):
+    def __init__(self, confparser, database_section='mysql', ai_model='temp_ai'):
         self._my_db, self._db_config = create_sql_connection(confparser=confparser, section=database_section)
         self._curs = self._my_db.cursor()
 
-        self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./ai/saved_models/{ai_model}')
+        self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = load_ai_model(f'./ai/saved_models/{ai_model}')
 
     def _get_database_description_no_id_column(self, table_name):
         """

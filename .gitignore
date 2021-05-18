@@ -5,6 +5,7 @@
 
 *.ini
 /logs/*
+*.json
 
 # User-specific files
 env/
