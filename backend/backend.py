@@ -25,11 +25,13 @@ ID_COLUMN_NAME = 'id'
 WANTED_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 class BackendBase:
-    def __init__(self, confparser, database_section='mysql', ai_model='temp_ai'):
+    def __init__(self, confparser, database_section='mysql', ai_model='temp_ai', load_ai=False):
         self._my_db, self._db_config = create_sql_connection(confparser=confparser, section=database_section)
         self._curs = self._my_db.cursor()
 
-        self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = load_ai_model(f'./ai/saved_models/{ai_model}')
+        self._load_ai = load_ai
+        if load_ai:
+            self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = load_ai_model(f'./ai/saved_models/{ai_model}')
 
     def _get_database_description_no_id_column(self, table_name):
         """
@@ -92,6 +94,12 @@ class BackendBase:
         pred_cols = [col for col in cols if PREDICTION_COLUMN_NAME in col]
         return pred_cols
         
+    def get_sensor_column_names(self, table_name):
+        
+        cols = self.get_database_column_names(table_name)
+        sens_cols = [col for col in cols if not PREDICTION_COLUMN_NAME in col and col not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME)]
+        return sens_cols
+
     def get_sensor_prediction_column_name_pairs(self, table_name):
         preds = self.get_prediction_column_names(table_name)
         pairs = [(pred.replace(PREDICTION_COLUMN_NAME, ''), pred) for pred in preds]
@@ -508,7 +516,7 @@ class BackendBase:
                 row[date_column_index] = row[date_column_index].strftime(WANTED_DATETIME_FORMAT)
                 data[i] = tuple(row)
 
-    def _check_has_classifications(self, table_name : str, data : dict, **kwargs):
+    def _check_has_classifications(self, table_name : str, data : dict, classify_if_not_exist=True, **kwargs):
         """ 
             Checks whether or not data has classification data.
 
@@ -529,24 +537,32 @@ class BackendBase:
         """
         col_names = list(data.keys())       # All columns in data
 
+        data_point_count = len(data[col_names[0]])
+
         non_reserved_column_names = [key for key in col_names if key not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME)] # All user-defined columns
         sensor_keys = [key for key in non_reserved_column_names if PREDICTION_COLUMN_NAME not in key]                                           # All columns that refer to sensors
         sensor_values = [data[key] for key in data.keys() if key in sensor_keys]
         
-        rows = []
-        for i in range(len(sensor_values[0])):
-            row = [values[i] for values in sensor_values]
-            rows.append(row)
-
-        predictions, classifications = self.classify_datapoints(table_name, rows, use_historical=kwargs.get('use_historical', False))
-
-        if not CLASSIFICATION_COLUMN_NAME in col_names:
-            data[CLASSIFICATION_COLUMN_NAME] = classifications
 
         prediction_column_names = [PREDICTION_COLUMN_NAME + key for key in sensor_keys]
+        if classify_if_not_exist and self._load_ai:
+            rows = []
+            for i in range(len(sensor_values[0])):
+                row = [values[i] for values in sensor_values]
+                rows.append(row)
 
-        for i, pkey in enumerate(prediction_column_names):
-            data[pkey] = predictions[i]
+            predictions, classifications = self.classify_datapoints(table_name, rows, use_historical=kwargs.get('use_historical', False))
+
+            if not CLASSIFICATION_COLUMN_NAME in col_names:
+                data[CLASSIFICATION_COLUMN_NAME] = classifications
+
+            for i, pkey in enumerate(prediction_column_names):
+                data[pkey] = predictions[i]
+        else:
+            if not CLASSIFICATION_COLUMN_NAME in col_names:
+                data[CLASSIFICATION_COLUMN_NAME] = [0] * data_point_count
+            for pkey in prediction_column_names:
+                data[pkey] = [0] * data_point_count
 
     def _check_has_datetime_column(self, table_name : str, data : dict, **kwargs):
         if DATETIME_COLUMN_NAME not in data:
@@ -720,14 +736,20 @@ class BackendBase:
 
             self.strip_columns_from_data_rows(table_name, n_last_datapoints, 
                                             [ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME, *prediction_columns])
-
             input_list = [*n_last_datapoints, *datapoints]
         else:
-            input_list = [*datapoints]
+            input_list = datapoints
             if len(input_list) < self._ai_input_size + self._ai_shift_size:
                 raise backend_errors.InputListSizeNotMachingException(len(input_list), self._ai_input_size + self._ai_shift_size) 
 
-        preds, classifications = run_ai(self._ai_model, input_list)
+        ilst_np = np.array(input_list)
+        # std, mean = ilst_np.std(), ilst_np.mean()
+
+        # ilst_np = (ilst_np - mean) / std
+
+        # print(datapoints[:10])
+        # print(f'Classifying data such as {ilst_np[:10]}')
+        preds, classifications = run_ai(self._ai_model, ilst_np)
 
         preds = [[None if np.isnan(i) else np.float32(i).item() for i in pred_list] for pred_list in preds]
 
@@ -741,7 +763,6 @@ class BackendBase:
         final_cls = [int(any(i)) for i in final_cls]
 
         if 1 in final_cls:
-            
             flipped_preds = [[] for _ in range(col_len)]
 
             for i in range(col_len):
@@ -773,7 +794,7 @@ class BackendBase:
 
         return preds, final_cls
 
-    def train_ai(self, table_name, target_columns=['sensor1'], save_ai=False, save_ai_path='ai/saved_models/temp_ai', **kwargs):
+    def train_ai(self, table_name, label_columns, save_ai=False, save_ai_path='ai/saved_models/temp_ai', **kwargs):
         """ 
             Trains AI model with target_column data. It's possible to save the newly trained model through this function.
             
@@ -789,7 +810,6 @@ class BackendBase:
         cols = self.get_database_column_names(table_name)
         col2idx = {k:i for i, k in enumerate(cols)}
 
-
         pred_cols = self.get_prediction_column_names(table_name)
 
         data_cols = [c for c in cols if c not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME, *pred_cols)]
@@ -804,14 +824,13 @@ class BackendBase:
             data_dct[col] = col_vals
 
         df = pd.DataFrame.from_dict(data_dct)
-
-        window = ai.create_window(df, input_width=self._ai_input_size, 
-                                    label_width=1, 
-                                    shift=self._ai_shift_size,
-                                    label_columns=target_columns)
-
+        window = ai.create_window(df, input_width=kwargs.get('input_width', 3), 
+                                      label_width=kwargs.get('label_width', 3), 
+                                      shift=kwargs.get('shift', 1),
+                                      label_columns=label_columns)
         output_dim = len(self.get_prediction_column_names(table_name))
         new_ai = ai.create_ai_model(output_dim)
+        print(f'Training on data such as {window.train_df.head()}')
         ai.train_ai(new_ai, window.train, window.val, **kwargs)
 
         self._ai_model = new_ai
