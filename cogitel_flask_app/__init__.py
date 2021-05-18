@@ -1,10 +1,9 @@
 from flask import Flask
 from backend import BackendBase
-app = None
+
 
 def init_app(confparser, section='app'):
     """Initialize the core application."""
-    global app
 
     host, port = 'localhost', 5000 # Default values
 
@@ -37,9 +36,8 @@ def init_app(confparser, section='app'):
         # Include our Routes
         from . import routes
 
-        # Register Blueprints
-        # app.register_blueprint(auth.auth_bp)
-        # app.register_blueprint(admin.admin_bp)
+        from .plotlydash.dashboard import init_dashboard
+        app = init_dashboard(app)
 
         return app
 

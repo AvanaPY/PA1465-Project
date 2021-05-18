@@ -17,22 +17,20 @@ from database import *
 from .ext import sql_type_to_python_type, all_type_equal_or_none, _all_types_not_equal, get_data_column_types
 import backend.errors as backend_errors
 
-DATETIME_COLUMN_NAME = 'date' # TODO: Check if this exists in imported data
+DATETIME_COLUMN_NAME = 'date'
 CLASSIFICATION_COLUMN_NAME = 'classification'
-PREDICTION_COLUMN_NAME = 'prediction'
+PREDICTION_COLUMN_NAME = 'PREDICTION'
 ID_COLUMN_NAME = 'id'
 
 WANTED_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 class BackendBase:
-    def __init__(self, confparser, database_section='mysql', ai_model='3, 1, 1'):
+    def __init__(self, confparser, database_section='mysql', ai_model='2, 1, 1'):
         self._my_db, self._db_config = create_sql_connection(confparser=confparser, section=database_section)
         self._curs = self._my_db.cursor()
-        self._current_table = None                                                          # The current table name that is being under consideration
-                                                                                            # This is more a temporary solution and should be done on the front end instead
-        
-        self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./ai/saved_models/{ai_model}')
-        
+
+        #self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./ai/saved_models/{ai_model}')
+
     def _get_database_description_no_id_column(self, table_name):
         """
             Function for getting the information about a table
@@ -77,6 +75,11 @@ class BackendBase:
         database_col_names = list((a[0] for a in desc))
         return database_col_names
 
+    def get_prediction_column_names(self, table_name):
+        cols = self.get_database_column_names(table_name)
+        pred_cols = [col for col in cols if PREDICTION_COLUMN_NAME in col]
+        return pred_cols
+        
     def _compatability_check(self, data, table_name):
         ''' 
             Checks the compatibility of a json document against the database table.
@@ -258,19 +261,14 @@ class BackendBase:
                 Propagates any errors
         """
         self.check_has_classifications(database_table, data_dict, **kwargs)
+        self.check_has_datetime_column(database_table, data_dict, **kwargs)
 
         keys = list(data_dict.keys())
         for key in keys:
             if key.lower() == "id":
                 del data_dict[key]
-        
-        date_format = "%Y-%m-%d"
-        if date_col != None and datetime.datetime.strptime(data_dict[date_col][0], date_format): # TODO: Move the format check in the loop instead to check for
-                                                                                                 # formatting on each datapoint instead of just the first
-            for i, row in enumerate(data_dict[date_col]):
-                row += " 00:00:00"
-                data_dict[date_col][i] = row
 
+        data_dict = self._sort_data_dictionary(data_dict)
         try:
             self._compatability_check(data_dict, database_table)
         
@@ -280,6 +278,7 @@ class BackendBase:
         
         except:
             raise
+
         try:
             inv_dct = self._invert_dictionary(data_dict)
             for row in inv_dct:
@@ -287,14 +286,41 @@ class BackendBase:
         except Exception as e:
             raise
 
-    def _create_table_dict(self, data_dict, date_col=None, id_colum_name=None, **kwargs): #TODO: Replace date_col with DATETIME_COLUMN_NAME instead
-                                                                                # Because it's better that we reserve the name than give them
-                                                                                # the option to destroy our backend
-                                                                                # because I (Emil) don't want to bother writing very advanced
-                                                                                # code that will check that much
-                                                                                # so it's better to just not let them have fun
-                                                                                # 10/10 would code again
-                                                                                # yeet :tboof:
+    def _sort_data_dictionary(self, data_dict : dict):
+        """
+            Sorts a dictionary into the desired structure
+
+            Sorted into order of:
+
+            ID, Date, Classification, Sensor1, Sensor2... predictionSensor1, predictionSensor2...
+
+            Args:
+                data_dict : dict
+
+            Returns:
+                -
+
+            Raises:
+                -
+        """
+        sorted_data = {}
+        for key in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME):
+            if key in data_dict:
+                sorted_data[key] = data_dict[key]
+
+        sensor_keys = [key for key in data_dict if (key not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME) and PREDICTION_COLUMN_NAME not in key)]
+
+        for key in sensor_keys:
+            sorted_data[key] = data_dict[key]
+
+        prediction_keys = [key for key in data_dict if PREDICTION_COLUMN_NAME in key]
+
+        for key in prediction_keys:
+            sorted_data[key] = data_dict[key]
+
+        return sorted_data
+
+    def _create_table_dict(self, data_dict, **kwargs):
         """
             Creates a table type dict based on a data dictionary
 
@@ -312,7 +338,8 @@ class BackendBase:
         type_dict = {
             str: "VARCHAR(255)",
             int: "INT",
-            float: "FLOAT"
+            float: "FLOAT",
+            bool: int
         }
         
         dct = {
@@ -320,17 +347,21 @@ class BackendBase:
         }
 
         col_names = data_dict.keys()
-        data_column_types = get_data_column_types(data_dict, ignore_none=True)
+        data_column_types = get_data_column_types(data_dict)
         for col in col_names:
             data_type = data_column_types[col]
-            if date_col == col:
+            if col == DATETIME_COLUMN_NAME:
                 dct[col] = 'DATETIME'
             else:
                 dct[col] = type_dict[data_type]
         
         # Classification column
         dct[CLASSIFICATION_COLUMN_NAME] = 'bit'
-        dct[PREDICTION_COLUMN_NAME] = 'FLOAT(6)'
+        
+        prediction_column_names = [key for key in dct if PREDICTION_COLUMN_NAME in key]
+
+        for pkey in prediction_column_names:
+            dct[pkey] = 'FLOAT(6)'
 
         return dct
 
@@ -399,10 +430,15 @@ class BackendBase:
             Raises:
                 -
         """
-        data = get_data(self._curs, table_name)
-        if convert_datetime:
-            self._convert_row_datetime(table_name, data)
-        return data 
+        try:
+            data = get_data(self._curs, table_name)
+            if convert_datetime:
+                self._convert_row_datetime(table_name, data)
+            return data 
+        except merrors.ProgrammingError as e:
+            if e.errno == 1146:
+                raise backend_errors.TableDoesNotExistException(table_name)
+            raise
 
     def _convert_row_datetime(self, table_name, data):
         """ Converts the "date" column in the data from datetime.datetime objects to string values.
@@ -425,66 +461,6 @@ class BackendBase:
                 row[date_column_index] = row[date_column_index].strftime(WANTED_DATETIME_FORMAT)
                 data[i] = tuple(row)
 
-
-    def set_current_table(self, table_name):
-        """ 
-            Sets the current table name
-
-            Sets the current table name under consideration to a value.
-
-            Args:
-                table_name: str
-            
-            Returns:
-                -
-
-            Raises:
-                backend.errors
-        """
-        tables = show_tables(self._curs)
-
-
-        table_exists = False
-
-        for table in tables :
-            if table[0] == table_name :
-                table_exists = True
-
-        if table_exists == False :
-            raise backend_errors.TableDoesNotExistException(table_name)
-        else :
-            self._current_table = table_name
-
-    def reset_current_table(self):
-        """ 
-            Resets the current table name
-
-            Args:
-                -
-            
-            Returns:
-                -
-
-            Raises:
-                -
-        """
-        self._current_table = None
-
-    def get_current_table(self):
-        """ 
-            Returns the current table saved in the backend
-
-            Args:
-                -
-            
-            Returns:
-                self._current_table: str
-
-            Raises:
-                -
-        """
-        return self._current_table    
-
     def check_has_classifications(self, table_name : str, data : dict, **kwargs):
         """ 
             Checks whether or not data has classification data.
@@ -504,47 +480,86 @@ class BackendBase:
                 -
 
         """
-        col_names = list(data.keys())
-        col_values = [data[key] for key in data.keys() if key not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME, PREDICTION_COLUMN_NAME)]
-        if not CLASSIFICATION_COLUMN_NAME in col_names or not PREDICTION_COLUMN_NAME in col_names:
-            rows = []
-            for i in range(len(col_values[0])):
-                row = [values[i] for values in col_values]
-                rows.append(row)
+        col_names = list(data.keys())       # All columns in data
 
-            predictions, classifications = self.classify_datapoints(table_name, rows, use_historical=kwargs.get('use_historical', False))
-            
-            if not CLASSIFICATION_COLUMN_NAME in col_names:
-                data[CLASSIFICATION_COLUMN_NAME] = classifications
-            if not PREDICTION_COLUMN_NAME in col_names:
-                data[PREDICTION_COLUMN_NAME] = predictions
-            
-    
-    def edit_classification(self, id):
-        """ 
-            Edits a classification
-            
-            Args:
-                id: int - the id of the datapoint being edited
-            Returns:
-                -
-            Raises:
-                backend.errors
-        """
-        pass
+        non_reserved_column_names = [key for key in col_names if key not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME)] # All user-defined columns
+        sensor_keys = [key for key in non_reserved_column_names if PREDICTION_COLUMN_NAME not in key]                                           # All columns that refer to sensors
+        sensor_values = [data[key] for key in data.keys() if key in sensor_keys]
+        
+        rows = []
+        for i in range(len(sensor_values[0])):
+            row = [values[i] for values in sensor_values]
+            rows.append(row)
+
+        predictions, classifications = self.classify_datapoints(table_name, rows, use_historical=kwargs.get('use_historical', False))
+
+        if not CLASSIFICATION_COLUMN_NAME in col_names:
+            data[CLASSIFICATION_COLUMN_NAME] = classifications
+
+        prediction_column_names = [PREDICTION_COLUMN_NAME + key for key in sensor_keys]
+
+        for i, pkey in enumerate(prediction_column_names):
+            data[pkey] = predictions[i]
+
+    def check_has_datetime_column(self, table_name : str, data : dict, **kwargs):
+        if DATETIME_COLUMN_NAME not in data:
+            data_points = len(list(data.values())[0])
+            t = datetime.datetime.now()
+            t = t.strftime(WANTED_DATETIME_FORMAT)
+
+            data[DATETIME_COLUMN_NAME] = [t for _ in range(data_points)]
+        
+        else:
+            date_format = "%Y-%m-%d"
+            for i, v in enumerate(data[DATETIME_COLUMN_NAME]):
+                try:
+                    dt_obj = datetime.datetime.strptime(v, WANTED_DATETIME_FORMAT)
+                except:
+                    try:
+                        dt_obj = datetime.datetime.strptime(v, date_format)
+                    except:
+                        dt_obj = datetime.datetime.now()
+                    data[DATETIME_COLUMN_NAME][i] = datetime.datetime.strftime(dt_obj, WANTED_DATETIME_FORMAT)
     
     # TODO: Alert for anomaly function
     def scream(self):
-        """
-            Screams in python
+        """ Screams in python
         """
         print("REEEEEEEEE")
 
-    def _insert_classifications(self, id, classification):
+    def edit_column_value(self, table_name : str, id : int, column_name : str, new_column_value):
         """ 
-            Inserts a classification into the table
+            Edits the value in a database
 
             Args:
+                table_name : str - table name
+                id: int - the id of the row of the datapoint being edited
+                column_name : str - Name of the column
+                new_column_value: any - Value to insert into the table
+            Returns:
+                -
+            Raises:
+                Any propagated errors
+        """
+        try :
+            edit_data(self._curs, table_name,
+                { column_name : new_column_value },
+                { ID_COLUMN_NAME: id }
+            )
+        except merrors.ProgrammingError as e:
+            if e.errno == 1146:
+                raise backend_errors.TableDoesNotExistException(table_name)
+            else:
+                raise
+        except:
+            raise
+
+    def edit_classification(self, table_name : str, id : int , classification : bool):
+        """ 
+            Edits a classification in the table
+
+            Args:
+                table_name : str - table name
                 id: int - the id of the row of the datapoint being edited
                 classification: int - the classification of the datapoint, either 1 (True) or 0 (False) 
             Returns:
@@ -552,16 +567,14 @@ class BackendBase:
             Raises:
                 Any propagated errors
         """
-        try :
-            edit_data(self._curs, self._current_table, { "classification": classification }, { "id" : id })
-        except Exception as e:
-            print(e) # TODO: Get a proper god damn error owo
+        self.edit_column_value(table_name, id, CLASSIFICATION_COLUMN_NAME, classification)
         
-    def _delete_data_point(self, id):
+    def _delete_data_point(self, table_name : str, id : int):
         """
             Delets a datapoint
 
             Args:
+                table_name : str - table name
                 id: int - the id of the datapint being deleted
             Returns:
                 -
@@ -569,11 +582,11 @@ class BackendBase:
                 Any propagated errors
         """
         try :
-            delete_data(self._curs, self._current_table, { "id" : id })
+            delete_data(self._curs, table_name, { "id" : id })
         except Exception as e:
             print(e) # TODO: Same shit here, proper error
 
-    def _get_all_non_classified(self, table_name, NON_CLASSIFIED_VALUE=None, convert_datetime=False):
+    def _get_all_non_classified(self, table_name, NON_CLASSIFIED_VALUE=None, convert_datetime=False, **kwargs):
         """ 
             Returns all non-classified data points
             
@@ -585,24 +598,18 @@ class BackendBase:
                 Any propagated errors
         """
 
-        #table_name = ""
-
-        # if _table_name == None:
-        #     table_name = self.get_current_table
-        # else:
-        #     table_name = _table_name
-
         try:
             data = get_data(self._curs, table_name, column_dictionary={
-                CLASSIFICATION_COLUMN_NAME: NON_CLASSIFIED_VALUE
+                CLASSIFICATION_COLUMN_NAME: NON_CLASSIFIED_VALUE,
             })
             if convert_datetime:
                 self._convert_row_datetime(table_name, data)
             return data
         except Exception as e:
-            print("Error in _get_all_non_classified(): ", str(e)) # TODO: Make this an exception instead of print fooken pepega
+            raise
+            # TODO: Make this a proper exception instead
 
-    def _get_all_anomalies(self):
+    def _get_all_anomalies(self, table_name):
         """ 
             Returns all data points where the calssification column is 1
             
@@ -613,7 +620,7 @@ class BackendBase:
             Raises:
                 -
         """
-        my_sql_command = f'SELECT * FROM {self._current_table} WHERE classification = 1;'
+        my_sql_command = f'SELECT * FROM {table_name} WHERE classification = 1;'
         self._curs.execute(my_sql_command)
         data = self._curs.fetchall()
         return data
@@ -645,28 +652,67 @@ class BackendBase:
                 raise e
             except:
                 raise
+
             n_last_datapoints = list(reversed(n_last_datapoints))
 
+            prediction_columns = self.get_prediction_column_names(table_name)
+
             self.strip_columns_from_data_rows(table_name, n_last_datapoints, 
-                                            [ID_COLUMN_NAME, DATETIME_COLUMN_NAME, PREDICTION_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME])
+                                            [ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME, *prediction_columns])
 
             input_list = [*n_last_datapoints, *datapoints]
         else:
             input_list = [*datapoints]
             if len(input_list) < self._ai_input_size + self._ai_shift_size:
-                raise Exception(f'Invalid input list size!') # TODO: Create own errors in an ai.errors file
+                raise backend_errors.InputListSizeNotMachingException(len(input_list), self._ai_input_size + self._ai_shift_size) 
 
         preds, classifications = run_ai(self._ai_model, input_list)
-        preds = [np.float32(i).item() for i in preds]
 
-        if use_historical:
-            preds, classifications = preds[self._ai_input_size:], classifications[self._ai_input_size:]
+        preds = [[None if np.isnan(i) else np.float32(i).item() for i in pred_list] for pred_list in preds]
 
-        preds = [(None if np.isnan(i) else i) for i in preds]
+        col_len = len(classifications[0])
+        final_cls = [[] for _ in range(col_len)]
+
+        for i in range(col_len):
+            for j in range(len(classifications)):
+                final_cls[i].append(classifications[j][i])
         
-        return preds, classifications
+        final_cls = [int(any(i)) for i in final_cls]
 
-    def train_ai(self, table_name, target_column='sensor1'): #TODO: Jävlar vad du gnäller om TODOs samuel
+        if 1 in final_cls:
+            
+            flipped_preds = [[] for _ in range(col_len)]
+
+            for i in range(col_len):
+                for j in range(len(preds)):
+                    flipped_preds[i].append(preds[j][i])
+
+            with open('./jsonlog.json', 'r') as f:
+                try:
+                    fl = json.load(f)
+                except Exception as e:
+                    fl = []
+
+            now = datetime.datetime.strftime(datetime.datetime.now(), WANTED_DATETIME_FORMAT)
+
+            indices = [i for i, a in enumerate(final_cls) if a == 1]
+            for index in indices:
+                i = input_list[index-5:index+1]
+                c = final_cls[index-5:index+1]
+                p = flipped_preds[index-5:index+1]
+                fl.append({
+                    "time": now,
+                    "input": i,
+                    "classification": c,
+                    "predictions": p
+                })
+                
+            with open('./jsonlog.json', 'w') as f:
+                json.dump(fl, f)
+
+        return preds, final_cls
+
+    def train_ai(self, table_name, target_columns=['sensor1']): #TODO: Jävlar vad du gnäller om TODOs samuel
         """ 
             Trains AI model with target_column data. It's possible to save the newly trained model through this function.
             
@@ -682,7 +728,10 @@ class BackendBase:
         cols = self.get_database_column_names(table_name)
         col2idx = {k:i for i, k in enumerate(cols)}
 
-        data_cols = [c for c in cols if c not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, PREDICTION_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME)]
+
+        pred_cols = self.get_prediction_column_names(table_name)
+
+        data_cols = [c for c in cols if c not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME, *pred_cols)]
 
         data = self.get_all_data(table_name)
         data_dct = {}
@@ -698,5 +747,5 @@ class BackendBase:
         window = ai.create_window(df, input_width=self._ai_input_size, 
                                     label_width=1, 
                                     shift=self._ai_shift_size,
-                                    label_columns=[target_column])
+                                    label_columns=target_columns)
         ai.train_ai(self._ai_model, window.train, window.val, max_epochs=100)

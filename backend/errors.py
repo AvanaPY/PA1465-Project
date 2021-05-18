@@ -27,3 +27,11 @@ class ColumnTypesNotSameException(Error):
 class ColumnTypesNotMatchingException(Error):
     def __init__(self, key, database_col_type, data_type):
         super().__init__(f'Column type does not match with the database\'s column type: Column "{key}" with type {database_col_type} against data type {data_type}.')
+
+class InputListSizeNotMachingException(Error):
+    def __init__(self, input_size, ai_size):
+        super().__init__(f'Input size of {input_size} does not match wanted ai_input_size of {ai_size}.')
+
+class InvalidColumnTypeException(Error):
+    def __init__(self, lst):
+        super().__init__(f'One or more items in {lst} does not contain values of valid column types.')
