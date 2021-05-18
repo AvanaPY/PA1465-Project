@@ -687,25 +687,27 @@ class BackendBase:
                 for j in range(len(preds)):
                     flipped_preds[i].append(preds[j][i])
 
-            with open('jsonlog.json', 'w+') as f:
+            with open('./jsonlog.json', 'r') as f:
                 try:
                     fl = json.load(f)
-                except:
+                except Exception as e:
                     fl = []
-                
-                now = datetime.datetime.strftime(datetime.datetime.now(), WANTED_DATETIME_FORMAT)
 
-                indices = [i for i, a in enumerate(final_cls) if a == 1]
-                for index in indices:
-                    i = input_list[index-5:index+1]
-                    c = final_cls[index-5:index+1]
-                    p = flipped_preds[index-5:index+1]
-                    fl.append({
-                        "time": now,
-                        "input": i,
-                        "classification": c,
-                        "predictions": p
-                    })
+            now = datetime.datetime.strftime(datetime.datetime.now(), WANTED_DATETIME_FORMAT)
+
+            indices = [i for i, a in enumerate(final_cls) if a == 1]
+            for index in indices:
+                i = input_list[index-5:index+1]
+                c = final_cls[index-5:index+1]
+                p = flipped_preds[index-5:index+1]
+                fl.append({
+                    "time": now,
+                    "input": i,
+                    "classification": c,
+                    "predictions": p
+                })
+                
+            with open('./jsonlog.json', 'w') as f:
                 json.dump(fl, f)
 
         return preds, final_cls
