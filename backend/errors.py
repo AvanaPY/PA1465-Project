@@ -37,3 +37,7 @@ class InputListSizeNotMachingException(Error):
 class InvalidColumnTypeException(Error):
     def __init__(self, lst):
         super().__init__(f'One or more items in {lst} does not contain values of valid column types.')
+
+class NoDatabaseConnectedException(Error):
+    def __init__(self):
+        super().__init__(f'The backend could not connect to a MySQL database.')

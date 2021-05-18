@@ -60,8 +60,10 @@ def create_sql_connection(confparser, section='mysql'):
             db_config[item[0]] = item[1]
     else:
         raise Exception('Section {0} not found in the config file'.format(section,))
-
-    my_db = MySQLConnection(autocommit=True, **db_config)
+    try:
+        my_db = MySQLConnection(autocommit=True, **db_config)
+    except:
+        my_db = None
     return my_db, db_config
 
 def create_table(curs, table_name, column_dictionary):
