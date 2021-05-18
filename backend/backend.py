@@ -57,7 +57,7 @@ class BackendBase:
 
     def get_database_column_names(self, table_name):
         """
-            A function for gatting all the columns in the table
+            A function for getting all the columns in the table
 
             Args:
                 table_name: str
