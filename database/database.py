@@ -66,18 +66,18 @@ def create_sql_connection(confparser, section='mysql'):
 
 def create_table(curs, table_name, column_dictionary):
     """
-        Creates a table in the database
+        Creates a table in the database.
 
         Args:
-            curs: a MySQLConnection cursor
+            curs: a MySQLConnection cursor.
             table_name: str
-            column_dictionary: dictionary with columnname-columntype mapping, e.g { "first-name": "text", "last-name": "text", "age:", "INT" }
+            column_dictionary: dictionary with columnname-columntype mapping, e.g { "first-name": "text", "last-name": "text", "age:", "INT" }.
         
         Returns:
             -
 
         Raises:
-            Propagates any exceptions from cursor.execute
+            Propagates any exceptions from cursor.execute.
     """
     _skip_none_dictionary(column_dictionary)
     columns = [f'{key} {value}' for key, value in column_dictionary.items()]
@@ -88,16 +88,16 @@ def create_table(curs, table_name, column_dictionary):
 
 def show_databases(curs):
     """
-        Prints out all databases in the MySQL database
+        Prints out all databases in the MySQL database.
 
         Args:
-            curs: a MySQLConnection cursor
+            curs: a MySQLConnection cursor.
         
         Returns:
             -
 
         Raises:
-            Propagates any exceptions from cursor.execute
+            Propagates any exceptions from cursor.execute.
     """
     my_sql_command = 'SHOW DATABASES'
     curs.execute(my_sql_command)
@@ -106,16 +106,16 @@ def show_databases(curs):
 
 def show_tables(cursor):
     """
-        Returns all tables in the MySQL database
+        Returns all tables in the MySQL database.
 
         Args:
-            cursor  : a MySQLConnection cursor
+            cursor  : a MySQLConnection cursor.
         
         Returns:
-            tables  : a list of all tables in the database
+            tables  : a list of all tables in the database.
 
         Raises:
-            Propagates any exceptions from cursor.execute
+            Propagates any exceptions from cursor.execute.
     """
     my_sql_command = 'SHOW TABLES'
     cursor.execute(my_sql_command)
@@ -124,35 +124,35 @@ def show_tables(cursor):
 
 def drop_table(curs, table_name):
     """
-        Drops a table from the database
+        Drops a table from the database.
 
         Args:
-            curs        : a MySQLConnection cursor
+            curs        : a MySQLConnection cursor.
             table_name  : str
         
         Returns:
             -
 
         Raises:
-            Propagates any exceptions from cursor.execute
+            Propagates any exceptions from cursor.execute.
     """
     my_sql_command = f'DROP TABLE {table_name}'
     curs.execute(my_sql_command)
 
 def insert_data(curs, table_name, data_dictionary):
     """
-        Inserts data into a table in the database
+        Inserts data into a table in the database.
 
         Args:
-            curs            : a MySQLConnection cursor instance
+            curs            : a MySQLConnection cursor instance.
             table_name      : str
-            data_dictionary : a dictionary with columnname-columnvalue mapping, e.g { "ID": "1", "Value": "123", "Value2", "456" }
+            data_dictionary : a dictionary with columnname-columnvalue mapping, e.g { "ID": "1", "Value": "123", "Value2", "456" }.
         
         Returns:
             -
 
         Raises:
-            Any errors that occured from MySQLConnection
+            Any errors that occured from MySQLConnection.
     """
     _skip_none_dictionary(data_dictionary)
     insert_names = ', '.join([str(key) for key in data_dictionary])
@@ -162,20 +162,20 @@ def insert_data(curs, table_name, data_dictionary):
 
 def get_data(curs, table_name, column_dictionary=None, order_by=None, order_by_asc_desc='ASC', limit_offset=0, limit_row_count=0):
     """
-        Returns data into a table in the database
+        Returns data into a table in the database.
 
         Args:
-            curs                : a MySQLConnection cursor instance
+            curs                : a MySQLConnection cursor instance.
             table_name          : str
-            column_dictionary   : dictionary with columnname-columnvale mapping, e.g { "ID": "1", "Data1": "ABC" } for SQL lookup
+            column_dictionary   : dictionary with columnname-columnvale mapping, e.g { "ID": "1", "Data1": "ABC" } for SQL lookup.
             order_by            : a list of column values to order by. None is default for no ordering.
             order_by_asc_desc   : Whether to order by ascending ('ASC') or descending ('DESC'). 
         
         Returns:
-            a tuple of data to be inserted into the database
+            a tuple of data to be inserted into the database.
 
         Raises:
-            Any errors that occured from MySQLConnection
+            Any errors that occured from MySQLConnection.
     """
     if column_dictionary:
         #_skip_none_dictionary(column_dictionary)
@@ -200,15 +200,15 @@ def delete_data(curs, table_name, column_dictionary):
         Deletes data from table_name
 
         Args:
-            curs                : a MySQLConnection cursor instance
+            curs                : a MySQLConnection cursor instance.
             table_name          : str
-            column_dictionary   : dictionary with columnname-columnvale mapping, e.g { "ID": "1", "Data1": "ABC" } for SQL lookup
+            column_dictionary   : dictionary with columnname-columnvale mapping, e.g { "ID": "1", "Data1": "ABC" } for SQL lookup.
         
         Returns:
             -
 
         Raises:
-            Any errors that occured from MySQLConnection
+            Any errors that occured from MySQLConnection.
     """
     _skip_none_dictionary(column_dictionary)
     WHERE_LOOK = _column_dictionary_to_sql_and_join(column_dictionary)  # Join into an AND list
@@ -217,19 +217,19 @@ def delete_data(curs, table_name, column_dictionary):
 
 def edit_data(curs, table_name, new_column_values, column_constraints):
     """
-        Returns data into a table in the database
+        Returns data into a table in the database.
 
         Args:
-            curs                : a MySQLConnection cursor instance
+            curs                : a MySQLConnection cursor instance.
             table_name          : str
-            new_column_values   : column dictionary of new values
-            column_constraints  : column dictionary of look-up values in the database
+            new_column_values   : column dictionary of new values.
+            column_constraints  : column dictionary of look-up values in the database.
         
         Returns:
             -
 
         Raises:
-            Any errors that occured from MySQLConnection
+            Any errors that occured from MySQLConnection.
     """
 
     SET_VALUES = 'name=%(set_name)s, age=%(set_age)s'
