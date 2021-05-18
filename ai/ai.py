@@ -40,16 +40,16 @@ def create_ai_model(output_dim = 1):
 
 def load_ai_model(load_ai_path):
     """
-        Loads the AI model from a file
+        Loads the AI model from a file.
 
-    Args::
-        load_ai_path: str object representing the file path to load the ai from
+    Args:
+        load_ai_path: str object representing the file path to load the ai from.
 
-    Returns::
-        Tensorflow AI model
+    Returns:
+        model       : a Tensorflow AI model.
 
-    Raises::
-        Any errors tensorflow might've raised when loading the ai model
+    Raises:
+        Any errors tensorflow might've raised when loading the ai model.
     """
     model = tf.keras.models.load_model(load_ai_path)
 
@@ -68,16 +68,16 @@ def load_ai_model(load_ai_path):
 
 def save_ai_model(model, save_ai_path, INPUT_WIDTH = 1, SHIFT = 1, LABEL_WIDTH = 1, in_dimentions = 1, out_dimentions = 1):
     """
-        Saves the AI model into a file
+        Saves the AI model into a file.
 
-    Args::
-        model: A tensorflow AI model
+    Args:
+        model       : A tensorflow AI model.
         save_ai_path: str object representing the file path to save the ai model to.
 
-    Returns::
-        Tensorflow AI model
+    Returns:
+        model       : Tensorflow AI model
 
-    Raises::
+    Raises:
         Any errors tensorflow might've raised when saving the ai model
     """
     model.save(save_ai_path)
@@ -108,20 +108,20 @@ def save_ai_model(model, save_ai_path, INPUT_WIDTH = 1, SHIFT = 1, LABEL_WIDTH =
 
 def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5):
     """
-        Trains an AI model
+        Trains an AI model.
 
-        Args::
-            model: A tensorflow AI model
-            train_data: training data from window object
-            validation_data: validation data from window object
-            patience: how many Epocs to train without val_loss decreasing before stopping
-            max_epochs: how many Epocs to train maximum
+        Args:
+            model           : A tensorflow AI model.
+            train_data      : training data from window object.
+            validation_data : validation data from window object.
+            patience        : how many Epocs to train without val_loss decreasing before stopping.
+            max_epochs      : how many Epocs to train maximum.
 
-        Returns::
-            --
+        Returns:
+            -
 
-        Raises::
-           --
+        Raises:
+           -
     """
 
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
@@ -167,19 +167,19 @@ def test_run_ai(model, df_data, return_full = "no"):
 
 def run_ai(model, input_list, input_width = 2, shift = 1, label_width = 1, lower_sensitivity = 1.5, upper_sensitivity = 1.5, verbose = 0):
     """
-        Runs the Ai
+        Runs the Ai.
 
-        Args::
-            model: A tensorflow AI model
-            input_list: A list containing datapoints. Each datapoint is a list with inputs (input list will be shortened to compensate for shift to make sure that all predicted values have a real value to compare to)
-            shift: How long in the future to predict (in datapoints) (1 = the next value, 2 = the next next value from the input(s))
+        Args:
+            model       : A tensorflow AI model.
+            input_list  : A list containing datapoints. Each datapoint is a list with inputs (input list will be shortened to compensate for shift to make sure that all predicted values have a real value to compare to).
+            shift       : How long in the future to predict (in datapoints) (1 = the next value, 2 = the next next value from the input(s)).
 
-        Returns::
-            output_array: array with predictions (shifted)
-            anomaly: list containing True / False for each prediction (shifted)
+        Returns:
+            output_array: array with predictions (shifted).
+            anomaly     : list containing True / False for each prediction (shifted).
 
-        Raises::
-           --
+        Raises:
+           -
     """
 
     #for i in input_list:
@@ -251,18 +251,18 @@ def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['val
     """
         Creates a window object for storing training, validation and test data
 
-        Args::
-            df: dataframe to format into training/validation and test data [only values allowed]
-            input_width: how many datapoints (in timeunits) the model takes in in each training
-            label_width: how many predictions the ai does (one at a time)
-            shift: how far in the future the prediction(s) are
-            label_columns: a list containing what values that should be predicted from the input dataset
+        Args:
+            df              : dataframe to format into training/validation and test data [only values allowed].
+            input_width     : how many datapoints (in timeunits) the model takes in in each training.
+            label_width     : how many predictions the ai does (one at a time).
+            shift           : how far in the future the prediction(s) are.
+            label_columns   : a list containing what values that should be predicted from the input dataset.
 
-        Returns::
-            w2: a window object containing training, validation and test data.
+        Returns:
+            w2              : a window object containing training, validation and test data.
 
-        Raises::
-        --
+        Raises:
+        -
     """
     n = len(df)
     train_df = df[0:int(n*0.7)] #trainging data = first 70%

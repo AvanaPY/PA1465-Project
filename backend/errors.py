@@ -1,4 +1,6 @@
-
+'''
+Self defined errors for testing and for making SQL errors easier to handle.
+'''
 
 class Error(Exception):
     def __init__(self, *args, **kwargs):
