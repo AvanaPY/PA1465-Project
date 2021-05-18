@@ -14,41 +14,67 @@ import datetime
 
 import random
 
+def visualize(df_datas, shifting):
 
-def predict_json_file(data_file):
-    with open(data_file, "r") as f:
-            open_file = json.load(f)
-            dates = open_file.keys()
-            values = open_file.values()
-            new_dict = {"dates": dates, "values": values}
-            df = pd.DataFrame(new_dict)
-    visualize_df = ai.run_ai(df)
-    return visualize_df
-
-def visualize(df_data, shifting):
-    df_data_vis = df_data.copy()
-    
-    for i in range(shifting):
-        df_data_vis.loc[df_data_vis.iloc[-1].name + 1,:] = np.nan #creates a new nan row
-    df_data_vis['predictions'] = df_data_vis['predictions'].shift(shifting) #shifts all predictions down
-    
     fig = go.Figure()
-    
-    fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["predictions"],
-                    mode='markers+lines',
-                    name='predicted values',
-                    marker_color=df_data["anom"]))
-    fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["values"],
-                    mode='markers+lines',
-                    name='real values'))
-    #fig.add_trace(go.Scatter(x=df_data_vis.index, y=abs(df_data_vis["dif"]),
-    #                mode='markers+lines',
-    #                name='abs difference'))
-    #fig.add_trace(go.Scatter(x=df_data_vis.index, y=abs(df_data_vis["anom"]),
-    #                mode='markers+lines',
-    #                name='anomaly'))
-    
-    #pio.write_html(fig, file=’index.html’, auto_open=True) 
+
+    for i in range(len(df_datas)):
+        df_data_vis = df_datas[i].copy()
+        
+        for i in range(shifting):
+            df_data_vis.loc[df_data_vis.iloc[-1].name + 1,:] = np.nan #creates a new nan row
+        df_data_vis['predictions'] = df_data_vis['predictions'].shift(shifting) #shifts all predictions down
+        
+        #fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["predictions"],
+        #                mode='markers+lines',
+        #                name='predicted values nr' + str(i + 1)))
+        #                #color= i))#  + df_data_vis["anom"]))
+        color1 = ["aliceblue", "antiquewhite", "aqua", "aquamarine", "azure",
+            "beige", "bisque", "black", "blanchedalmond", "blue",
+            "blueviolet", "brown", "burlywood", "cadetblue",
+            "chartreuse", "chocolate", "coral", "cornflowerblue",
+            "cornsilk", "crimson", "cyan", "darkblue", "darkcyan",
+            "darkgoldenrod", "darkgray", "darkgrey", "darkgreen"]
+        """,
+            darkkhaki, darkmagenta, darkolivegreen, darkorange,
+            darkorchid, darkred, darksalmon, darkseagreen,
+            darkslateblue, darkslategray, darkslategrey,
+            darkturquoise, darkviolet, deeppink, deepskyblue,
+            dimgray, dimgrey, dodgerblue, firebrick,
+            floralwhite, forestgreen, fuchsia, gainsboro,
+            ghostwhite, gold, goldenrod, gray, grey, green,
+            greenyellow, honeydew, hotpink, indianred, indigo,
+            ivory, khaki, lavender, lavenderblush, lawngreen,
+            lemonchiffon, lightblue, lightcoral, lightcyan,
+            lightgoldenrodyellow, lightgray, lightgrey,
+            lightgreen, lightpink, lightsalmon, lightseagreen,
+            lightskyblue, lightslategray, lightslategrey,
+            lightsteelblue, lightyellow, lime, limegreen,
+            linen, magenta, maroon, mediumaquamarine,
+            mediumblue, mediumorchid, mediumpurple,
+            mediumseagreen, mediumslateblue, mediumspringgreen,
+            mediumturquoise, mediumvioletred, midnightblue,
+            mintcream, mistyrose, moccasin, navajowhite, navy,
+            oldlace, olive, olivedrab, orange, orangered,
+            orchid, palegoldenrod, palegreen, paleturquoise,
+            palevioletred, papayawhip, peachpuff, peru, pink,
+            plum, powderblue, purple, red, rosybrown,
+            royalblue, rebeccapurple, saddlebrown, salmon,
+            sandybrown, seagreen, seashell, sienna, silver,
+            skyblue, slateblue, slategray, slategrey, snow,
+            springgreen, steelblue, tan, teal, thistle, tomato,
+            turquoise, violet, wheat, white, whitesmoke,
+            yellow, yellowgreen]
+        """
+        fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["values"],
+                        mode='lines',
+                        name='real values nr' + str(i + 1),
+                        line=dict(color=str(color1[i]), width=4, dash='dot')))
+        fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["dif"],
+                        mode='lines',
+                        name='dif nr' + str(i + 1),
+                        line=dict(color=str(color1[i]), width=4, dash='dot')))
+                        #color= i))# *5))
     
     fig.show()
 
@@ -69,17 +95,20 @@ def fill_missing_avg(dataset):
         index += 1
     return dataset
 
-def generate_interval(number, size, dataset, sample_columns = False):
+def generate_interval(number, size, dataset, sample_columns = []):
+    if sample_columns == True:
+        sample_columns = dataset.columns
     intervals = []
     for i in range(number):
-        upperdata = len(dataset["values"]) - size
+        upperdata = len(dataset[dataset.columns[0]]) - size
 
         random_bound = random.randint(0, upperdata)
         lower_bound = random_bound
         upper_bound = random_bound + size
 
-        if sample_columns != False:
+        if len(sample_columns) != 0:
             interval_data = []
+
             for column in sample_columns:
                 interval_data.append(dataset[column][lower_bound:upper_bound])
         else:
@@ -89,60 +118,7 @@ def generate_interval(number, size, dataset, sample_columns = False):
         intervals.append(interval)
     return intervals
 
-def loop_through_samples(samples_df, num_of_samples = 1, sample_size = 20, all = False, anom_range = 1):
-
-    INPUT_WIDTH = 2
-    SHIFT = 1
-    LABEL_WIDTH = 1
-
-    if all == True:
-        values_samples = [samples_df["values"][-1000:]]
-        print(values_samples)
-    else:
-        values_samples = generate_interval(num_of_samples, sample_size, normal_df)
-
-    for sample in values_samples:
-        value = None
-        values = []
-        for index, a in enumerate(sample):
-            if index % 100 == 0 and all == True:
-                print(index, "samples done of", len(sample))
-        #while True:
-            #value = float(input("vilket värde ska jag gissa på?"))
-            value = a
-            values.append(value)
-            if len(values) >= INPUT_WIDTH:
-                values_dict = {"values": values[-1 * INPUT_WIDTH +1 -SHIFT:]}
-                own_df = pd.DataFrame.from_dict(values_dict)
-                if len(values) == INPUT_WIDTH:
-                    df_data = ai.run_ai(model, own_df, return_full = "yes")
-                else:
-                    new_row = ai.run_ai(model, own_df, return_full = "no")
-
-                    #ai.test_run_ai(model, own_df, return_full = "no")
-                    
-                    
-                    if abs(new_row["values"] - new_row["predictions"]) > anom_range:
-                        new_row["anomaly"] = "True"
-                        new_row["color"] = "firebrick"
-                    else:
-                        new_row["color"] = "deepskyblue"
-                    df_data = df_data.append(new_row, ignore_index=True)
-                           
-        df_data_vis = df_data.copy()
-        for i in range(SHIFT):
-            df_data_vis.loc[df_data_vis.iloc[-1].name + 1,:] = np.nan #creates a new nan row
-        df_data_vis['predictions'] = df_data_vis['predictions'].shift(SHIFT) #shifts all predictions down
-
-        print(df_data_vis)
-        visualize(df_data, SHIFT)
-    return df_data   
-
-def anomaly_range(total_df):
-    total_df["dif"] = total_df.eval("values-predictions").abs()
-    return total_df
-
-def run_sample(model, normal_df, sample_size, shift):
+def run_sample(model, normal_df, sample_size, shift, input_width, prediction_labes):
     """
         Args::
             model: Ai model to use
@@ -159,13 +135,15 @@ def run_sample(model, normal_df, sample_size, shift):
     """
     values_sample = generate_interval(1, sample_size, normal_df)[0]
 
-    output, anomaly = ai.run_ai(model, values_sample, shift = shift)
-    output = output[0] #väljer bara de första dimentioner av output
-    anomaly = anomaly[0] #väljer bara de första dimentioner av output
+    output, anomaly = ai.run_ai(model, values_sample, shift = shift, input_width = input_width)
+    output = output #väljer bara de första dimentioner av output
+    anomaly = anomaly #väljer bara de första dimentioner av output
 
-    only_value_sample = generate_interval(1, sample_size, normal_df, sample_columns = ["values"])[0][0]
-    difference = output - only_value_sample
-    vis_dict = {"values": only_value_sample, "predictions": output, "dif": difference, "anom": anomaly}
+    vis_dict = []
+    only_value_sample = generate_interval(1, sample_size, normal_df, sample_columns = True)[0]
+    for i in range(len(output)):
+        difference = output[i] - only_value_sample[i]
+        vis_dict.append({"values": only_value_sample[i], "predictions": output[i], "dif": difference, "anom": anomaly[i]})
     return vis_dict
 
 def import_tf_special_dataset():
@@ -181,21 +159,22 @@ def import_tf_special_dataset():
         Raises::
         --
     """
+    dataset = "tf"
 
-
-    """
-    with open("backend/ai/Raspberry_data/temp_dataset_3.json", "r") as f:
-        open_file = json.load(f)
-        dates = list(open_file.keys())[:3000]
-        values = list(open_file.values())[:3000]
-        for index, value in enumerate(values):
-            #values[index] = index % 10
-            values[index] = round(np.sin(((index * 17 % 360) * np.pi) / 180), 1)
-            #values[index] = np.sin(((index * 17 % 360) * np.pi) / 180)
-    new_dict = {"dates": dates, "values": values}
-    df = pd.DataFrame(new_dict)
-    df.pop("dates")
-    """
+    if dataset == "sin":
+        with open("ai/Raspberry_data/temp_dataset_3.json", "r") as f:
+            open_file = json.load(f)
+            dates = list(open_file.keys())[:3000]
+            values = list(open_file.values())[:3000]
+            values2 = []
+            for index, value in enumerate(values):
+                #values[index] = index % 10
+                values[index] = round(np.sin(((index * 17 % 360) * np.pi) / 180), 1)
+                values2.append(index % 10)
+                #values[index] = np.sin(((index * 17 % 360) * np.pi) / 180)
+        new_dict = {"dates": dates * 2, "values": values * 2, "values2": values2 * 2}
+        df = pd.DataFrame(new_dict)
+        df.pop("dates")
     
     """
     with open("backend/ai/SMHI_Data.csv", "r") as f:
@@ -207,82 +186,67 @@ def import_tf_special_dataset():
     df.columns = ["values", "values2"]
     """
 
+    if dataset == "tf":
+        #Tesorflow dataset input
+        zip_path = tf.keras.utils.get_file(
+            origin='https://storage.googleapis.com/tensorflow/tf-keras-datasets/jena_climate_2009_2016.csv.zip',
+            fname='jena_climate_2009_2016.csv.zip',
+            extract=True)
+        csv_path, _ = os.path.splitext(zip_path)
 
-    #Tesorflow dataset input
-    zip_path = tf.keras.utils.get_file(
-        origin='https://storage.googleapis.com/tensorflow/tf-keras-datasets/jena_climate_2009_2016.csv.zip',
-        fname='jena_climate_2009_2016.csv.zip',
-        extract=True)
-    csv_path, _ = os.path.splitext(zip_path)
+        df = pd.read_csv(csv_path)
+        # slice [start:stop:step], starting from index 5 take every 6th record.
+        df = df[5::6]
 
-    df = pd.read_csv(csv_path)
-    # slice [start:stop:step], starting from index 5 take every 6th record.
-    df = df[5::6]
+        date_time = pd.to_datetime(df.pop('Date Time'), format='%d.%m.%Y %H:%M:%S')
 
-    date_time = pd.to_datetime(df.pop('Date Time'), format='%d.%m.%Y %H:%M:%S')
+        wv = df['wv (m/s)']
+        bad_wv = wv == -9999.0
+        wv[bad_wv] = 0.0
 
-    wv = df['wv (m/s)']
-    bad_wv = wv == -9999.0
-    wv[bad_wv] = 0.0
+        max_wv = df['max. wv (m/s)']
+        bad_max_wv = max_wv == -9999.0
+        max_wv[bad_max_wv] = 0.0
 
-    max_wv = df['max. wv (m/s)']
-    bad_max_wv = max_wv == -9999.0
-    max_wv[bad_max_wv] = 0.0
+        # The above inplace edits are reflected in the DataFrame
+        df['wv (m/s)'].min()
 
-    # The above inplace edits are reflected in the DataFrame
-    df['wv (m/s)'].min()
+        wv = df.pop('wv (m/s)')
+        max_wv = df.pop('max. wv (m/s)')
 
-    wv = df.pop('wv (m/s)')
-    max_wv = df.pop('max. wv (m/s)')
+        # Convert to radians.
+        wd_rad = df.pop('wd (deg)')*np.pi / 180
 
-    # Convert to radians.
-    wd_rad = df.pop('wd (deg)')*np.pi / 180
+        # Calculate the wind x and y components.
+        df['Wx'] = wv*np.cos(wd_rad)
+        df['Wy'] = wv*np.sin(wd_rad)
 
-    # Calculate the wind x and y components.
-    df['Wx'] = wv*np.cos(wd_rad)
-    df['Wy'] = wv*np.sin(wd_rad)
+        # Calculate the max wind x and y components.
+        df['max Wx'] = max_wv*np.cos(wd_rad)
+        df['max Wy'] = max_wv*np.sin(wd_rad)
 
-    # Calculate the max wind x and y components.
-    df['max Wx'] = max_wv*np.cos(wd_rad)
-    df['max Wy'] = max_wv*np.sin(wd_rad)
+        timestamp_s = date_time.map(datetime.datetime.timestamp)
 
-    timestamp_s = date_time.map(datetime.datetime.timestamp)
+        day = 24*60*60
+        year = (365.2425)*day
 
-    day = 24*60*60
-    year = (365.2425)*day
-
-    df['Day sin'] = np.sin(timestamp_s * (2 * np.pi / day))
-    df['Day cos'] = np.cos(timestamp_s * (2 * np.pi / day))
-    df['Year sin'] = np.sin(timestamp_s * (2 * np.pi / year))
-    df['Year cos'] = np.cos(timestamp_s * (2 * np.pi / year))
-
-    fft = tf.signal.rfft(df['T (degC)'])
-    f_per_dataset = np.arange(0, len(fft))
-
-    n_samples_h = len(df['T (degC)'])
-    hours_per_year = 24*365.2524
-    years_per_dataset = n_samples_h/(hours_per_year)
-
-    df = df.rename(columns={'T (degC)': "values"})
-
-    df = df[["p (mbar)",  "values", "Tpot (K)"]] #uses only the three first columns
+        df['Day sin'] = np.sin(timestamp_s * (2 * np.pi / day))
+        df['Day cos'] = np.cos(timestamp_s * (2 * np.pi / day))
+        df['Year sin'] = np.sin(timestamp_s * (2 * np.pi / year))
+        df['Year cos'] = np.cos(timestamp_s * (2 * np.pi / year))
+    
 
     return df
 
 if __name__ == "__main__":
     tf.get_logger().setLevel('ERROR')
-    INPUT_WIDTH = 10
-    SHIFT = 10
-    LABEL_WIDTH = INPUT_WIDTH 
-
-    df = import_tf_special_dataset()
 
     path = 'ai/saved_models/'
     directory_contents = os.listdir(path)
     print()
-    print("Saved models: [input width, shift, label width]")
+    print("~*~ Saved models ~*~")
     for enum, direc in enumerate(directory_contents):
-        print(enum + 1, " | [", direc, "]", sep = "")
+        print(enum + 1, "-", direc)
     print()
     use_saved_input = input("Do you want to use a previously saved version?[y/n]")
     
@@ -291,38 +255,55 @@ if __name__ == "__main__":
         INPUT_WIDTH = int(input("Imput width: "))
         SHIFT = int(input("shift: "))
         LABEL_WIDTH = int(input("Label width: "))
-        w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT, label_columns=["p (mbar)",  "values", "Tpot (K)"])
-        normal_df = w2.val_df
+        in_dim = int(input("Input dimentions: "))
+        out_dim = int(input("Output dimentions: "))
+        
+        df = import_tf_special_dataset()
+        df = df[df.columns[0:in_dim]]
+        prediction_labes = list(df.columns[0:out_dim])
 
-        #output dimention = 3
-        model = ai.create_ai_model(output_dim=len(df.columns))
+        w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT, label_columns=prediction_labes)
+        normal_df = w2.train_df
 
-        ai.train_ai(model, w2.train, w2.val, max_epochs = 5)
+        model = ai.create_ai_model(output_dim=out_dim)
+
+        ai.train_ai(model, w2.train, w2.val, max_epochs = 50)
 
         if input("do you want to save?[y/n]") == "y":
-            name = str(INPUT_WIDTH) + ", " + str(SHIFT) + ", " + str(LABEL_WIDTH)
+            name = input("what name should the ai_model have: ")
             input_path = 'ai/saved_models/' + name
 
-            ai.save_ai_model(model, input_path)
+            ai.save_ai_model(model, input_path, INPUT_WIDTH=INPUT_WIDTH, SHIFT=SHIFT, LABEL_WIDTH= LABEL_WIDTH, in_dimentions=in_dim, out_dimentions=out_dim)
+
     else:
         name = int(input("model number to use: "))
         input_path = 'ai/saved_models/' + directory_contents[name - 1]
-        model, INPUT_WIDTH, SHIFT, LABEL_WIDTH = ai.load_ai_model(input_path)
+        model, INPUT_WIDTH, SHIFT, LABEL_WIDTH, in_dim, out_dim = ai.load_ai_model(input_path)
         
-        print("info:", INPUT_WIDTH, SHIFT, LABEL_WIDTH)
-        w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT, label_columns=["p (mbar)",  "values", "Tpot (K)"])
-        normal_df = w2.val_df
+        df = import_tf_special_dataset()
+        df = df[df.columns[0:in_dim]]
+        prediction_labes = list(df.columns[0:out_dim])
 
+        w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT, label_columns=["p (mbar)",  "values", "Tpot (K)"])
+        normal_df = w2.train_df
 
     while True:
-        vis_dict = run_sample(model, normal_df, sample_size = INPUT_WIDTH + SHIFT, shift = SHIFT)
-        result_df = pd.DataFrame.from_dict(vis_dict)
-        print(result_df)
+        vis_dicts = run_sample(model, normal_df, sample_size = len(normal_df), shift = SHIFT, input_width = INPUT_WIDTH, prediction_labes = prediction_labes)
+        
+        result_dfs = []
+        supertotal_df = {}
+        for enum, vis_dict in enumerate(vis_dicts):
+            result_df = pd.DataFrame.from_dict(vis_dict)
+            result_dfs.append(result_df)
+            
+            supertotal_df[prediction_labes[enum]] = abs(result_df["dif"])
 
-        visualize(result_df, 0)
+        visualize(result_dfs, 0)
+
+        supertotal_df = pd.DataFrame.from_dict(supertotal_df)
         if input("go again?[y/n][g for graf]") == "g":
             fig, ax = plt.subplots()
-            N, bins, patches = plt.hist(result_df["dif"], bins = 100)
+            ax = sns.boxplot(data=supertotal_df, showfliers=False, orient="h")
             plt.show()
             input("press any key to go again")
 

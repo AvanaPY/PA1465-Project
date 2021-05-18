@@ -23,13 +23,13 @@ def create_ai_model(output_dim = 1):
             --
     """
     model = tf.keras.models.Sequential([
-        tf.keras.layers.LSTM(30, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
-        tf.keras.layers.LSTM(70, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
-        tf.keras.layers.LSTM(30, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
+        tf.keras.layers.LSTM(50, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
+        tf.keras.layers.LSTM(100, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
+        tf.keras.layers.LSTM(50, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
         #tf.keras.layers.LSTM(10, return_sequences=True),#, dropout=0.5, recurrent_dropout=0.1),
+        tf.keras.layers.Dense(units=70),
         tf.keras.layers.Dense(units=50),
         tf.keras.layers.Dense(units=30),
-        tf.keras.layers.Dense(units=10),
         tf.keras.layers.Dense(units=output_dim)
     ])
 
@@ -53,15 +53,20 @@ def load_ai_model(load_ai_path):
     """
     model = tf.keras.models.load_model(load_ai_path)
 
-    ai_name = list(load_ai_path.split("/"))[-1]
-    model_info_list = [int(i) for i in list(ai_name.split(", "))]
+    with open(load_ai_path + '/ai_info.json') as json_file:
+        data = json.load(json_file)
         
-    INPUT_WIDTH = model_info_list[0]
-    SHIFT = model_info_list[1]
-    LABEL_WIDTH = model_info_list[2]
-    return model, INPUT_WIDTH, SHIFT, LABEL_WIDTH
+    INPUT_WIDTH = data["timeframe"][0]["input_width"]
+    SHIFT = data["timeframe"][0]["shift"]
+    LABEL_WIDTH = data["timeframe"][0]["label_width"]
 
-def save_ai_model(model, save_ai_path):
+    IN_DIM = data["dimention"][0]["input_dim"]
+    OUT_DIM = data["dimention"][0]["output_dim"]
+
+
+    return model, INPUT_WIDTH, SHIFT, LABEL_WIDTH, IN_DIM, OUT_DIM
+
+def save_ai_model(model, save_ai_path, INPUT_WIDTH = 1, SHIFT = 1, LABEL_WIDTH = 1, in_dimentions = 1, out_dimentions = 1):
     """
         Saves the AI model into a file
 
@@ -83,6 +88,21 @@ def save_ai_model(model, save_ai_path):
     # in a .json file
     # expected_input_size = 0
     # expected_output = 0
+
+    data = {}
+    data['timeframe'] = []
+    data['timeframe'].append({
+        'input_width': INPUT_WIDTH,
+        'shift': SHIFT,
+        'label_width': LABEL_WIDTH
+    })
+    data['dimention'] = []
+    data['dimention'].append({
+        'input_dim': in_dimentions,
+        'output_dim': out_dimentions,
+    })
+    with open(save_ai_path + '/ai_info.json', 'w') as outfile:
+        json.dump(data, outfile)
     
     return model #, expected_input_size, expected_output
 
@@ -347,58 +367,3 @@ def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['val
     w2 = WindowGenerator(input_width=input_width, label_width=label_width, shift=shift,
                     label_columns=label_columns)
     return w2
-
-
-if __name__ == "__main__":
-    #until next time: Clean out ai and keep the data outside of it and ai in separate functions
-    import json
-    import pandas as pd
-    import numpy as np
-    import tensorflow as tf
-    import seaborn as sns
-    import math
-
-    if input("Do you want to use a previously saved version?[y/n]") == "n":
-        #with open("Raspberry data/hum_dataset_1.json", "r") as f:
-        with open("backend/ai/Raspberry_data/temp_dataset_3.json", "r") as f:
-            open_file = json.load(f)
-            #open_file = pd.DataFrame(open_file)#, index=False)
-            dates = open_file.keys()
-            values = open_file.values()
-        
-        new_dict = {"dates": dates, "values": values}
-        df = pd.DataFrame(new_dict)
-        df.pop("dates")
-        
-        w2 = create_window(df)
-
-        model = create_ai_model()
-
-        train_ai(model, w2.train, w2.val)
-
-        val_performance = {}
-        performance = {}
-        val_performance['LSTM'] = model.evaluate(w2.val)
-        performance['LSTM'] = model.evaluate(w2.test, verbose=0)
-
-        if input("do you want to save?[y/n]") == "y":
-            name = input("what name should the model use?")
-            input_path = 'backend/ai/saved_models/' + name
-
-            save_ai_model(model, input_path)
-    else:
-        print()
-        name = input("what model should we use?")
-        input_path = 'backend/ai/saved_models/' + name
-        model = load_ai_model(input_path)
-
-
-    value = None
-    values = []
-    while True:
-        value = int(input("vilket värde ska jag gissa på?"))
-        values.append(value)
-        values_dict = {"values": values}
-        own_df = pd.DataFrame.from_dict(values_dict)
-        df_data = run_ai(model, own_df)
-        print(df_data)
