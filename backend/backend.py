@@ -27,11 +27,17 @@ WANTED_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 class BackendBase:
     def __init__(self, confparser, database_section='mysql', ai_model='temp_ai', load_ai=False):
         self._my_db, self._db_config = create_sql_connection(confparser=confparser, section=database_section)
-        self._curs = self._my_db.cursor()
+        if self._my_db:
+            self._curs = self._my_db.cursor()
+        else:
+            self._curs = None
+            print(f'WARNING: FAILED TO LOAD DATABASE: NO DATABASE AVAILABLE')
 
         self._load_ai = load_ai
         if load_ai:
             self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = load_ai_model(f'./ai/saved_models/{ai_model}')
+        else:
+            print(f'INFO: AI MODEL NOT LOADED')
 
     def _get_database_description_no_id_column(self, table_name):
         """
@@ -315,6 +321,8 @@ class BackendBase:
             Raises:
                 Propagates any errors.
         """
+        if not self._my_db:
+            raise backend_errors.NoDatabaseConnectedException()
         self._check_has_classifications(database_table, data_dict, **kwargs)
         self._check_has_datetime_column(database_table, data_dict, **kwargs)
 
