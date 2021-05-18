@@ -68,11 +68,7 @@ def load_ai_model(load_ai_path):
 
 def save_ai_model(model, save_ai_path, input_width = 1, SHIFT = 1, LABEL_WIDTH = 1, in_dimentions = 1, out_dimentions = 1):
     """
-<<<<<<< HEAD
         Saves the AI model into a file with its info in ai_info.json
-=======
-        Saves the AI model into a file.
->>>>>>> c6a501794b6d825261e9600ae7857a8e0b4cf3cc
 
     Args:
         model       : A tensorflow AI model.
@@ -106,16 +102,6 @@ def save_ai_model(model, save_ai_path, input_width = 1, SHIFT = 1, LABEL_WIDTH =
 
 def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5):
     """
-<<<<<<< HEAD
-        Trains the AI model
-
-        Args::
-            model: A tensorflow AI model
-            train_data: training data from window object
-            validation_data: validation data from window object
-            patience: how many Epocs to train without validation loss decreasing before stopping
-            max_epochs: how many Epocs to train maximum
-=======
         Trains an AI model.
 
         Args:
@@ -124,7 +110,6 @@ def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5):
             validation_data : validation data from window object.
             patience        : how many Epocs to train without val_loss decreasing before stopping.
             max_epochs      : how many Epocs to train maximum.
->>>>>>> c6a501794b6d825261e9600ae7857a8e0b4cf3cc
 
         Returns:
             -
@@ -147,21 +132,6 @@ def run_ai(model, input_list, shift = 1, input_width = 2,  label_width = 1, verb
     """
         Runs the Ai.
 
-<<<<<<< HEAD
-        Args::
-            model: A tensorflow AI model
-            input_list: A list containing datapoints. Each datapoint is a list with inputs (input list will be shortened to compensate for shift to make sure that all predicted values have a real value to compare to)
-            shift: How long in the future to predict (in datapoints) (1 = the next value, 2 = the next next value from the input(s))
-            input_width: The number of input dimentions the model uses
-            label_width: The number of outputs the ai_model produces in time
-            verbose: 0 if no extra info shall be printed into terminal, 1 if it should
-
-
-
-        Returns::
-            output_array: a list of values for each output dimention, where each value is an array with predictions (shifted)
-            anomaly: a list of values for each output dimention, where each value is a lists containing True / False for each prediction (shifted)
-=======
         Args:
             model       : A tensorflow AI model.
             input_list  : A list containing datapoints. Each datapoint is a list with inputs (input list will be shortened to compensate for shift to make sure that all predicted values have a real value to compare to).
@@ -170,7 +140,6 @@ def run_ai(model, input_list, shift = 1, input_width = 2,  label_width = 1, verb
         Returns:
             output_array: array with predictions (shifted).
             anomaly     : list containing True / False for each prediction (shifted).
->>>>>>> c6a501794b6d825261e9600ae7857a8e0b4cf3cc
 
         Raises:
            -
