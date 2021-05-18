@@ -52,8 +52,12 @@ def load_ai_model(load_ai_path):
     """
     model = tf.keras.models.load_model(load_ai_path)
 
-    with open(load_ai_path + '/ai_info.json') as json_file:
-        data = json.load(json_file)
+    try:
+        with open(load_ai_path + '/ai_info.json') as json_file:
+            data = json.load(json_file)
+    except IOError as e:
+        print(f'Could not find file {load_ai_path}!')
+        return None, 0, 0, 0
         
     INPUT_WIDTH = data["timeframe"][0]["input_width"]
     SHIFT = data["timeframe"][0]["shift"]
