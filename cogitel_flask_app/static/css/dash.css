@@ -1,0 +1,108 @@
+body {
+    background-color: rgb(99, 94, 94);
+}
+
+.div-header {
+    background-color: rgb(240, 240, 240);
+    width: 80%;
+    padding: 2em 0;
+    margin: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.dash-container {
+    background-color: white;
+    width: 80%;
+    margin: auto;
+    height:100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.button-square {
+    border-radius: 4px;
+    background-color: #f4511e;
+    border: none;
+    color: #FFFFFF;
+    text-align: center;
+    font-size: 15px;
+    padding: 20px;
+    margin: 5px 10px;
+    width: 11em;
+    height: 4em;
+    transition: all 0.5s;
+    cursor: pointer;
+}
+  
+.btn-square-span {
+    background-color: #f4511e; 
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+    transition: 0.5s;
+}
+
+.btn-square-span:after {
+    content: '\00bb';
+    position: absolute;
+    opacity: 0;
+    top: 0;
+    right: -10px;
+    transition: 0.5s;
+}
+  
+.button-square:hover span {
+    padding-right: 15px;
+}
+  
+.button-square:hover span:after {
+    opacity: 1;
+    right: 0;
+}
+.button-square:active {
+    border: none;
+}
+
+#dash-chart {
+    width: 100%;
+}
+
+.chart-btn-list {
+    padding-left: 3em;
+    padding-top: 1em;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.upload-btn-div {
+    display: flex;
+    flex-direction: column;
+}
+
+.upload-data-input {
+    height: 100%;
+    width: 170px;
+    outline: none;
+    white-space: nowrap;
+    border: none;
+    border-radius: 9px;
+    color: transparent;
+}
+.upload-data-input::-webkit-file-upload-button {
+    visibility: hidden;
+}
+.upload-data-input::before {
+    content: "Select a file";
+    color: black;
+    padding: 8px 24px;
+    border: 1px solid grey;
+    border-radius: 4px;
+    display: inline;
+    cursor: pointer;
+}
+.upload-data-input:hover::before {
+    border: 1px solid black;
+}
