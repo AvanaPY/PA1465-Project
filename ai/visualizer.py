@@ -35,21 +35,24 @@ def visualize(df_datas, shifting):
         fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis[df_data_vis.columns[0]],
                         mode='lines',
                         name="real - " + df_data_vis.columns[0],
-                        line=dict(color="black", width=4)))
+                        line=dict(color="black", width=8)))
         
         fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["predictions"],
                         mode='lines',
                         name="pred - " + df_data_vis.columns[0],
-                        line=dict(color="magenta", width=4, dash='dot')))
-                        #color= i))# *5))
+                        line=dict(color="black", width=3, dash='dash')))
+        
+        df_data_vis["anom"] = df_data_vis["anom"].replace(0, np.nan)
 
-        fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["predictions"],
+        fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["anom"] * df_data_vis["predictions"],
                         mode='markers',
                         name="anomalies - " + df_data_vis.columns[0],
-                        marker_color = "red",
-                        opacity=df_data_vis["anom"].tolist()))
+                        marker=dict(
+                            color="red",
+                            size=10,)))
     
     fig.show()
+    return fig
 
 def fill_missing_avg(dataset):
 
