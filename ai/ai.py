@@ -40,16 +40,16 @@ def create_ai_model(output_dim = 1):
 
 def load_ai_model(load_ai_path):
     """
-        Loads the AI model from a file
+        Loads the AI model from a file.
 
-    Args::
-        load_ai_path: str object representing the file path to load the ai from
+    Args:
+        load_ai_path: str object representing the file path to load the ai from.
 
-    Returns::
-        Tensorflow AI model
+    Returns:
+        model       : a Tensorflow AI model.
 
-    Raises::
-        Any errors tensorflow might've raised when loading the ai model
+    Raises:
+        Any errors tensorflow might've raised when loading the ai model.
     """
     model = tf.keras.models.load_model(load_ai_path)
 
@@ -66,33 +66,31 @@ def load_ai_model(load_ai_path):
 
     return model, INPUT_WIDTH, SHIFT, LABEL_WIDTH, IN_DIM, OUT_DIM
 
-def save_ai_model(model, save_ai_path, INPUT_WIDTH = 1, SHIFT = 1, LABEL_WIDTH = 1, in_dimentions = 1, out_dimentions = 1):
+def save_ai_model(model, save_ai_path, input_width = 1, SHIFT = 1, LABEL_WIDTH = 1, in_dimentions = 1, out_dimentions = 1):
     """
-        Saves the AI model into a file
+<<<<<<< HEAD
+        Saves the AI model into a file with its info in ai_info.json
+=======
+        Saves the AI model into a file.
+>>>>>>> c6a501794b6d825261e9600ae7857a8e0b4cf3cc
 
-    Args::
-        model: A tensorflow AI model
+    Args:
+        model       : A tensorflow AI model.
         save_ai_path: str object representing the file path to save the ai model to.
+        input_width: 
 
-    Returns::
-        Tensorflow AI model
+    Returns:
+        model       : Tensorflow AI model
 
-    Raises::
+    Raises:
         Any errors tensorflow might've raised when saving the ai model
     """
     model.save(save_ai_path)
 
-    # TODO: Save meta-data about AI in a json file
-    # Save things such as input size in datapoints, 
-    # output size, how many steps it predicts forward
-    # in a .json file
-    # expected_input_size = 0
-    # expected_output = 0
-
     data = {}
     data['timeframe'] = []
     data['timeframe'].append({
-        'input_width': INPUT_WIDTH,
+        'input_width': input_width,
         'shift': SHIFT,
         'label_width': LABEL_WIDTH
     })
@@ -104,24 +102,35 @@ def save_ai_model(model, save_ai_path, INPUT_WIDTH = 1, SHIFT = 1, LABEL_WIDTH =
     with open(save_ai_path + '/ai_info.json', 'w') as outfile:
         json.dump(data, outfile)
     
-    return model #, expected_input_size, expected_output
+    return model
 
 def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5):
     """
-        Trains an AI model
+<<<<<<< HEAD
+        Trains the AI model
 
         Args::
             model: A tensorflow AI model
             train_data: training data from window object
             validation_data: validation data from window object
-            patience: how many Epocs to train without val_loss decreasing before stopping
+            patience: how many Epocs to train without validation loss decreasing before stopping
             max_epochs: how many Epocs to train maximum
+=======
+        Trains an AI model.
 
-        Returns::
-            --
+        Args:
+            model           : A tensorflow AI model.
+            train_data      : training data from window object.
+            validation_data : validation data from window object.
+            patience        : how many Epocs to train without val_loss decreasing before stopping.
+            max_epochs      : how many Epocs to train maximum.
+>>>>>>> c6a501794b6d825261e9600ae7857a8e0b4cf3cc
 
-        Raises::
-           --
+        Returns:
+            -
+
+        Raises:
+           -
     """
 
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
@@ -132,79 +141,53 @@ def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5):
                       validation_data=validation_data,
                       callbacks=[early_stopping])
 
-    #used to be history
     return
 
-def test_run_ai(model, df_data, return_full = "no"):
-    input_data = df_data["values"]
-
-    input_data = [[value] for value in input_data] #[värde1, värde2] --> [[värde 1][värde 2]]
-    input_data = tf.stack([tf.stack(value) for value in input_data]) #[[värde 1][värde 2]] --> tf.stack([värde 1][värde 2])
-    input_data = tf.stack([input_data] * 1) #tf.stack([värde 1][värde 2]) --> tf.stack(tf.stack([värde 1][värde 2]))
-    #shape = [batch size, time steps, inputs] = [1, 2, 1] I vårt test fall
-
-    output = model.predict(input_data)
-
-    #own_data = tf.stack([value for value in input_data])
-    #own_data = tf.stack([own_data] * 1)
-    #print("shape:", own_data.shape())
-    #output = model(own_data)
-    new_array = [n[0] for n in np.array(output)[0]]
-    for i in range(len(new_array) - 1):
-        new_array[i] = np.nan
-    df_data["predictions"] = new_array
-
-    new_anomaly_array = [n[0] for n in np.array(output)[0]]
-    for i in range(len(new_array)):
-        new_anomaly_array[i] = "False"
-    df_data["anomaly"] = new_anomaly_array
-
-    if return_full == "no":
-        df_data_last_row = df_data.iloc[-1]
-        return df_data_last_row
-    else:
-        return df_data
-
-def run_ai(model, input_list, input_width = 2, shift = 1, label_width = 1, lower_sensitivity = 1.5, upper_sensitivity = 1.5, verbose = 0):
+def run_ai(model, input_list, shift = 1, input_width = 2,  label_width = 1, verbose = 0):
     """
-        Runs the Ai
+        Runs the Ai.
 
+<<<<<<< HEAD
         Args::
             model: A tensorflow AI model
             input_list: A list containing datapoints. Each datapoint is a list with inputs (input list will be shortened to compensate for shift to make sure that all predicted values have a real value to compare to)
             shift: How long in the future to predict (in datapoints) (1 = the next value, 2 = the next next value from the input(s))
+            input_width: The number of input dimentions the model uses
+            label_width: The number of outputs the ai_model produces in time
+            verbose: 0 if no extra info shall be printed into terminal, 1 if it should
+
+
 
         Returns::
-            output_array: array with predictions (shifted)
-            anomaly: list containing True / False for each prediction (shifted)
+            output_array: a list of values for each output dimention, where each value is an array with predictions (shifted)
+            anomaly: a list of values for each output dimention, where each value is a lists containing True / False for each prediction (shifted)
+=======
+        Args:
+            model       : A tensorflow AI model.
+            input_list  : A list containing datapoints. Each datapoint is a list with inputs (input list will be shortened to compensate for shift to make sure that all predicted values have a real value to compare to).
+            shift       : How long in the future to predict (in datapoints) (1 = the next value, 2 = the next next value from the input(s)).
 
-        Raises::
-           --
+        Returns:
+            output_array: array with predictions (shifted).
+            anomaly     : list containing True / False for each prediction (shifted).
+>>>>>>> c6a501794b6d825261e9600ae7857a8e0b4cf3cc
+
+        Raises:
+           -
     """
 
-    #for i in input_list:
-    #    print(i)
     input_data_og = input_list
     total_size = len(input_list)
 
     input_data = input_list[:-1 * shift]
-    #print(input_data)
-
-    #input list should be in shape of nr_of_batches[nr_of_timesteps[values, b], b]
-    #print(input_list)
-    #input_data = [[value] for value in input_list[:-1 * shift]] #[värde1, värde2] --> [[värde 1][värde 2]]
-    #input_data = tf.stack([tf.stack(value) for value in input_data]) #[[värde 1][värde 2]] --> tf.stack([värde 1][värde 2])
-    input_data = tf.stack([input_data] * 1) #tf.stack([värde 1][värde 2]) --> tf.stack(tf.stack([värde 1][värde 2]))
-    #shape = [batch size, time steps, inputs] = [1, 2, 1] I vårt test fall
+        
+    input_data = tf.stack([input_data] * 1)
 
     output = model.predict(input_data)
-    non_output_size = input_width + shift - label_width  #4 - 1 right now = 3
+    non_output_size = input_width + shift - label_width
     output = [n for n in np.array(output[0])]
-    #one_d_output = [n[0] for n in output]
-    #real_output = one_d_output[non_output_size - shift:]
+
     real_real_output = output[non_output_size - shift:]
-    #print("non output size:", non_output_size)
-    #print("rro:", real_real_output)
 
     output_array = []
     anomaly = []
@@ -228,6 +211,8 @@ def run_ai(model, input_list, input_width = 2, shift = 1, label_width = 1, lower
 
         IQR = Q3 - Q1
 
+        lower_sensitivity = 1.5
+        upper_sensitivity = 1.5
         lower_whisker = Q1 - lower_sensitivity * IQR    #- lower_sensitivityIQR
         upper_whisker = Q3 + upper_sensitivity * IQR  #+ upper_sensitivityIQR
         if verbose == 1:
@@ -238,44 +223,40 @@ def run_ai(model, input_list, input_width = 2, shift = 1, label_width = 1, lower
         for value in difference_df["difference"]:
             if value <= lower_whisker or value >= upper_whisker:
                 anomaly[j].append(ANOM_VALUE_TRUE)
-                #anomaly.append(True)
             else:
-                #anomaly.append(False)
                 anomaly[j].append(ANOM_VALUE_FALSE)
 
-        #print("o", output_array, "a", anomaly)
-    #print("output", output_array, anomaly)
     return output_array, anomaly
 
 def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['values']):
     """
         Creates a window object for storing training, validation and test data
 
-        Args::
-            df: dataframe to format into training/validation and test data [only values allowed]
-            input_width: how many datapoints (in timeunits) the model takes in in each training
-            label_width: how many predictions the ai does (one at a time)
-            shift: how far in the future the prediction(s) are
-            label_columns: a list containing what values that should be predicted from the input dataset
+        Args:
+            df              : dataframe to format into training/validation and test data [only values allowed].
+            input_width     : how many datapoints (in timeunits) the model takes in in each training.
+            label_width     : how many predictions the ai does (one at a time).
+            shift           : how far in the future the prediction(s) are.
+            label_columns   : a list containing what values that should be predicted from the input dataset.
 
-        Returns::
-            w2: a window object containing training, validation and test data.
+        Returns:
+            w2              : a window object containing training, validation and test data.
 
-        Raises::
-        --
+        Raises:
+        -
     """
     n = len(df)
     train_df = df[0:int(n*0.7)] #trainging data = first 70%
     val_df = df[int(n*0.7):int(n*0.9)] #validation = 90-70 = 20%
     test_df = df[int(n*0.9):] #test = last 10%
-    if True: #is it tho?
-        train_mean = train_df.mean() #meadian
-        train_std = train_df.std() #standard deviation (expecting every data being normal distributed)
 
-        #Converting every value into standard deviations from the mean of training data
-        train_df = (train_df - train_mean) / train_std
-        val_df = (val_df - train_mean) / train_std
-        test_df = (test_df - train_mean) / train_std
+    train_mean = train_df.mean() #meadian
+    train_std = train_df.std() #standard deviation (expecting every data being normal distributed)
+
+    #Converting every value into standard deviations from the mean of training data
+    train_df = (train_df - train_mean) / train_std
+    val_df = (val_df - train_mean) / train_std
+    test_df = (test_df - train_mean) / train_std
 
     class WindowGenerator():
     #inpun width = how many indexes of data before making each prediction (in single prediction)

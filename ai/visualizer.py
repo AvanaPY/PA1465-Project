@@ -25,56 +25,29 @@ def visualize(df_datas, shifting):
             df_data_vis.loc[df_data_vis.iloc[-1].name + 1,:] = np.nan #creates a new nan row
         df_data_vis['predictions'] = df_data_vis['predictions'].shift(shifting) #shifts all predictions down
         
-        #fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["predictions"],
-        #                mode='markers+lines',
-        #                name='predicted values nr' + str(i + 1)))
-        #                #color= i))#  + df_data_vis["anom"]))
-        color1 = ["aliceblue", "antiquewhite", "aqua", "aquamarine", "azure",
-            "beige", "bisque", "black", "blanchedalmond", "blue",
+        color1 = ["black", "antiquewhite", "aqua", "aquamarine", "azure",
+            "beige", "bisque", "aliceblue", "blanchedalmond", "blue",
             "blueviolet", "brown", "burlywood", "cadetblue",
             "chartreuse", "chocolate", "coral", "cornflowerblue",
             "cornsilk", "crimson", "cyan", "darkblue", "darkcyan",
             "darkgoldenrod", "darkgray", "darkgrey", "darkgreen"]
-        """,
-            darkkhaki, darkmagenta, darkolivegreen, darkorange,
-            darkorchid, darkred, darksalmon, darkseagreen,
-            darkslateblue, darkslategray, darkslategrey,
-            darkturquoise, darkviolet, deeppink, deepskyblue,
-            dimgray, dimgrey, dodgerblue, firebrick,
-            floralwhite, forestgreen, fuchsia, gainsboro,
-            ghostwhite, gold, goldenrod, gray, grey, green,
-            greenyellow, honeydew, hotpink, indianred, indigo,
-            ivory, khaki, lavender, lavenderblush, lawngreen,
-            lemonchiffon, lightblue, lightcoral, lightcyan,
-            lightgoldenrodyellow, lightgray, lightgrey,
-            lightgreen, lightpink, lightsalmon, lightseagreen,
-            lightskyblue, lightslategray, lightslategrey,
-            lightsteelblue, lightyellow, lime, limegreen,
-            linen, magenta, maroon, mediumaquamarine,
-            mediumblue, mediumorchid, mediumpurple,
-            mediumseagreen, mediumslateblue, mediumspringgreen,
-            mediumturquoise, mediumvioletred, midnightblue,
-            mintcream, mistyrose, moccasin, navajowhite, navy,
-            oldlace, olive, olivedrab, orange, orangered,
-            orchid, palegoldenrod, palegreen, paleturquoise,
-            palevioletred, papayawhip, peachpuff, peru, pink,
-            plum, powderblue, purple, red, rosybrown,
-            royalblue, rebeccapurple, saddlebrown, salmon,
-            sandybrown, seagreen, seashell, sienna, silver,
-            skyblue, slateblue, slategray, slategrey, snow,
-            springgreen, steelblue, tan, teal, thistle, tomato,
-            turquoise, violet, wheat, white, whitesmoke,
-            yellow, yellowgreen]
-        """
-        fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["values"],
+
+        fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis[df_data_vis.columns[0]],
                         mode='lines',
-                        name='real values nr' + str(i + 1),
-                        line=dict(color=str(color1[i]), width=4, dash='dot')))
-        fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["dif"],
+                        name="real - " + df_data_vis.columns[0],
+                        line=dict(color="black", width=4)))
+        
+        fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["predictions"],
                         mode='lines',
-                        name='dif nr' + str(i + 1),
-                        line=dict(color=str(color1[i]), width=4, dash='dot')))
+                        name="pred - " + df_data_vis.columns[0],
+                        line=dict(color="magenta", width=4, dash='dot')))
                         #color= i))# *5))
+
+        fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["predictions"],
+                        mode='markers',
+                        name="anomalies - " + df_data_vis.columns[0],
+                        marker_color = "red",
+                        opacity=df_data_vis["anom"].tolist()))
     
     fig.show()
 
@@ -143,7 +116,7 @@ def run_sample(model, normal_df, sample_size, shift, input_width, prediction_lab
     only_value_sample = generate_interval(1, sample_size, normal_df, sample_columns = True)[0]
     for i in range(len(output)):
         difference = output[i] - only_value_sample[i]
-        vis_dict.append({"values": only_value_sample[i], "predictions": output[i], "dif": difference, "anom": anomaly[i]})
+        vis_dict.append({prediction_labes[i]: only_value_sample[i], "predictions": output[i], "dif": difference, "anom": anomaly[i]})
     return vis_dict
 
 def import_tf_special_dataset():
@@ -263,7 +236,7 @@ if __name__ == "__main__":
         prediction_labes = list(df.columns[0:out_dim])
 
         w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT, label_columns=prediction_labes)
-        normal_df = w2.train_df
+        normal_df = w2.val
 
         model = ai.create_ai_model(output_dim=out_dim)
 
@@ -273,7 +246,7 @@ if __name__ == "__main__":
             name = input("what name should the ai_model have: ")
             input_path = 'ai/saved_models/' + name
 
-            ai.save_ai_model(model, input_path, INPUT_WIDTH=INPUT_WIDTH, SHIFT=SHIFT, LABEL_WIDTH= LABEL_WIDTH, in_dimentions=in_dim, out_dimentions=out_dim)
+            ai.save_ai_model(model, input_path, input_width=INPUT_WIDTH, SHIFT=SHIFT, LABEL_WIDTH= LABEL_WIDTH, in_dimentions=in_dim, out_dimentions=out_dim)
 
     else:
         name = int(input("model number to use: "))
@@ -285,7 +258,7 @@ if __name__ == "__main__":
         prediction_labes = list(df.columns[0:out_dim])
 
         w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT, label_columns=["p (mbar)",  "values", "Tpot (K)"])
-        normal_df = w2.train_df
+        normal_df = w2.val_df
 
     while True:
         vis_dicts = run_sample(model, normal_df, sample_size = len(normal_df), shift = SHIFT, input_width = INPUT_WIDTH, prediction_labes = prediction_labes)

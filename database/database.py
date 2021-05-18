@@ -1,13 +1,38 @@
 from mysql.connector import MySQLConnection
 from .python_mysql_dbconfig import read_db_config
 
-def skip_none_dictionary(dictionary):
+def _skip_none_dictionary(dictionary):
+    """
+        Removes None values in dictionary
+
+        Args:
+            dictionary: a dictionary containing data to be cleaned
+
+        Returns:
+            -
+
+        Raises:
+            -
+    """
     keys = dictionary.keys()
     for key in list(keys):
         if dictionary[key] is None:
             dictionary.pop(key)
 
-def column_dictionary_to_sql_and_join(dictionary, join_key=' AND '):
+def _column_dictionary_to_sql_and_join(dictionary, join_key=' AND '):
+    """
+        Removes None values in dictionary
+
+        Args:
+            dictionary  : a dictionary containing data that will be usedd to create the WHERE_LOOK query
+            join_key    : a string for how the query limiters will be connected
+
+        Returns:
+            WHERE_LOOK  : a string contining the query information
+
+        Raises:
+            None
+    """
     comparers = [" IS " if dictionary[key] is None else "=" for key in dictionary]
     safe_query_list = [f'{key}{comparer}%({key})s' for key, comparer in zip(dictionary, comparers)]     # Safe query
     WHERE_LOOK = join_key.join(safe_query_list)
@@ -49,22 +74,17 @@ def create_table(curs, table_name, column_dictionary):
             column_dictionary: dictionary with columnname-columntype mapping, e.g { "first-name": "text", "last-name": "text", "age:", "INT" }
         
         Returns:
-            None
+            -
 
         Raises:
             Propagates any exceptions from cursor.execute
     """
-    skip_none_dictionary(column_dictionary)
+    _skip_none_dictionary(column_dictionary)
     columns = [f'{key} {value}' for key, value in column_dictionary.items()]
     columns = ', '.join(columns)
     
     my_sql_command = f"CREATE TABLE IF NOT EXISTS {table_name} ({columns})"
     curs.execute(my_sql_command)
-
-def get_columns(curs) :
-    my_sql_command = f'DESCRIBE {table_name}'
-    curs.execute(my_sql_command)
-    return curs.fetchall()
 
 def show_databases(curs):
     """
@@ -74,7 +94,7 @@ def show_databases(curs):
             curs: a MySQLConnection cursor
         
         Returns:
-            None
+            -
 
         Raises:
             Propagates any exceptions from cursor.execute
@@ -86,13 +106,13 @@ def show_databases(curs):
 
 def show_tables(cursor):
     """
-        Prints out all tables in the MySQL database
+        Returns all tables in the MySQL database
 
         Args:
-            curs: a MySQLConnection cursor
+            cursor  : a MySQLConnection cursor
         
         Returns:
-            None
+            tables  : a list of all tables in the database
 
         Raises:
             Propagates any exceptions from cursor.execute
@@ -103,16 +123,15 @@ def show_tables(cursor):
     return tables
 
 def drop_table(curs, table_name):
-    
     """
-        Drops a table from a database
+        Drops a table from the database
 
         Args:
-            curs: a MySQLConnection cursor
-            table_name: str
+            curs        : a MySQLConnection cursor
+            table_name  : str
         
         Returns:
-            None
+            -
 
         Raises:
             Propagates any exceptions from cursor.execute
@@ -125,17 +144,17 @@ def insert_data(curs, table_name, data_dictionary):
         Inserts data into a table in the database
 
         Args:
-            curs: a MySQLConnection cursor instance
-            table_name: str
-            data_dictionary: a dictionary with columnname-columnvalue mapping, e.g { "ID": "1", "Value": "123", "Value2", "456" }
+            curs            : a MySQLConnection cursor instance
+            table_name      : str
+            data_dictionary : a dictionary with columnname-columnvalue mapping, e.g { "ID": "1", "Value": "123", "Value2", "456" }
         
         Returns:
-            None
+            -
 
         Raises:
             Any errors that occured from MySQLConnection
     """
-    skip_none_dictionary(data_dictionary)
+    _skip_none_dictionary(data_dictionary)
     insert_names = ', '.join([str(key) for key in data_dictionary])
     insert_values = ', '.join([f'%({key})s' for key in data_dictionary])
     my_sql_command = f"INSERT INTO {table_name} ({insert_names}) VALUES ({insert_values})"
@@ -146,11 +165,11 @@ def get_data(curs, table_name, column_dictionary=None, order_by=None, order_by_a
         Returns data into a table in the database
 
         Args:
-            curs: a MySQLConnection cursor instance
-            table_name: str
-            column_dictionary: dictionary with columnname-columnvale mapping, e.g { "ID": "1", "Data1": "ABC" } for SQL lookup
-            order_by: a list of column values to order by. None is default for no ordering.
-            order_by_asc_desc: Whether to order by ascending ('ASC') or descending ('DESC'). 
+            curs                : a MySQLConnection cursor instance
+            table_name          : str
+            column_dictionary   : dictionary with columnname-columnvale mapping, e.g { "ID": "1", "Data1": "ABC" } for SQL lookup
+            order_by            : a list of column values to order by. None is default for no ordering.
+            order_by_asc_desc   : Whether to order by ascending ('ASC') or descending ('DESC'). 
         
         Returns:
             a tuple of data to be inserted into the database
@@ -159,8 +178,8 @@ def get_data(curs, table_name, column_dictionary=None, order_by=None, order_by_a
             Any errors that occured from MySQLConnection
     """
     if column_dictionary:
-        #skip_none_dictionary(column_dictionary)
-        WHERE_LOOK = column_dictionary_to_sql_and_join(column_dictionary)  # Join into an AND list
+        #_skip_none_dictionary(column_dictionary)
+        WHERE_LOOK = _column_dictionary_to_sql_and_join(column_dictionary)  # Join into an AND list
         my_sql_command = f"SELECT * FROM {table_name} WHERE {WHERE_LOOK}"
     else:
         my_sql_command = f"SELECT * FROM {table_name}"
@@ -181,18 +200,18 @@ def delete_data(curs, table_name, column_dictionary):
         Deletes data from table_name
 
         Args:
-            curs: a MySQLConnection cursor instance
-            table_name: str
-            column_dictionary: dictionary with columnname-columnvale mapping, e.g { "ID": "1", "Data1": "ABC" } for SQL lookup
+            curs                : a MySQLConnection cursor instance
+            table_name          : str
+            column_dictionary   : dictionary with columnname-columnvale mapping, e.g { "ID": "1", "Data1": "ABC" } for SQL lookup
         
         Returns:
-            Nothing
+            -
 
         Raises:
             Any errors that occured from MySQLConnection
     """
-    skip_none_dictionary(column_dictionary)
-    WHERE_LOOK = column_dictionary_to_sql_and_join(column_dictionary)  # Join into an AND list
+    _skip_none_dictionary(column_dictionary)
+    WHERE_LOOK = _column_dictionary_to_sql_and_join(column_dictionary)  # Join into an AND list
     my_sql_command = f'DELETE FROM {table_name} WHERE ({WHERE_LOOK});'
     curs.execute(my_sql_command, column_dictionary)
 
@@ -201,10 +220,10 @@ def edit_data(curs, table_name, new_column_values, column_constraints):
         Returns data into a table in the database
 
         Args:
-            curs: a MySQLConnection cursor instance
-            table_name: str
-            new_column_values: column dictionary of new values
-            column_constraints: column dictionary of look-up values in the database
+            curs                : a MySQLConnection cursor instance
+            table_name          : str
+            new_column_values   : column dictionary of new values
+            column_constraints  : column dictionary of look-up values in the database
         
         Returns:
             -
@@ -214,13 +233,13 @@ def edit_data(curs, table_name, new_column_values, column_constraints):
     """
 
     SET_VALUES = 'name=%(set_name)s, age=%(set_age)s'
-    safe_query_list = [f'{key}=%(set_{key})s' for key in new_column_values]     # Safe query
+    safe_query_list = [f'{key} = %(set_{key})s' for key in new_column_values]     # Safe query
     SET_VALUES = ', '.join(safe_query_list)          
 
-    WHERE_LOOK = column_dictionary_to_sql_and_join(column_constraints, ', ')
+    WHERE_LOOK = _column_dictionary_to_sql_and_join(column_constraints, ', ')
 
     major_dictionary = {**column_constraints}
     for key in new_column_values:
         major_dictionary[f'set_{key}'] = new_column_values[key]
-    my_sql_command = f'UPDATE {table_name} SET {SET_VALUES} WHERE ({WHERE_LOOK})'
+    my_sql_command = f'UPDATE {table_name} SET {SET_VALUES} WHERE {WHERE_LOOK}'
     curs.execute(my_sql_command, major_dictionary)
