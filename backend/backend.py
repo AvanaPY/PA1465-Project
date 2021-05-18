@@ -25,11 +25,11 @@ ID_COLUMN_NAME = 'id'
 WANTED_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 class BackendBase:
-    def __init__(self, confparser, database_section='mysql', ai_model='2, 1, 1'):
+    def __init__(self, confparser, database_section='mysql', ai_model='2, 1, 1, 2'):
         self._my_db, self._db_config = create_sql_connection(confparser=confparser, section=database_section)
         self._curs = self._my_db.cursor()
 
-        #self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./ai/saved_models/{ai_model}')
+        self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size = load_ai_model(f'./ai/saved_models/{ai_model}')
 
     def _get_database_description_no_id_column(self, table_name):
         """
@@ -92,6 +92,11 @@ class BackendBase:
         pred_cols = [col for col in cols if PREDICTION_COLUMN_NAME in col]
         return pred_cols
         
+    def get_sensor_prediction_column_name_pairs(self, table_name):
+        preds = self.get_prediction_column_names(table_name)
+        pairs = [(pred.replace(PREDICTION_COLUMN_NAME, ''), pred) for pred in preds]
+        return pairs
+    
     def _compatability_check(self, data, table_name):
         ''' 
             Checks the compatibility of a json document against the database table.
@@ -195,7 +200,7 @@ class BackendBase:
             print(f'backend.delete_table | Failed to delete table {table_name}: {str(e)}')
             pass
 
-    def import_data_json(self, path_to_file, database_table, **kwargs):
+    def import_data_json(self, path_to_file, database_table, max_values=None, **kwargs):
         """
             Imports data from a json file and converts it into dict.
 
@@ -210,6 +215,11 @@ class BackendBase:
         """
         with open(path_to_file, "r") as f:
             dct = json.load(f)
+
+        if max_values and max_values > 0:
+            dct = {
+                key:dct[key][:max_values] for key in dct
+            }
 
         self.add_dict_to_database(dct, database_table, **kwargs)
                    
@@ -541,10 +551,13 @@ class BackendBase:
     def _check_has_datetime_column(self, table_name : str, data : dict, **kwargs):
         if DATETIME_COLUMN_NAME not in data:
             data_points = len(list(data.values())[0])
-            t = datetime.datetime.now()
-            t = t.strftime(WANTED_DATETIME_FORMAT)
 
-            data[DATETIME_COLUMN_NAME] = [t for _ in range(data_points)]
+            t = datetime.datetime.now()
+            
+            data[DATETIME_COLUMN_NAME] = []
+            for _ in range(data_points):
+                t += datetime.timedelta(0, 1)
+                data[DATETIME_COLUMN_NAME].append(t.strftime(WANTED_DATETIME_FORMAT))
         
         else:
             date_format = "%Y-%m-%d"
@@ -556,6 +569,7 @@ class BackendBase:
                         dt_obj = datetime.datetime.strptime(v, date_format)
                     except:
                         dt_obj = datetime.datetime.now()
+                    dt_obj += datetime.timedelta(0, i)
                     data[DATETIME_COLUMN_NAME][i] = datetime.datetime.strftime(dt_obj, WANTED_DATETIME_FORMAT)
     
     # TODO: Alert for anomaly function
@@ -734,11 +748,11 @@ class BackendBase:
                 for j in range(len(preds)):
                     flipped_preds[i].append(preds[j][i])
 
-            with open('./jsonlog.json', 'r') as f:
-                try:
+            try:
+                with open('./jsonlog.json', 'r+') as f:
                     fl = json.load(f)
-                except Exception as e:
-                    fl = []
+            except Exception as e:
+                fl = []
 
             now = datetime.datetime.strftime(datetime.datetime.now(), WANTED_DATETIME_FORMAT)
 
@@ -759,7 +773,7 @@ class BackendBase:
 
         return preds, final_cls
 
-    def train_ai(self, table_name, target_columns=['sensor1']):
+    def train_ai(self, table_name, target_columns=['sensor1'], save_ai=False, save_ai_path='ai/saved_models/temp_ai', **kwargs):
         """ 
             Trains AI model with target_column data. It's possible to save the newly trained model through this function.
             
@@ -795,4 +809,12 @@ class BackendBase:
                                     label_width=1, 
                                     shift=self._ai_shift_size,
                                     label_columns=target_columns)
-        ai.train_ai(self._ai_model, window.train, window.val, max_epochs=100)
+
+        output_dim = len(self.get_prediction_column_names(table_name))
+        new_ai = ai.create_ai_model(output_dim)
+        ai.train_ai(new_ai, window.train, window.val, **kwargs)
+
+        self._ai_model = new_ai
+
+        if save_ai:
+            ai.save_ai_model(self._ai_model, save_ai_path)

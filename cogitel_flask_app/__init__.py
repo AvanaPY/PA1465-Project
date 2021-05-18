@@ -1,8 +1,19 @@
-from flask import Flask
+from flask import Flask, app
 from backend import BackendBase
 
+app = None
 
-def init_app(confparser, section='app'):
+class App(Flask):
+    def __init__(self, host, port, confparser, *args, **kwargs):
+        super().__init__(__name__, *args, **kwargs)
+        self._host = host
+        self._port = port
+        self._backend = BackendBase(confparser=confparser)
+
+    def run(self, **kwargs):
+        super().run(host=self._host, port=self._port, **kwargs)
+
+def init_app(confparser, section='app') -> App:
     """Initialize the core application."""
 
     host, port = 'localhost', 5000 # Default values
@@ -24,30 +35,13 @@ def init_app(confparser, section='app'):
         except ValueError as e:
             raise Exception(f'Error when reading config file: "{config["port"]}" is not a valid port value!')
 
-
+    global app
     app = App(host, port, confparser, instance_relative_config=False)
-    #app.config.from_object('config.Config')
-
-    # Initialize Plugins
-    # db.init_app(app)
-    # r.init_app(app)
 
     with app.app_context():
-        # Include our Routes
         from . import routes
 
         from .plotlydash.dashboard import init_dashboard
         app = init_dashboard(app)
 
         return app
-
-
-class App(Flask):
-    def __init__(self, host, port, confparser, *args, **kwargs):
-        super().__init__(__name__, *args, **kwargs)
-        self._host = host
-        self._port = port
-        self._backend = BackendBase(confparser=confparser)
-
-    def run(self, **kwargs):
-        super().run(host=self._host, port=self._port)
