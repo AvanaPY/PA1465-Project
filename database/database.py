@@ -86,24 +86,6 @@ def create_table(curs, table_name, column_dictionary):
     my_sql_command = f"CREATE TABLE IF NOT EXISTS {table_name} ({columns})"
     curs.execute(my_sql_command)
 
-def get_columns(curs, table_name):
-    """
-        Returns the columns of the table
-
-        Args:
-            curs            : a MySQLConnection cursor
-            table_name      : the table to be quieried
-
-        Returns:
-            a list of all column names in the table
-
-        Raises:
-            None
-    """
-    my_sql_command = f'DESCRIBE {table_name}'
-    curs.execute(my_sql_command)
-    return curs.fetchall()
-
 def show_databases(curs):
     """
         Prints out all databases in the MySQL database
