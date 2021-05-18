@@ -60,10 +60,10 @@ class BackendBase:
             A function for getting all the columns in the table
 
             Args:
-                table_name: str
+                table_name          : str
             
             Returns:
-                database_col_names: list of str - each string is a column name
+                database_col_names  : list of str - each string is a column name
 
             Raises:
                 -
@@ -76,6 +76,18 @@ class BackendBase:
         return database_col_names
 
     def get_prediction_column_names(self, table_name):
+        """
+            A function for getting all the names of the prediction columns in the table
+
+            Args:
+                table_name          : str
+            
+            Returns:
+                database_col_names  : list of str - each string is a column name
+
+            Raises:
+                -
+        """
         cols = self.get_database_column_names(table_name)
         pred_cols = [col for col in cols if PREDICTION_COLUMN_NAME in col]
         return pred_cols
@@ -90,11 +102,11 @@ class BackendBase:
             This method assumes that the table exists in the database already, otherwise nothing happens.
 
             Args:
-                data : dict - json document
-                table_name: str - the table name
+                data        : dict - json document
+                table_name  : str - the table name
 
             Returns:
-                boolean - Wether or not it's compatible
+                boolean     : Wether or not it's compatible
 
             Raises:
                 Backend.Error
@@ -147,11 +159,36 @@ class BackendBase:
         # If no errors occured and nothing seems wrong, let's just return True.
         return True
 
-    def create_table_based_on_data_dict(self, table_name, data, **kwargs):
+    def _create_table_based_on_data_dict(self, table_name, data, **kwargs):
+        """
+            Creates a table using a dictionary of a column-name:column-sql-types mapping.
+
+            Args:
+                table_name  : str
+                data        : a dictionary of a column-name:column-sql-types mapping
+            
+            Returns:
+                -
+
+            Raises:
+                -
+        """
         table_types = self._create_table_dict(data, **kwargs)
         create_table(self._curs, table_name, table_types)
 
     def delete_table(self, table_name):
+        """
+            Deletes a table from the database.
+
+            Args:
+                table_name: str
+            
+            Returns:
+                -
+
+            Raises:
+                -
+        """
         try:
             drop_table(self._curs, table_name)
         except Exception as e:
@@ -178,16 +215,16 @@ class BackendBase:
                    
     def import_data_csv(self, path_to_file, database_table, **kwargs):
         """
-            Imports data from a csv file and converts it into dict
+            Imports data from a csv file and converts it into dict.
 
             Args:
                 path_to_file: str
             
             Returns:
-                dct: a dictionary containing the data in the csv file 
+                dct: a dictionary containing the data in the csv file. 
 
             Raises:
-                Propagates any errors
+                Propagates any errors.
         """
         dct = pd.read_csv(path_to_file).to_dict()
         dct = { key: [val for val in dct[key].values() ] for key in dct }
@@ -195,17 +232,17 @@ class BackendBase:
     
     def export_data_json(self, path_to_file, database_table, **kwargs):
         """
-            Exports data as a json file
+            Exports data as a json file.
 
             Args:
                 path_to_file: str
                 database_table: str
             
             Returns:
-                Nothing 
+                -
 
             Raises:
-                Propagates any errors
+                Propagates any errors.
         """
         columns = self.get_database_column_names(database_table)
         json_data = {
@@ -222,17 +259,17 @@ class BackendBase:
 
     def export_data_csv(self, path_to_file, database_table, **kwargs):
         """
-            Exports data as a csv file
+            Exports data as a csv file.
 
             Args:
                 path_to_file: str
                 database_table: str
             
             Returns:
-                Nothing 
+                -
 
             Raises:
-                Propagates any errors
+                Propagates any errors.
         """
 
         data = self.get_all_data(database_table)
@@ -250,18 +287,18 @@ class BackendBase:
             Adds a dictionary to the database.
 
             Args:
-                data_dict: dict - a dictionary containing the data from the import functions
-                database_table: str - the table name in the database
-                date_col: str - The column that should be considered as the datetime column
+                data_dict: dict - a dictionary containing the data from the import functions.
+                database_table: str - the table name in the database.
+                date_col: str - The column that should be considered as the datetime column.
 
             Returns:
-                Nothing
+                -
 
             Raises:
-                Propagates any errors
+                Propagates any errors.
         """
-        self.check_has_classifications(database_table, data_dict, **kwargs)
-        self.check_has_datetime_column(database_table, data_dict, **kwargs)
+        self._check_has_classifications(database_table, data_dict, **kwargs)
+        self._check_has_datetime_column(database_table, data_dict, **kwargs)
 
         keys = list(data_dict.keys())
         for key in keys:
@@ -273,7 +310,7 @@ class BackendBase:
             self._compatability_check(data_dict, database_table)
         
         except backend_errors.TableDoesNotExistException:
-            self.create_table_based_on_data_dict(database_table, data_dict, date_col=date_col, **kwargs)
+            self._create_table_based_on_data_dict(database_table, data_dict, date_col=date_col, **kwargs)
             self._compatability_check(data_dict, database_table)
         
         except:
@@ -288,7 +325,7 @@ class BackendBase:
 
     def _sort_data_dictionary(self, data_dict : dict):
         """
-            Sorts a dictionary into the desired structure
+            Sorts a dictionary into the desired structure.
 
             Sorted into order of:
 
@@ -322,17 +359,17 @@ class BackendBase:
 
     def _create_table_dict(self, data_dict, **kwargs):
         """
-            Creates a table type dict based on a data dictionary
+            Creates a table type dict based on a data dictionary.
 
             Args:
-                data_dict: A dictionary of data values
-                date_col[optional]: Which column in the data_dict that should be interpreted as datetime
+                data_dict           : A dictionary of data values.
+                date_col[optional]  : Which column in the data_dict that should be interpreted as datetime.
 
             Returns:
-                Dictionary of column-name:column-sql-types
+                dct                 : Dictionary of column-name:column-sql-types.
 
             Raises:
-                None
+                -
         """
 
         type_dict = {
@@ -400,16 +437,16 @@ class BackendBase:
 
     def get_tables(self):
         """ 
-            A wrapping function for returning all the tables in the databasse
+            A wrapping function for returning all the tables in the databasse.
 
             Args:
                 -
             
             Returns:
-                tables: a list of all tables in the database
+                tables: a list of all tables in the database.
 
             Raises:
-                No tables available error
+                No tables available error.
         """
         try:
             tables = show_tables(self._curs)
@@ -419,13 +456,13 @@ class BackendBase:
 
     def get_all_data(self, table_name, convert_datetime=False):
         """ 
-            A wrapping function for returning all the data in the table
+            A wrapping function for returning all the data in the table.
 
             Args:
-                table_name: str
+                table_name  : str
             
             Returns:
-                data: a list of touples containing the data of the database, where each touple is a row
+                data        : a list of touples containing the data of the database, where each touple is a row.
 
             Raises:
                 -
@@ -444,8 +481,8 @@ class BackendBase:
         """ Converts the "date" column in the data from datetime.datetime objects to string values.
 
             Args:
-                table_name - str
-                data : list[tuple]
+                table_name  : str
+                data        : list[tuple]
 
             Returns:
                 -
@@ -461,7 +498,7 @@ class BackendBase:
                 row[date_column_index] = row[date_column_index].strftime(WANTED_DATETIME_FORMAT)
                 data[i] = tuple(row)
 
-    def check_has_classifications(self, table_name : str, data : dict, **kwargs):
+    def _check_has_classifications(self, table_name : str, data : dict, **kwargs):
         """ 
             Checks whether or not data has classification data.
 
@@ -501,7 +538,7 @@ class BackendBase:
         for i, pkey in enumerate(prediction_column_names):
             data[pkey] = predictions[i]
 
-    def check_has_datetime_column(self, table_name : str, data : dict, **kwargs):
+    def _check_has_datetime_column(self, table_name : str, data : dict, **kwargs):
         if DATETIME_COLUMN_NAME not in data:
             data_points = len(list(data.values())[0])
             t = datetime.datetime.now()
@@ -529,17 +566,17 @@ class BackendBase:
 
     def edit_column_value(self, table_name : str, id : int, column_name : str, new_column_value):
         """ 
-            Edits the value in a database
+            Edits the value in a database.
 
             Args:
-                table_name : str - table name
-                id: int - the id of the row of the datapoint being edited
-                column_name : str - Name of the column
-                new_column_value: any - Value to insert into the table
+                table_name          : str - table name.
+                id                  : int - the id of the row of the datapoint being edited.
+                column_name         : str - Name of the column.
+                new_column_value    : any - Value to insert into the table.
             Returns:
                 -
             Raises:
-                Any propagated errors
+                Any propagated errors.
         """
         try :
             edit_data(self._curs, table_name,
@@ -556,30 +593,30 @@ class BackendBase:
 
     def edit_classification(self, table_name : str, id : int , classification : bool):
         """ 
-            Edits a classification in the table
+            Edits a classification in the table.
 
             Args:
-                table_name : str - table name
-                id: int - the id of the row of the datapoint being edited
-                classification: int - the classification of the datapoint, either 1 (True) or 0 (False) 
+                table_name : str - table name.
+                id: int - the id of the row of the datapoint being edited.
+                classification: int - the classification of the datapoint, either 1 (True) or 0 (False).
             Returns:
                 -
             Raises:
-                Any propagated errors
+                Any propagated errors.
         """
         self.edit_column_value(table_name, id, CLASSIFICATION_COLUMN_NAME, classification)
         
     def _delete_data_point(self, table_name : str, id : int):
         """
-            Delets a datapoint
+            Delets a datapoint.
 
             Args:
-                table_name : str - table name
-                id: int - the id of the datapint being deleted
+                table_name : str - table name.
+                id: int - the id of the datapint being deleted.
             Returns:
                 -
             Raises:
-                Any propagated errors
+                Any propagated errors.
         """
         try :
             delete_data(self._curs, table_name, { "id" : id })
@@ -588,14 +625,14 @@ class BackendBase:
 
     def _get_all_non_classified(self, table_name, NON_CLASSIFIED_VALUE=None, convert_datetime=False, **kwargs):
         """ 
-            Returns all non-classified data points
+            Returns all non-classified data points.
             
             Args:
-                _table_name: str - Default None
+                _table_name: str - Default None.
             Returns:
-                data: a list of touples where each touple is a row in the databasae
+                data: a list of touples where each touple is a row in the databasae.
             Raises:
-                Any propagated errors
+                Any propagated errors.
         """
 
         try:
@@ -611,12 +648,12 @@ class BackendBase:
 
     def _get_all_anomalies(self, table_name):
         """ 
-            Returns all data points where the calssification column is 1
+            Returns all data points where the calssification column is 1.
             
             Args:
                 -
             Returns:
-                data: a list of touples where each touple is a row in the database
+                data: a list of touples where each touple is a row in the database.
             Raises:
                 -
         """
@@ -627,7 +664,7 @@ class BackendBase:
 
     def strip_columns_from_data_rows(self, table_name : str, data : list, cols_to_strip : list):
         """
-            SUPPOSE THAT `data` IS COLUMN-WISE ORDERED ACCORDING TO THE GOD DAMN DATABASE
+            SUPPOSE THAT `data` IS COLUMN-WISE ORDERED ACCORDING TO THE GOD DAMN DATABASE.
         """
         data_cols = self.get_database_column_names(table_name)
 
@@ -639,9 +676,19 @@ class BackendBase:
             data[i] = row
 
     def classify_datapoints(self, table_name : str, datapoints : list, use_historical : bool=True):
-        #self.model #is a thing tbc
-        #self.input #is maby a thing
-
+        """ 
+            Predicts the and checks for anomalies in the dataset. 
+            
+            Args:
+                table_name              : str
+                datapoints              : list - a list of datapoints to be predicted and checked for anomalies.
+                use_historical[optional]: bool - wether to use historical data or only the data in datapoints (True: yes, False: no).
+            Returns:
+                preds                   : list - a list of predictions
+                final_cls               : list - a list of anomaly chec results.
+            Raises:
+                -
+        """
         if use_historical:
             n = self._ai_input_size # Amount of datapoints the AI will use
             try:
@@ -712,7 +759,7 @@ class BackendBase:
 
         return preds, final_cls
 
-    def train_ai(self, table_name, target_columns=['sensor1']): #TODO: Jävlar vad du gnäller om TODOs samuel
+    def train_ai(self, table_name, target_columns=['sensor1']):
         """ 
             Trains AI model with target_column data. It's possible to save the newly trained model through this function.
             
