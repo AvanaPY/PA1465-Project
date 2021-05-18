@@ -52,6 +52,7 @@ def visualize(df_datas, shifting):
                             size=10,)))
     
     fig.show()
+    return fig
 
 def fill_missing_avg(dataset):
 
