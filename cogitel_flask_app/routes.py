@@ -1,4 +1,4 @@
-from cogitel_flask_app import app
+from flask import current_app as app
 
 from flask import render_template, request, jsonify
 import os

@@ -9,17 +9,17 @@ parser.read('./config.ini')
 app = init_app(confparser=parser, section='app')
 
 if __name__ == '__main__':
-    #app._backend.delete_table('atable')
-    #app.run()
+    app._backend.delete_table('atable')
+    app.run()
     # Either or
     #backend_app.console_program(args.ip, args.port)
     
     #app._backend.import_data_json('./test_files/base_json_file_id.json', 'atable')
     #app._backend.train_ai('atable')
-    app._backend.import_data_json('./t.json', 'atable')
-    preds, clas = app._backend.classify_datapoints('atable', [(32, 32, 32), (11, 11, 11), (100, -100, -100)])
-    print(preds)
-    print(clas)
+    # app._backend.import_data_json('./t.json', 'atable')
+    # preds, clas = app._backend.classify_datapoints('atable', [(32, 32, 32), (11, 11, 11), (100, -100, -100)])
+    # print(preds)
+    # print(clas)
 
     # data = app._backend.get_all_data('atable', convert_datetime=True)
     # cols = app._backend.get_database_column_names('atable')
