@@ -226,9 +226,9 @@ def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['val
     train_std = train_df.std() #standard deviation (expecting every data being normal distributed)
 
     #Converting every value into standard deviations from the mean of training data
-    train_df = (train_df - train_mean) / train_std
-    val_df = (val_df - train_mean) / train_std
-    test_df = (test_df - train_mean) / train_std
+    # train_df = (train_df - train_mean) / train_std
+    # val_df = (val_df - train_mean) / train_std
+    # test_df = (test_df - train_mean) / train_std
 
     class WindowGenerator():
         '''
