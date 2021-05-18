@@ -26,7 +26,6 @@ def create_ai_model(output_dim = 1):
         tf.keras.layers.LSTM(50, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
         tf.keras.layers.LSTM(100, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
         tf.keras.layers.LSTM(50, return_sequences=True),#, dropout=0.2, recurrent_dropout=0.1),
-        #tf.keras.layers.LSTM(10, return_sequences=True),#, dropout=0.5, recurrent_dropout=0.1),
         tf.keras.layers.Dense(units=70),
         tf.keras.layers.Dense(units=50),
         tf.keras.layers.Dense(units=30),
@@ -228,10 +227,15 @@ def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['val
     test_df = (test_df - train_mean) / train_std
 
     class WindowGenerator():
-    #inpun width = how many indexes of data before making each prediction (in single prediction)
-    #label_width = how many predictions the model will make (per label (I expect))
-    #shift = how big the gap is from the input indexes to the nodes we want to predict (including the labels)
-    #label_columns = the labels we want it to predict
+        '''
+        A class for containing the training-, validation- and test dataset for when training an AI model.
+
+        Attributes:
+            inpun width     : how many indexes of data before making each prediction (in single prediction).
+            label_width     : how many predictions the model will make (per label (I expect)).
+            shift           : how big the gap is from the input indexes to the nodes we want to predict (including the labels).
+            label_columns   : the labels we want it to predict.
+        '''
         def __init__(self, input_width, label_width, shift,
                     train_df=train_df, val_df=val_df, test_df=test_df,
                     label_columns=None):
