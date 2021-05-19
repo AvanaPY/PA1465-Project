@@ -40,7 +40,7 @@ def visualize(df_datas, shifting):
         fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["predictions"],
                         mode='lines',
                         name="pred - " + df_data_vis.columns[0],
-                        line=dict(color="black", width=3, dash='dash')))
+                        line=dict(color="magenta", width=3, dash='dash')))
         
         df_data_vis["anom"] = df_data_vis["anom"].replace(0, np.nan)
 
