@@ -1,9 +1,8 @@
+from backend.backend import BackendBase
+import ai
 from dash import Dash
-from flask import current_app as app
 import dash_html_components as html
-import dash_core_components as dcc  
-
-dash_app = None
+import dash_core_components as dcc
 
 def init_dashboard(server):
     """Create a Plotly Dash dashboard."""
@@ -25,16 +24,12 @@ def init_dashboard(server):
             ])
         ]),
         html.Div(className="dash-container", children=[
-            html.Div(id="backend-status-div", children=[
-                html.Div(className="backend-status", id="status-db", children=''),
-                html.Div(className="backend-status", id="status-ai", children=''),
-                html.Div(className="backend-status", id='output-data-upload', children=''),
-            ]),
             html.Div(id='dash-chart', children=[
                 html.Div(className='chart-btn-list', children=[
                     dcc.Upload(id='upload-data', className='button-square', children=[
                         html.Span(className="btn-square-span", children='Upload data')
                     ]),
+                    html.Div(id='output-data-upload', children=''),
                     html.Button(className="button-square", id='update-chart-btn', children=[
                         html.Span(className="btn-square-span", children='Update chart')
                     ]),
@@ -43,6 +38,18 @@ def init_dashboard(server):
                 dcc.Graph(id="box-plot")
             ]),
         ]),
+        dcc.Dropdown(
+            id='ai_dropdown',
+            options=[],
+            value=[]
+        ),
+        html.Div(id='Ai_dropdown'),
+        dcc.Dropdown(
+            id='table_dropdown',
+            options=table_options,
+            value=table_options[0]['value']
+        ),
+        html.Div(id='Table_dropdown')
     ])
 
     from . import callbacks
