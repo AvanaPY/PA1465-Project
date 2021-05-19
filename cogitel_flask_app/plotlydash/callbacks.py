@@ -52,16 +52,22 @@ def generate_fig():
                     mode='markers',
                     line=dict(color='rgb(0, 0, 0)', width=8),
                     name=sensor + 'Anoms'))
-    return fig
+
+    df = pd.DataFrame.from_dict(dct)
+    #box_fig = px.box(df)
+    return fig#, box_fig
 
 @dash_app.callback(
-                Output("line-chart", "figure"), 
+                [Output("line-chart", "figure"),
+                 Output("box-plot", "figure")], 
                 [Input("update-chart-btn", "n_clicks")])
 def update_line_chart(clicks):
     try:
-        return generate_fig()
-    except:
-        return go.Figure()
+        print('owo')
+        return generate_fig(), go.Figure()
+    except Exception as e:
+        print(f'owo again {e}')
+        return go.Figure(), go.Figure()
 
 @dash_app.callback([Output('output-data-upload', 'children'),
                     Output('files_uploaded', 'data')],
@@ -96,3 +102,9 @@ def update_output(contents, name, clicks):
 
     clicks = clicks + 1 if clicks else 1
     return f'({clicks}) {message}', clicks
+
+@dash_app.callback([Output('status-db', 'children'),
+                    Output('status-ai', 'children')],
+                    Input("update-chart-btn", "n_clicks"))
+def update_output(clicks):
+    return f'Database loaded: {app._backend._my_db is not None}', f'AI model loaded: {app._backend._load_ai}'

@@ -29,13 +29,15 @@ class BackendBase:
         self._my_db, self._db_config = create_sql_connection(confparser=confparser, section=database_section)
         if self._my_db:
             self._curs = self._my_db.cursor()
+            print(f'SUCCESSFULLY CONNECTED TO DATABASE')
         else:
             self._curs = None
-            print(f'WARNING: FAILED TO LOAD DATABASE: NO DATABASE AVAILABLE')
+            print(f'FAILED TO LOAD DATABASE: NO DATABASE AVAILABLE')
 
         self._load_ai = load_ai
         if load_ai:
             self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = load_ai_model(f'./ai/saved_models/{ai_model}')
+            print(f'SUCCESFULLY LOADED AI MODEL')
         else:
             print(f'INFO: AI MODEL NOT LOADED')
 

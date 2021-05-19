@@ -28,17 +28,20 @@ body {
     color: #FFFFFF;
     text-align: center;
     font-size: 15px;
-    padding: 20px;
-    margin: 5px 10px;
+    margin: 2px;
     width: 11em;
     height: 4em;
     transition: all 0.5s;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-  
+
 .btn-square-span {
     background-color: #f4511e; 
     cursor: pointer;
+    text-align: center;
     display: inline-block;
     position: relative;
     transition: 0.5s;
@@ -74,7 +77,6 @@ body {
     padding-top: 1em;
     display: flex;
     flex-direction: row;
-    align-items: center;
 }
 
 .upload-btn-div {
@@ -105,4 +107,28 @@ body {
 }
 .upload-data-input:hover::before {
     border: 1px solid black;
+}
+
+
+.output-data-upload {
+    position: absolute;
+    top: 0;
+    height: 1em;
+    width: 100%;
+    padding-top: 1em;
+}
+
+#backend-status-div {
+    width: 100%;
+    justify-content: left;
+    padding-top: 1em;
+    padding-left: 3em;
+    display: flex;
+}
+
+.backend-status {
+    border: 1px solid gray;
+    padding: 0.2em 1em;
+    margin-left: 1px;
+    width: auto;
 }
