@@ -26,6 +26,11 @@ def init_dashboard(server):
     )
 
     dash_app.layout = html.Div([
+        dcc.ConfirmDialog(
+            id='confirm-ai-trained',
+            message='Do you want to save the newly trained AI?',
+        ),
+        html.Dialog(id="a-fooken-dialog"),
         dcc.Store(id='files_uploaded'),
         html.Div(className="div-header center-items", children=[
             html.A(id='logo', href='/', children=[
@@ -33,13 +38,17 @@ def init_dashboard(server):
             ])
         ]),
         html.Div(className="dash-container", children=[
-            html.Button(id="bugitel-report", className="button-square", children=[
+            html.Button(id="bugitel-report", className="button-square", children=[ # TODO: Bugitel no pls :(
                 html.Span(className="btn-square-span", children='Bug report')
+            ]),
+            html.Button(id="button-train-ai", className="button-square", children=[
+                html.Span(className="btn-square-span", children='Train AI')
             ]),
             html.Div(id="backend-status-div", children=[
                 html.Div(className="backend-status", id="status-db", children=''),
                 html.Div(className="backend-status", id="status-ai", children=''),
                 html.Div(className="backend-status", id='output-data-upload', children=''),
+                html.Div(className="backend-status", id='output-ai-save', children=''),
             ]),
             html.Div(id='dash-chart', children=[
                 html.Div(className='chart-btn-list', children=[

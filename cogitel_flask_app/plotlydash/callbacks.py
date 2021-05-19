@@ -1,4 +1,6 @@
 from logging import exception
+
+import dash
 from cogitel_flask_app.plotlydash.dashboard import dash_app
 from cogitel_flask_app import App
 from cogitel_flask_app import app
@@ -125,9 +127,27 @@ def update_output(contents, name, clicks):
 def update_output(clicks):
     return f'Database loaded: {app._backend._my_db is not None}', f'AI model loaded: {app._backend._load_ai}'
 
-
+# TODO: Bugitel no pls :(
 @dash_app.callback([Output('bugitel-logo', 'src')],
                     Input('bugitel-report', 'n_clicks'),
                     prevent_initial_call=True)
 def bug_report(clicks):
     return ['/static/img/bugitel.png']
+
+@dash_app.callback([Output('confirm-ai-trained', 'displayed'),
+ #                   Output('confirm-ai-trained', 'message'),
+                    ],
+                    Input('button-train-ai', 'n_clicks'),
+                    prevent_initial_call=True)
+def train_ai(value, table_name='atable'):
+    app._backend.train_ai(table_name, app._backend.get_sensor_column_names(table_name), save_ai=True)
+    return [True]#, f'Do you want to save the ai model as {ai_name}?'
+
+@dash_app.callback(Output('output-ai-save', 'children'),
+                    Input('confirm-ai-trained', 'submit_n_clicks'),
+                    prevent_initial_call=True)
+def display_confirm_save_ai_after_train(value, ai_name='a_very_temporary_ai_fuck_yea'):
+    if os.path.exists(f'./ai/saved_models/{ai_name}'):
+        os.remove(f'./ai/saved_models/{ai_name}')
+    os.rename('./ai/saved_models/temp_ai', f'ai/saved_models/{ai_name}')
+    return 'AI has been saved'
