@@ -103,7 +103,7 @@ def save_ai_model(model, save_ai_path, input_width = 1, SHIFT = 1, LABEL_WIDTH =
     
     return model
 
-def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5):
+def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5, **kwargs):
     """
         Trains an AI model.
 
