@@ -1,3 +1,6 @@
+from os import supports_bytes_environ
+from backend.backend import BackendBase
+import ai
 from dash import Dash
 from flask import current_app as app
 import dash_html_components as html
@@ -7,7 +10,12 @@ dash_app = None
 
 def init_dashboard(server):
     """Create a Plotly Dash dashboard."""
+    
     global dash_app
+    
+    tables = app._backend.get_tables()
+    table_options = [{'label': table, 'value': table} for table in tables]
+
     dash_app = Dash(
         server=server,
         routes_pathname_prefix='/dashapp/',

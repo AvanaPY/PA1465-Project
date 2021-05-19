@@ -23,22 +23,6 @@ if __name__ == '__main__':
     with open('ai\Raspberry_data\hum_dataset_1.json', 'r') as f:
         j = json.load(f)
     
-    data = {
-        'date':[],
-        'sensor1':[]
-    }
-
-    i = 0
-    for k,v in j.items():
-        data['date'].append(k)
-        data['sensor1'].append(v)
-        i += 1
-        if i > 10_000:
-            break
-
-    with open('t3.json', 'w') as f:
-        json.dump(data, f)
-
-    app._backend.import_data_json('t3.json', 'atable', classify_if_not_exist=False)
-
-    app.run(debug=False)
+    app._backend.delete_table('atable')
+    app._backend.import_data_json('./test_files/base_json_file_id.json', 'atable', max_values=1000, classify_if_not_exist=True)
+    app.run(debug=True)
