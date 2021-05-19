@@ -28,11 +28,14 @@ def init_dashboard(server):
     dash_app.layout = html.Div([
         dcc.Store(id='files_uploaded'),
         html.Div(className="div-header center-items", children=[
-            html.A(href='/', children=[
-                html.Img(src='/static/img/cogitel-logo.png')
+            html.A(id='logo', href='/', children=[
+                html.Img(id="bugitel-logo", src='/static/img/cogitel-logo.png')
             ])
         ]),
         html.Div(className="dash-container", children=[
+            html.Button(id="bugitel-report", className="button-square", children=[
+                html.Span(className="btn-square-span", children='Bug report')
+            ]),
             html.Div(id="backend-status-div", children=[
                 html.Div(className="backend-status", id="status-db", children=''),
                 html.Div(className="backend-status", id="status-ai", children=''),

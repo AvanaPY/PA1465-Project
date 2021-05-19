@@ -477,7 +477,7 @@ class BackendBase:
                 No tables available error.
         """
         try:
-            tables = show_tables(self._curs)
+            tables = get_tables(self._curs)
             return tables
         except:
             raise
