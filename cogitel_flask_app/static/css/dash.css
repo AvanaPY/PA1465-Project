@@ -132,3 +132,8 @@ body {
     margin-left: 1px;
     width: auto;
 }
+
+.dropdown-menus {
+    display: flex;
+    flex-direction: row;
+}

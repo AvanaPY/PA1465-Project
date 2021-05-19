@@ -13,6 +13,7 @@ import base64
 import os
 import numpy as np
 
+import shutil
 
 BASE_DIR = os.path.dirname(__file__)
 upload_dir_path = os.path.join(BASE_DIR, 'web/uploads')
@@ -148,14 +149,18 @@ def train_ai(value, table_name='atable'):
                     Input('confirm-ai-trained', 'submit_n_clicks'),
                     prevent_initial_call=True)
 def display_confirm_save_ai_after_train(value, ai_name='a_very_temporary_ai_fuck_yea'):
-    if os.path.exists(f'./ai/saved_models/{ai_name}'):
-        os.remove(f'./ai/saved_models/{ai_name}')
-    os.rename('./ai/saved_models/temp_ai', f'ai/saved_models/{ai_name}')
+
+    npath = f'./ai/saved_models/{ai_name}'
+    if os.path.exists(npath):
+        shutil.rmtree(npath)
+    os.rename('./ai/saved_models/temp_ai', npath)
     return 'AI has been saved'
+
 @dash_app.callback(
     Output('table-accept-btn', 'options'),
     Input('table-accept-btn', 'n_clicks'),
-    State('table-dropdown', 'value')
+    State('table-dropdown', 'value'),
+    prevent_initial_call=True,
 )
 def update_table_dropdown(n_clicks, tname):
     print(tname)
@@ -169,7 +174,8 @@ def update_table_dropdown(n_clicks, tname):
 @dash_app.callback(
     Output('ai-accept-btn', 'options'),
     [Input('ai-accept-btn', 'n_clicks')],
-    State('ai-dropdown', 'value')
+    State('ai-dropdown', 'value'),
+    prevent_initial_call=True,
 )
 def update_ai_dropdown(n_clicks, aname):
     try:

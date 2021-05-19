@@ -55,19 +55,17 @@ def load_ai_model(load_ai_path):
         model = tf.keras.models.load_model(load_ai_path)
         with open(load_ai_path + '/ai_info.json') as json_file:
             data = json.load(json_file)
+        INPUT_WIDTH = data["timeframe"][0]["input_width"]
+        SHIFT = data["timeframe"][0]["shift"]
+        LABEL_WIDTH = data["timeframe"][0]["label_width"]
+
+        IN_DIM = data["dimention"][0]["input_dim"]
+        OUT_DIM = data["dimention"][0]["output_dim"]
+
+
+        return model, INPUT_WIDTH, SHIFT, LABEL_WIDTH, IN_DIM, OUT_DIM
     except IOError as e:
-        print(f'Could not find file {load_ai_path}!')
-        return None, 0, 0, 0
-        
-    INPUT_WIDTH = data["timeframe"][0]["input_width"]
-    SHIFT = data["timeframe"][0]["shift"]
-    LABEL_WIDTH = data["timeframe"][0]["label_width"]
-
-    IN_DIM = data["dimention"][0]["input_dim"]
-    OUT_DIM = data["dimention"][0]["output_dim"]
-
-
-    return model, INPUT_WIDTH, SHIFT, LABEL_WIDTH, IN_DIM, OUT_DIM
+        print(f'Could not find file {load_ai_path}')
 
 def save_ai_model(model, save_ai_path, input_width = 1, SHIFT = 1, LABEL_WIDTH = 1, in_dimentions = 1, out_dimentions = 1):
     """
