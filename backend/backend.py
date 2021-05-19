@@ -46,6 +46,15 @@ class BackendBase:
         else:
             print(f'INFO: AI MODEL NOT LOADED')
 
+    def load_ai(self, ai_name):
+        self._load_ai = True
+        try:
+            self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = load_ai_model(f'./ai/saved_models/{ai_name}')
+        except Exception as e:
+            self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = None, 0, 0, 0, 0, 0, 0
+            raise Exception(f'Failed to load AI model: {str(e)}')
+
+
     def _get_database_description_no_id_column(self, table_name):
         """
             Function for getting the information about a table
