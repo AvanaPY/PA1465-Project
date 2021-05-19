@@ -226,9 +226,9 @@ def create_window(df, input_width=1, label_width=1, shift=1, label_columns=['val
     train_std = train_df.std() #standard deviation (expecting every data being normal distributed)
 
     #Converting every value into standard deviations from the mean of training data
-    # train_df = (train_df - train_mean) / train_std
-    # val_df = (val_df - train_mean) / train_std
-    # test_df = (test_df - train_mean) / train_std
+    train_df = (train_df - train_mean) / train_std
+    val_df = (val_df - train_mean) / train_std
+    test_df = (test_df - train_mean) / train_std
 
     class WindowGenerator():
         '''
@@ -325,3 +325,12 @@ def create_window(df, input_width=1, label_width=1, shift=1, label_columns=['val
     w2 = WindowGenerator(input_width=input_width, label_width=label_width, shift=shift,
                     label_columns=label_columns)
     return w2
+
+def get_ai_names():
+    path = 'ai/saved_models/'
+    directory_contents = os.listdir(path)
+    name_list = []
+    for direc in directory_contents:
+        name_list.append(direc)
+
+    return name_list
