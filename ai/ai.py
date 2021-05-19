@@ -50,9 +50,9 @@ def load_ai_model(load_ai_path):
     Raises:
         Any errors tensorflow might've raised when loading the ai model.
     """
-    model = tf.keras.models.load_model(load_ai_path)
 
     try:
+        model = tf.keras.models.load_model(load_ai_path)
         with open(load_ai_path + '/ai_info.json') as json_file:
             data = json.load(json_file)
     except IOError as e:
