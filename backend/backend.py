@@ -39,15 +39,19 @@ class BackendBase:
         if load_ai:
             self.load_ai(ai_model)
         else:
+            self._ai_model_name = ''
             print(f'INFO: AI MODEL NOT LOADED')
 
     def load_ai(self, ai_name):
         self._load_ai = True
         try:
+            self._ai_model_name = ai_name
             self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = load_ai_model(f'./ai/saved_models/{ai_name}')
         except Exception as e:
-            self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = None, 0, 0, 0, 0, 0, 0
-            raise Exception(f'Failed to load AI model: {str(e)}')
+            self._ai_model_name = ''
+            self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = None, 0, 0, 0, 0, 0
+            self._load_ai = False
+            print(f'Failed to load AI model: {str(e)}')
 
 
     def _get_database_description_no_id_column(self, table_name):
@@ -220,10 +224,16 @@ class BackendBase:
                 -
         """
         try:
-            drop_table(self._curs, table_name)
-        except Exception as e:
-            print(f'backend.delete_table | Failed to delete table {table_name}: {str(e)}')
-            pass
+            if table_name:
+                drop_table(self._curs, table_name)
+            else:
+                raise Exception('Table name is Null or has an equivalent value')
+        except merrors.ProgrammingError as e:
+            if e.errno == 1146:
+                raise backend_errors.TableDoesNotExistException(table_name)
+            raise
+        except:
+            raise
 
     def import_data_json(self, path_to_file, database_table, max_values=None, **kwargs):
         """
@@ -856,11 +866,3 @@ class BackendBase:
 
         if save_ai:
             ai.save_ai_model(self._ai_model, save_ai_path)
-
-    def set_ai(self, path):
-        try:
-            self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = load_ai_model(f'{path}')
-            print(f'SUCCESSFULLY LOADED AI MODEL')
-        except Exception as e:
-            self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = None, 0, 0, 0, 0, 0, 0
-            print(f'FAILED TO LOAD AI MODEL: {str(e)}')

@@ -1,6 +1,11 @@
 from mysql.connector import MySQLConnection
 from .python_mysql_dbconfig import read_db_config
 
+DEFAULT_TABLES = [
+    'innodb_index_stats', 
+    'innodb_table_stats'
+]
+
 def _skip_none_dictionary(dictionary):
     """
         Removes None values in dictionary
@@ -106,7 +111,7 @@ def show_databases(curs):
     for x in curs:
         print(x)
 
-def get_tables(cursor):
+def get_tables(cursor, ignore_defaults=True):
     """
         Returns all tables in the MySQL database.
 
@@ -122,6 +127,10 @@ def get_tables(cursor):
     my_sql_command = 'SHOW TABLES'
     cursor.execute(my_sql_command)
     tables = cursor.fetchall()
+    tables = [t[0] for t in tables]
+
+    if ignore_defaults:
+        tables = [t for t in tables if not t in DEFAULT_TABLES]
     return tables
 
 def drop_table(curs, table_name):

@@ -329,6 +329,6 @@ def get_ai_names():
     directory_contents = os.listdir(path)
     name_list = []
     for direc in directory_contents:
+        a, b = os.path.split(direc)
         name_list.append(direc)
-
     return name_list
