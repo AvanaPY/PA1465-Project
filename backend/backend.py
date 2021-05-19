@@ -29,7 +29,7 @@ class BackendBase:
     def __init__(self, confparser, database_section='mysql', ai_model='temp_ai', load_ai=False):
         self._my_db, self._db_config = create_sql_connection(confparser=confparser, section=database_section)
         if self._my_db:
-            self._curs = self._my_db.cursor()
+            self._curs = self._my_db.cursor(buffered=True)
             print(f'SUCCESSFULLY CONNECTED TO DATABASE')
         else:
             self._curs = None
@@ -852,3 +852,11 @@ class BackendBase:
 
         if save_ai:
             ai.save_ai_model(self._ai_model, save_ai_path)
+
+    def set_ai(self, path):
+        try:
+            self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = load_ai_model(f'{path}')
+            print(f'SUCCESSFULLY LOADED AI MODEL')
+        except Exception as e:
+            self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = None, 0, 0, 0, 0, 0, 0
+            print(f'FAILED TO LOAD AI MODEL: {str(e)}')

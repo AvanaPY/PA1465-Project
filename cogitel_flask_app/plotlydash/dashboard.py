@@ -50,6 +50,26 @@ def init_dashboard(server):
                 html.Div(className="backend-status", id='output-data-upload', children=''),
                 html.Div(className="backend-status", id='output-ai-save', children=''),
             ]),
+            html.Div([
+                dcc.Dropdown(
+                    id='table-dropdown',
+                    options= [{'label': table, 'value': table} for table in app._backend.get_tables()],
+                    value = app._backend.get_tables()[0]
+                    ),
+                html.Button(className="button-square", id='table-accept-btn', children=[
+                        html.Span(className="table-accept-btn", children='Load')
+                    ]),
+            ]),
+            html.Div([
+                dcc.Dropdown(
+                    id='ai-dropdown',
+                    options= [{'label': a, 'value': f'./ai/saved_models/{a}'} for a in ai.get_ai_names()],
+                    value = ai.get_ai_names()[0]
+                    ),
+                html.Button(className="button-square", id='ai-accept-btn', children=[
+                        html.Span(className="ai-accept-btn", children='Load')
+                    ]),
+            ]),
             html.Div(id='dash-chart', children=[
                 html.Div(className='chart-btn-list', children=[
                     dcc.Upload(id='upload-data', className='button-square', children=[

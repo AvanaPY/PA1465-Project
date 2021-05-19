@@ -1,3 +1,4 @@
+import ai
 from logging import exception
 
 import dash
@@ -74,7 +75,7 @@ def generate_line_fig(table_name='atable'):
     df = pd.DataFrame.from_dict(dct)
     df = df[[f'diff{sensor}' for sensor in sensors]]
     box_fig = px.box(df)  
-    return fig, box_fig 
+    return fig, box_fig
 
 @dash_app.callback([Output("line-chart", "figure"),
                     Output("box-plot", "figure")], 
@@ -151,3 +152,30 @@ def display_confirm_save_ai_after_train(value, ai_name='a_very_temporary_ai_fuck
         os.remove(f'./ai/saved_models/{ai_name}')
     os.rename('./ai/saved_models/temp_ai', f'ai/saved_models/{ai_name}')
     return 'AI has been saved'
+@dash_app.callback(
+    Output('table-accept-btn', 'options'),
+    Input('table-accept-btn', 'n_clicks'),
+    State('table-dropdown', 'value')
+)
+def update_table_dropdown(n_clicks, tname):
+    print(tname)
+    try:
+        line_fig, box_fig = generate_line_fig(table_name=tname[0])
+        return line_fig, box_fig
+    except Exception as e:
+        print(f'owo again {e}')
+        return go.Figure(), go.Figure()
+
+@dash_app.callback(
+    Output('ai-accept-btn', 'options'),
+    [Input('ai-accept-btn', 'n_clicks')],
+    State('ai-dropdown', 'value')
+)
+def update_ai_dropdown(n_clicks, aname):
+    try:
+        app._backend.set_ai(aname)
+        print(f'Loaded AI model: {aname}')
+    except:
+        print("Why you try to load fuck shit?")
+if __name__ == '__main__':
+    app.run_server(debug=True)
