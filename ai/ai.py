@@ -200,7 +200,7 @@ def run_ai(model, input_list, shift = 1, input_width = 1,  label_width = 1, verb
 
     return output_array, anomaly
 
-def create_window(df, input_width=6, label_width=1, shift=1, label_columns=['values']):
+def create_window(df, input_width=1, label_width=1, shift=1, label_columns=['values']):
     """
         Creates a window object for storing training, validation and test data
 
