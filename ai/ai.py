@@ -131,7 +131,7 @@ def train_ai(model, train_data, validation_data, patience = 2, max_epochs = 5):
 
     return
 
-def run_ai(model, input_list, shift = 1, input_width = 2,  label_width = 1, verbose = 0):
+def run_ai(model, input_list, shift = 1, input_width = 1,  label_width = 1, verbose = 0):
     """
         Runs the Ai.
 
