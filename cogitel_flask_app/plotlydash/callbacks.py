@@ -86,7 +86,6 @@ def update_line_chart(clicks):
         line_fig, box_fig = generate_line_fig()
         return line_fig, box_fig
     except Exception as e:
-        print(f'owo again {e}')
         return go.Figure(), go.Figure()
 
 @dash_app.callback([Output('output-data-upload', 'children'),
@@ -95,7 +94,7 @@ def update_line_chart(clicks):
               State('upload-data', 'filename'),
               State('files_uploaded', 'data'),
               prevent_initial_call=True)
-def update_output(contents, name, clicks):
+def upload_data(contents, name, clicks):
     content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
     
@@ -104,13 +103,14 @@ def update_output(contents, name, clicks):
         os.makedirs(upload_dir_path)
     with open(fpath, 'wb') as f:
         f.write(decoded)
+    print('Uploading data...')
     try:
         if name.endswith('.json'):
-            app._backend.import_data_json(fpath, 'atable', use_historical=False)
+            app._backend.import_data_json(fpath, 'atable', use_historical=False, classify_if_not_exist=False)
         elif name.endswith('.csv'):
-            app._backend.import_data_csv(fpath, 'atable', use_historical=False)
+            app._backend.import_data_csv(fpath, 'atable', use_historical=False, classify_if_not_exist=False)
         else:
-            raise Exception('Unknown extension bitch :tboof:')
+            raise Exception('Unknown extension')
     except Exception as e:
         message = str(e)
     else:
@@ -120,14 +120,16 @@ def update_output(contents, name, clicks):
     except:
         pass
 
+    print('Uploaded data complete')
+
     clicks = clicks + 1 if clicks else 1
     return f'({clicks}) {message}', clicks
 
 @dash_app.callback([Output('status-db', 'children'),
                     Output('status-ai', 'children')],
                     Input("update-chart-btn", "n_clicks"))
-def update_output(clicks):
-    return f'Database loaded: {app._backend._my_db is not None}', f'AI model loaded: {app._backend._load_ai}'
+def update_backend_status_labels(clicks):
+    return f'Database loaded: {app._backend._my_db is not None}', f'AI model loaded: {app._backend._load_ai} ({app._backend._ai_model_name})'
 
 # TODO: Bugitel no pls :(
 @dash_app.callback([Output('bugitel-logo', 'src')],
@@ -142,46 +144,53 @@ def bug_report(clicks):
                     Input('button-train-ai', 'n_clicks'),
                     prevent_initial_call=True)
 def train_ai(value, table_name='atable'):
-    app._backend.train_ai(table_name, app._backend.get_sensor_column_names(table_name), save_ai=True)
+    app._backend.train_ai(table_name, app._backend.get_sensor_column_names(table_name), 
+                        save_ai=True, save_ai_path='./ai/saved_models/temp_ai', max_epochs=100, patience=5)
     return [True]#, f'Do you want to save the ai model as {ai_name}?'
 
 @dash_app.callback(Output('output-ai-save', 'children'),
                     Input('confirm-ai-trained', 'submit_n_clicks'),
                     prevent_initial_call=True)
-def display_confirm_save_ai_after_train(value, ai_name='a_very_temporary_ai_fuck_yea'):
-
+def display_confirm_save_ai_after_train(value, ai_name='temp_ai_saved'):
     npath = f'./ai/saved_models/{ai_name}'
     if os.path.exists(npath):
         shutil.rmtree(npath)
     os.rename('./ai/saved_models/temp_ai', npath)
-    return 'AI has been saved'
+    return f'AI has been saved as "{ai_name}"'
 
 @dash_app.callback(
-    Output('table-accept-btn', 'options'),
-    Input('table-accept-btn', 'n_clicks'),
+    Output('button-load-table', 'value'),
+    Input('button-load-table', 'n_clicks'),
     State('table-dropdown', 'value'),
     prevent_initial_call=True,
 )
-def update_table_dropdown(n_clicks, tname):
-    print(tname)
-    try:
-        line_fig, box_fig = generate_line_fig(table_name=tname[0])
-        return line_fig, box_fig
-    except Exception as e:
-        print(f'owo again {e}')
-        return go.Figure(), go.Figure()
+def callback_load_table(n_clicks, tname):
+    #line_fig, box_fig = generate_line_fig(table_name=tname[0])
+    return tname
 
 @dash_app.callback(
-    Output('ai-accept-btn', 'options'),
-    [Input('ai-accept-btn', 'n_clicks')],
+        Output('button-drop-table-output', 'children'),
+        Input('button-drop-table', 'n_clicks'),
+        State('table-dropdown', 'value'),
+        prevent_initial_call=True
+)
+def callback_drop_table(n_clicks, table_name):
+    try:
+        app._backend.delete_table(table_name)
+        return f'Dropped table "{table_name}".'
+    except Exception as e:
+        return f'Failed to drop table "{table_name}": {e}'
+
+@dash_app.callback(
+    Output('button-load-ai', 'options'),
+    [Input('button-load-ai', 'n_clicks')],
     State('ai-dropdown', 'value'),
     prevent_initial_call=True,
 )
-def update_ai_dropdown(n_clicks, aname):
+def callback_load_ai(n_clicks, aname):
     try:
-        app._backend.set_ai(aname)
+        app._backend.load_ai(aname)
         print(f'Loaded AI model: {aname}')
     except:
         print("Why you try to load fuck shit?")
-if __name__ == '__main__':
-    app.run_server(debug=True)
+    return ai.get_ai_names()
