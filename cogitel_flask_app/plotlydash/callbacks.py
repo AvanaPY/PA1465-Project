@@ -124,3 +124,10 @@ def update_output(contents, name, clicks):
                     Input("update-chart-btn", "n_clicks"))
 def update_output(clicks):
     return f'Database loaded: {app._backend._my_db is not None}', f'AI model loaded: {app._backend._load_ai}'
+
+
+@dash_app.callback([Output('bugitel-logo', 'src')],
+                    Input('bugitel-report', 'n_clicks'),
+                    prevent_initial_call=True)
+def bug_report(clicks):
+    return ['/static/img/bugitel.png']
