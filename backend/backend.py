@@ -41,6 +41,7 @@ class BackendBase:
                 self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = load_ai_model(f'./ai/saved_models/{ai_model}')
                 print(f'SUCCESSFULLY LOADED AI MODEL')
             except Exception as e:
+                self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = None, 0, 0, 0, 0, 0, 0
                 print(f'FAILED TO LOAD AI MODEL: {str(e)}')
         else:
             print(f'INFO: AI MODEL NOT LOADED')
