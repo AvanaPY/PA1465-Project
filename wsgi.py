@@ -18,7 +18,6 @@ if __name__ == '__main__':
     
     # create('t2.json', n=1000)
     
-    app._backend.delete_table('atable')
-    # app._backend.import_data_json('./t2.json', 'atable', max_values=1000, classify_if_not_exist=True)
-    
+    #app._backend.delete_table('atable')
+    #app._backend.import_data_json('./test_files/base_json_file_id.json', 'atable', max_values=1000, classify_if_not_exist=True)
     app.run(debug=True)

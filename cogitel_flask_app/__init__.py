@@ -13,7 +13,7 @@ class App(Flask):
     def run(self, **kwargs):
         super().run(host=self._host, port=self._port, **kwargs)
 
-def init_app(confparser, section='app') -> App:
+def init_app(confparser, section='app', **kwargs) -> App:
     """Initialize the core application."""
 
     host, port = 'localhost', 5000 # Default values
@@ -36,7 +36,7 @@ def init_app(confparser, section='app') -> App:
             raise Exception(f'Error when reading config file: "{config["port"]}" is not a valid port value!')
 
     global app
-    app = App(host, port, confparser, instance_relative_config=False)
+    app = App(host, port, confparser, instance_relative_config=False, **kwargs)
 
     with app.app_context():
         from . import routes
