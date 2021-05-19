@@ -37,7 +37,7 @@ class BackendBase:
         self._load_ai = load_ai
         if load_ai:
             self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = load_ai_model(f'./ai/saved_models/{ai_model}')
-            print(f'SUCCESFULLY LOADED AI MODEL')
+            print(f'SUCCESSFULLY LOADED AI MODEL')
         else:
             print(f'INFO: AI MODEL NOT LOADED')
 
@@ -112,7 +112,7 @@ class BackendBase:
         preds = self.get_prediction_column_names(table_name)
         pairs = [(pred.replace(PREDICTION_COLUMN_NAME, ''), pred) for pred in preds]
         return pairs
-    
+        
     def _compatability_check(self, data, table_name):
         ''' 
             Checks the compatibility of a json document against the database table.

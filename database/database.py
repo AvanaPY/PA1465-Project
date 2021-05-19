@@ -106,7 +106,7 @@ def show_databases(curs):
     for x in curs:
         print(x)
 
-def show_tables(cursor):
+def get_tables(cursor):
     """
         Returns all tables in the MySQL database.
 

@@ -8,15 +8,16 @@ import plotly.express as px
 import pandas as pd
 import base64
 import os
+import numpy as np
 
 
 BASE_DIR = os.path.dirname(__file__)
 upload_dir_path = os.path.join(BASE_DIR, 'web/uploads')
 app : App = app
 
-def generate_fig():
-    cols = app._backend.get_database_column_names('atable') # TODO: Make this a dropdown option on the website
-    data = app._backend.get_all_data('atable', convert_datetime=True)
+def generate_line_fig(table_name='atable'):
+    cols = app._backend.get_database_column_names(table_name) # TODO: Make this a dropdown option on the website
+    data = app._backend.get_all_data(table_name, convert_datetime=True)
     dct = {
         col:[] for col in cols
     }
@@ -24,7 +25,7 @@ def generate_fig():
         for col, d in zip(cols, tpl):
             dct[col].append(d)
 
-    anomalies = app._backend._get_all_anomalies('atable')
+    anomalies = app._backend._get_all_anomalies(table_name)
     anom_dct = {
         col:[] for col in cols
     }
@@ -32,7 +33,7 @@ def generate_fig():
         for col, d in zip(cols, tpl):
             anom_dct[col].append(d)
 
-    sens_preds = app._backend.get_sensor_prediction_column_name_pairs('atable')
+    sens_preds = app._backend.get_sensor_prediction_column_name_pairs(table_name)
     fig = go.Figure()
 
     for sensor, pred in sens_preds:
@@ -53,18 +54,33 @@ def generate_fig():
                     line=dict(color='rgb(0, 0, 0)', width=8),
                     name=sensor + 'Anoms'))
 
-    df = pd.DataFrame.from_dict(dct)
-    #box_fig = px.box(df)
-    return fig#, box_fig
+    sensors = app._backend.get_sensor_column_names(table_name)
 
-@dash_app.callback(
-                [Output("line-chart", "figure"),
-                 Output("box-plot", "figure")], 
-                [Input("update-chart-btn", "n_clicks")])
+    for sensor, pred in sens_preds:
+        dct[sensor][dct[sensor] == None] = 0
+        dct[pred][dct[pred] == None] = 0
+
+        for i, (sv, pv) in enumerate(zip(dct[sensor], dct[pred])):
+            if sv is None:
+                dct[sensor][i] = 0
+            if pv is None:
+                dct[pred][i] = dct[sensor][i]
+
+        diff = np.array(dct[sensor]) - np.array(dct[pred])
+        dct[f'diff{sensor}'] = diff.astype(float)
+
+    df = pd.DataFrame.from_dict(dct)
+    df = df[[f'diff{sensor}' for sensor in sensors]]
+    box_fig = px.box(df)  
+    return fig, box_fig 
+
+@dash_app.callback([Output("line-chart", "figure"),
+                    Output("box-plot", "figure")], 
+                   [Input("update-chart-btn", "n_clicks")])
 def update_line_chart(clicks):
     try:
-        print('owo')
-        return generate_fig(), go.Figure()
+        line_fig, box_fig = generate_line_fig()
+        return line_fig, box_fig
     except Exception as e:
         print(f'owo again {e}')
         return go.Figure(), go.Figure()

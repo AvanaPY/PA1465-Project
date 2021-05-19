@@ -4,16 +4,16 @@ from backend import BackendBase
 app = None
 
 class App(Flask):
-    def __init__(self, host, port, confparser, *args, **kwargs):
+    def __init__(self, host, port, confparser, load_ai=False, *args, **kwargs):
         super().__init__(__name__, *args, **kwargs)
         self._host = host
         self._port = port
-        self._backend = BackendBase(confparser=confparser)
+        self._backend = BackendBase(confparser=confparser, load_ai=load_ai)
 
     def run(self, **kwargs):
         super().run(host=self._host, port=self._port, **kwargs)
 
-def init_app(confparser, section='app', **kwargs) -> App:
+def init_app(confparser, section='app', load_ai=False, **kwargs) -> App:
     """Initialize the core application."""
 
     host, port = 'localhost', 5000 # Default values
@@ -36,7 +36,7 @@ def init_app(confparser, section='app', **kwargs) -> App:
             raise Exception(f'Error when reading config file: "{config["port"]}" is not a valid port value!')
 
     global app
-    app = App(host, port, confparser, instance_relative_config=False, **kwargs)
+    app = App(host, port, confparser, instance_relative_config=False, load_ai=load_ai, **kwargs)
 
     with app.app_context():
         from . import routes
