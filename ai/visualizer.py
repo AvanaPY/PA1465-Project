@@ -17,30 +17,19 @@ import random
 def visualize(df_datas, shifting):
 
     fig = go.Figure()
-
+    colors = ["black", "magenta", "blue", "green"]
     for i in range(len(df_datas)):
         df_data_vis = df_datas[i].copy()
-        
-        for i in range(shifting):
-            df_data_vis.loc[df_data_vis.iloc[-1].name + 1,:] = np.nan #creates a new nan row
-        df_data_vis['predictions'] = df_data_vis['predictions'].shift(shifting) #shifts all predictions down
-        
-        color1 = ["black", "antiquewhite", "aqua", "aquamarine", "azure",
-            "beige", "bisque", "aliceblue", "blanchedalmond", "blue",
-            "blueviolet", "brown", "burlywood", "cadetblue",
-            "chartreuse", "chocolate", "coral", "cornflowerblue",
-            "cornsilk", "crimson", "cyan", "darkblue", "darkcyan",
-            "darkgoldenrod", "darkgray", "darkgrey", "darkgreen"]
 
         fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis[df_data_vis.columns[0]],
                         mode='lines',
                         name="real - " + df_data_vis.columns[0],
-                        line=dict(color="black", width=8)))
+                        line=dict(color=colors[i * 2], width=5)))
         
         fig.add_trace(go.Scatter(x=df_data_vis.index, y=df_data_vis["predictions"],
                         mode='lines',
                         name="pred - " + df_data_vis.columns[0],
-                        line=dict(color="magenta", width=3, dash='dash')))
+                        line=dict(color=colors[i*2 + 1], width=2, dash='dash')))
         
         df_data_vis["anom"] = df_data_vis["anom"].replace(0, np.nan)
 
@@ -49,7 +38,7 @@ def visualize(df_datas, shifting):
                         name="anomalies - " + df_data_vis.columns[0],
                         marker=dict(
                             color="red",
-                            size=10,)))
+                            size=6,)))
     
     fig.show()
     return fig
@@ -228,7 +217,7 @@ if __name__ == "__main__":
     
     if use_saved_input == "n":
 
-        INPUT_WIDTH = int(input("Imput width: "))
+        INPUT_WIDTH = int(input("Input width: "))
         SHIFT = int(input("shift: "))
         LABEL_WIDTH = int(input("Label width: "))
         in_dim = int(input("Input dimentions: "))
@@ -239,11 +228,11 @@ if __name__ == "__main__":
         prediction_labes = list(df.columns[0:out_dim])
 
         w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT, label_columns=prediction_labes)
-        normal_df = w2.val
+        normal_df = w2.val_df
 
         model = ai.create_ai_model(output_dim=out_dim)
 
-        ai.train_ai(model, w2.train, w2.val, max_epochs = 50)
+        ai.train_ai(model, w2.train, w2.val, max_epochs = 1)
 
         if input("do you want to save?[y/n]") == "y":
             name = input("what name should the ai_model have: ")
@@ -260,7 +249,7 @@ if __name__ == "__main__":
         df = df[df.columns[0:in_dim]]
         prediction_labes = list(df.columns[0:out_dim])
 
-        w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT, label_columns=["p (mbar)",  "values", "Tpot (K)"])
+        w2 = ai.create_window(df, input_width=INPUT_WIDTH, label_width = LABEL_WIDTH, shift=SHIFT, label_columns=prediction_labes)
         normal_df = w2.val_df
 
     while True:
