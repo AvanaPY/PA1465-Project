@@ -1,5 +1,6 @@
 from mysql.connector import MySQLConnection
 from .python_mysql_dbconfig import read_db_config
+import os
 
 DEFAULT_TABLES = ['columns_priv', 'component', 'db',
     'default_roles', 'engine_cost', 'func', 'general_log',
@@ -73,6 +74,13 @@ def create_sql_connection(confparser, section='mysql'):
             db_config[item[0]] = item[1]
     else:
         raise Exception('Section {0} not found in the config file'.format(section,))
+    for k, environ_key in zip(('host', 'port'), ('MYSQL_DATABASE_HOST', 'MYSQL_DATABASE_PORT')):
+        try:
+            db_config[k] = os.environ[environ_key]
+        except:
+            raise Exception(f'Key {environ_key} does not exist in the environment.')
+    # db_config['host']=os.environ['MYSQL_DATABASE_HOST']
+    # db_config['port']=os.environ['MYSQL_DATABASE_PORT']
     try:
         my_db = MySQLConnection(autocommit=True, **db_config)
     except:

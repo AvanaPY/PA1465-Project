@@ -1,5 +1,6 @@
 from flask import Flask, app
 from backend import BackendBase
+import os 
 
 app = None
 
@@ -36,6 +37,9 @@ def init_app(confparser, section='app', load_ai=False, **kwargs) -> App:
             raise Exception(f'Error when reading config file: "{config["port"]}" is not a valid port value!')
 
     global app
+
+    host = os.environ.get('APPLICATION_HOST', host)
+    port = os.environ.get('APPLICATION_PORT', port)
     app = App(host, port, confparser, instance_relative_config=False, load_ai=load_ai, **kwargs)
 
     with app.app_context():
