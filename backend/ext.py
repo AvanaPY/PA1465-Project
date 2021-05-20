@@ -45,7 +45,12 @@ def all_type_equal_or_none(type_lst):
         Raises:
             Nothing
     """
-    first_non_none_type = [a for a in type_lst if a is not type(None)][0]
+    non_none_types = [a for a in type_lst if a is not type(None)]
+
+    if not non_none_types:
+        return int
+
+    first_non_none_type = non_none_types[0]
     types = [(a == first_non_none_type or a is type(None)) for a in type_lst]
     all_same = all(types)
     if all_same:

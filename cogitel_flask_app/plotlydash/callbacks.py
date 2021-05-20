@@ -15,6 +15,8 @@ import numpy as np
 
 import shutil
 
+from .dashboard import generate_ai_dropdown_labels, generate_table_dropdown_labels, get_first_table
+
 BASE_DIR = os.path.dirname(__file__)
 upload_dir_path = os.path.join(BASE_DIR, 'web/uploads')
 app : App = app
@@ -89,11 +91,13 @@ def update_line_chart(clicks):
         return go.Figure(), go.Figure()
 
 @dash_app.callback([Output('output-data-upload', 'children'),
-                    Output('files_uploaded', 'data')],
-              Input('upload-data', 'contents'),
-              State('upload-data', 'filename'),
-              State('files_uploaded', 'data'),
-              prevent_initial_call=True)
+                    Output('files_uploaded', 'data'),
+                    Output('table-dropdown', 'options'),
+                    Output('table-dropdown', 'value')],
+                    Input('upload-data', 'contents'),
+                    State('upload-data', 'filename'),
+                    State('files_uploaded', 'data'),
+                    prevent_initial_call=True)
 def upload_data(contents, name, clicks):
     content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
@@ -123,7 +127,7 @@ def upload_data(contents, name, clicks):
     print('Uploaded data complete')
 
     clicks = clicks + 1 if clicks else 1
-    return f'({clicks}) {message}', clicks
+    return f'({clicks}) {message}', clicks, generate_table_dropdown_labels(), 'atable'
 
 @dash_app.callback([Output('status-db', 'children'),
                     Output('status-ai', 'children')],
@@ -159,17 +163,7 @@ def display_confirm_save_ai_after_train(value, ai_name='temp_ai_saved'):
     return f'AI has been saved as "{ai_name}"'
 
 @dash_app.callback(
-    Output('button-load-table', 'value'),
-    Input('button-load-table', 'n_clicks'),
-    State('table-dropdown', 'value'),
-    prevent_initial_call=True,
-)
-def callback_load_table(n_clicks, tname):
-    #line_fig, box_fig = generate_line_fig(table_name=tname[0])
-    return tname
-
-@dash_app.callback(
-        Output('button-drop-table-output', 'children'),
+        [Output('button-drop-table-output', 'children')],
         Input('button-drop-table', 'n_clicks'),
         State('table-dropdown', 'value'),
         prevent_initial_call=True
@@ -177,15 +171,16 @@ def callback_load_table(n_clicks, tname):
 def callback_drop_table(n_clicks, table_name):
     try:
         app._backend.delete_table(table_name)
-        return f'Dropped table "{table_name}".'
+        return [f'Dropped table "{table_name}".']
     except Exception as e:
-        return f'Failed to drop table "{table_name}": {e}'
+        return [f'Failed to drop table "{table_name}": {e}']
 
 @dash_app.callback(
-    Output('button-load-ai', 'options'),
-    [Input('button-load-ai', 'n_clicks')],
-    State('ai-dropdown', 'value'),
-    prevent_initial_call=True,
+        [Output('button-load-ai', 'options'),
+         Output('ai-dropdown', 'options')],
+        [Input('button-load-ai', 'n_clicks')],
+         State('ai-dropdown', 'value'),
+         prevent_initial_call=True,
 )
 def callback_load_ai(n_clicks, aname):
     try:
@@ -193,4 +188,14 @@ def callback_load_ai(n_clicks, aname):
         print(f'Loaded AI model: {aname}')
     except:
         print("Why you try to load fuck shit?")
-    return ai.get_ai_names()
+    return (ai.get_ai_names(), generate_ai_dropdown_labels())
+
+@dash_app.callback(
+    Output('output-reclassify', 'children'),
+    Input('button-classify-database', 'n_clicks'),
+    State('table-dropdown', 'value'),
+    prevent_initial_call=True
+)
+def reclassify_database(n_clicks, tname):
+    app._backend.classify_database(tname)
+    return 'Reclassified database.'

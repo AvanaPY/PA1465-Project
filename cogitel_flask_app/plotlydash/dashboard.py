@@ -12,16 +12,25 @@ DROPDOWN_STYLE = {
     "width":"14em",
 }
 
+def get_first_table():
+    tables = app._backend.get_tables()
+    if len(tables) == 0:
+        return ''
+    return tables[0]
+
+def generate_table_dropdown_labels():
+    tables = app._backend.get_tables()
+    return [{'label': table, 'value': table} for table in tables]
+
+def generate_ai_dropdown_labels():
+    ai_names = ai.get_ai_names()
+    return [{'label': a, 'value': a} for a in ai_names]
 
 def init_dashboard(server):
     """Create a Plotly Dash dashboard."""
     
     global dash_app
     
-    ai_names = ai.get_ai_names()    
-    tables = app._backend.get_tables()
-    table_options = [{'label': table, 'value': table} for table in tables]
-
     dash_app = Dash(
         server=server,
         routes_pathname_prefix='/dashapp/',
@@ -52,10 +61,10 @@ def init_dashboard(server):
                     html.Div(className="backend-status-sublist", children=[
                         html.Div(className="backend-status", id="status-db", children=''),
                         html.Div(className="backend-status", id="status-ai", children=''),
-                    ]),
-                    html.Div(className="backend-status-sublist", children=[
                         html.Div(className="backend-status", id='output-data-upload', children='Data backend output'),
                         html.Div(className="backend-status", id='output-ai-save', children='AI backend output'),
+                        html.Div(className="backend-status", id='button-drop-table-output', children='Drop down table output'),
+                        html.Div(className="backend-status", id='output-reclassify', children='Reclassify output'),
                     ])
                 ]),
             ]),
@@ -72,14 +81,16 @@ def init_dashboard(server):
                 html.Button(className="button-square", id="button-drop-table", children=[
                     html.Span(className="btn-square-span", children='Drop table')
                 ]),
-                html.Div(id='button-drop-table-output')
+                html.Button(className="button-square", id="button-classify-database", children=[
+                    html.Span(className="btn-square-span", children='Reclassify')
+                ]),
             ]),
             html.Div(className='dropdown-menus', children=[
                 html.Div(className='dropdown-select', children=[
                     dcc.Dropdown(
                         id='table-dropdown',
-                        options= [{'label': table, 'value': table} for table in tables],
-                        value = tables[0]  if len(tables) > 0 else '',
+                        options= generate_table_dropdown_labels(),
+                        value = get_first_table(),
                         style=DROPDOWN_STYLE
                     ),
                     html.Button(className="button-square", id='button-load-table', children=[
@@ -89,7 +100,7 @@ def init_dashboard(server):
                 html.Div(className='dropdown-select', children=[
                     dcc.Dropdown(
                         id='ai-dropdown',
-                        options= [{'label': a, 'value': a} for a in ai_names],
+                        options = generate_ai_dropdown_labels(),
                         value = app._backend._ai_model_name,
                         style=DROPDOWN_STYLE
                     ),
