@@ -26,7 +26,7 @@ ID_COLUMN_NAME = 'id'
 WANTED_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 class BackendBase:
-    def __init__(self, confparser, database_section='mysql', ai_model='temp_ai', load_ai=False):
+    def __init__(self, confparser, database_section='mysql', ai_model='temp_ai_saved', load_ai=False):
         self._my_db, self._db_config = create_sql_connection(confparser=confparser, section=database_section)
         if self._my_db:
             self._curs = self._my_db.cursor(buffered=True)
@@ -589,7 +589,7 @@ class BackendBase:
                 data[pkey] = predictions[i]
         else:
             if not CLASSIFICATION_COLUMN_NAME in col_names:
-                data[CLASSIFICATION_COLUMN_NAME] = [0] * data_point_count
+                data[CLASSIFICATION_COLUMN_NAME] = [None] * data_point_count
             for pkey in prediction_column_names:
                 data[pkey] = [0] * data_point_count
 
@@ -866,3 +866,33 @@ class BackendBase:
 
         if save_ai:
             ai.save_ai_model(self._ai_model, save_ai_path)
+
+    def classify_database(self, table_name):
+        if not self._load_ai:
+            return False
+        data = self.get_all_data(table_name)
+
+        cols = self.get_database_column_names(table_name)
+        sens_cols = self.get_sensor_column_names(table_name)
+        sens_cols_idx = [cols.index(sens_col) for sens_col in sens_cols]
+
+        data_lst = []
+        for row in data:
+            data = [row[sens_col_idx] for sens_col_idx in sens_cols_idx]
+            data_lst.append(data)
+
+        preds, classifications = self.classify_datapoints('atable', data_lst, use_historical=False)
+        
+        count = len(classifications)
+
+        for i in range(count):
+            prediction = [p[i] for p in preds]
+            classification = classifications[i]
+
+            edit_data(self._curs, table_name, {
+                **{PREDICTION_COLUMN_NAME + sens_cols[j]:prediction[j] for j in range(len(prediction)) },
+                CLASSIFICATION_COLUMN_NAME:classification
+            }, {
+                ID_COLUMN_NAME: i
+            })
+        return True

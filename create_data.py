@@ -10,9 +10,9 @@ def create(fp, n=10000):
     date = datetime.datetime.now()
     data = {
         'date': [],
-        'sensor1': [np.float32(i).item() for i in (np.sin(xs + np.pi/4))],
-        'sensor2': [np.float32(i).item() for i in (np.sin(xs + np.pi/2))],
-        'sensor3': [np.float32(i).item() for i in (np.sin(xs - np.pi/4))],
+        'sensor1': np.sin(xs + np.pi/4).astype(float).tolist(),
+        'sensor2': np.sin(xs + np.pi/2).astype(float).tolist(),
+        'sensor3': np.sin(xs - np.pi/4).astype(float).tolist(),
     }
     for i in range(n):
         dt = date + datetime.timedelta(0, 60 * i)
