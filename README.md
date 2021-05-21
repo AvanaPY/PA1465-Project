@@ -1,45 +1,39 @@
 # Python
 This program requires python 3.8.3 as of the time or the latest version that is supported by Tensorflow.
 
-# Demo
+# User manual for AI prediction
 
-## Start the web
-* To start the web make sure to run `demo_ai.py` with python as a normal python file instead of using Flask as a module. So `python demo/demo_ai.py` and not `python -m flask run`. 
-* `Upload Data` is yet not implemented.
-* The AI is now integrated with the website, however it re-trains itself every time the webserver is restarted.
-* The AI has loadable and saveable weights. You'll find those weights under `demo/ai_data` named `weights.h5` and/or `weights_prel.h5`. If `weights.h5` exists it will attempt to use those weights, otherwise it will retrain itself and save the weights as `weights_prel.h5`. It is your job as a user to change the name to `weights.h5` in order to make sure they're used the next time the server restarts.
+This guide aims to guide users and developers on how various aspects of the program functions and goes into more details in how specific functions operate. This guide is aimed at a broad audience while including technical information. 
 
-## Config.ini
+## How to run the program:
 
-Create a config.ini file in the root directory with this content
+Please follow the appropriate subtitle regarding which steps to follow.
+
+## Setup
+
+1. Add the Git repository to your computer.
+
+2. Create a config.ini file in the root directory with this content
 ```
 [mysql]
-host = localhost
-database = python_mysql
-user = root
-password = hurrdurr
+
+host=localhost          #exchange this if the database is not locally hosted. 
+
+database=mysql          #exchange this with your own database
+
+user=root               #exchange this with your own username
+
+password=[password]     #exchange this with your own password
 
 [app]
-ip=localhost
-port=hurrdurr
+
+ip=localhost            #exchange this with the appropriate ip. 
+
+port=[port]            #exchange this with the appropriate port
+
 ```
+## Setting up a database.
 
-# Setting up a database and starting the service.
-
-Let this be your config.ini file
-```
-[mysql]
-host = localhost
-database = mysql
-user = root
-password = 123
-
-[app]
-ip=0.0.0.0
-port=1234
-```
-
-## MySQL database with Docker
 You can test-run the `database.py` file if you start up a mysql docker container and run the file. 
 
 Pull the mysql docker image with 
@@ -58,7 +52,7 @@ docker run --name mysql -e MYSQL_ROOT_PASSWORD=123 -d -p 3306:3306 mysql:latest
 
 `git pull` for any new changes.
 
-Then run
+Run
 ``` 
 docker build --tag unique-project-name .
 ```
@@ -67,121 +61,39 @@ in order to build the project into a docker file. This can take a while.
 
 ## Running the project docker container
 
-After that run
+After you have finished building the docker container, run
 ```
 docker run --name cogitel -p 1234:1234 -p 8888:3306 -e MYSQL_DATABASE_HOST=172.17.0.2 -e MYSQL_DATABASE_PORT=3306 unique-project-name
 ```
 
-NOTES:
+NOTE:
 * The ip address (MYSQL_DATABASE_HOST) will be the local ip address to the MySQL docker container, on our test systems it defaulted to 172.17.0.2 but it may be different on yours. To check the ip address of the docker container simply call `docker inspect mysql` and look for "ip address" in the output.
 * MYSQL_DATABASE_PORT is defaulted to 3306 when starting up the MySQL docker container, however this can change if the user wants it to. 
 
 ENVIRONMENT VARIABLES:
 * MYSQL_DATABASE_HOST refers to the ip-address of the MySQL database, defaults to 172.17.0.2.
-* MYSQL_DATABASE_PORT refers to the port of the MySQL address, defaults to 3306 
-## Testing the database
-Then run
-```
-python test.py
-```
-and it should work without problems.
-
-
-# Readme and user manual for AI prediction
-
-This guide aims to guide users and developers on how various aspects of the program functions and goes into more details in how specific functions operate. This guide is aimed at a broad audience while including technical information. 
-
-## How to run the program:
-
-Please follow the appropriate subtitle regarding which steps to follow.
-
-### Docker version:
-
-- Start...
+* MYSQL_DATABASE_PORT refers to the port of the MySQL address, defaults to 3306
 
 **The following steps need to be done before the program can begin detecting anomalies.** 
 
-## Database:
-
-### Config.ini
-
-Create a config.ini file in the root directory with this content
-
+## Testing the database
+To test the database, run
 ```
-
-[mysql]
-
-host = localhost        #exchange this if the database is not locally hosted. 
-
-database = python_mysql #exchange this with your own database
-
-user = root             #exchange this with your own username
-
-password = password     #exchange this with your own password
-
-[app]
-
-ip=localhost    #exchange this with the appropriate ip. 
-
-port=port       #exchange this with the appropriate port
-
+python test.py
 ```
+## Upload data to database
 
-### Starting up a database
-
-You can test-run the `database.py` file if you start up a mysql docker container and run the file. # No you can't
-
-Pull the mysql docker image with
-
+Run the docker container in terminal by typing:
 ```
-
-docker pull mysql
-
-```
-
-Run the docker image with
-
-```
-
 docker run --name mysql -e MYSQL_ROOT_PASSWORD=123 -d -p 3306:3306 mysql:latest
-
 ```
+in your command prompt, or by running it through ***Docker Desktop***. Open
 
-Let this be your config.ini file
+`http://localhost:[port]/dashapp/`
 
-```
+in your web browser of choice
 
-[mysql]
-
-host = localhost
-
-database = mysql
-
-user = root
-
-password = 123
-
-```
-
-### Upload data to database
-
-Run `wsgy.py` in terminal by typing:
-
-```
-python wsgy.py
-```
-
-in the terminal you should see that that the webserver is running.
-
-Open your webbrowser of choice and go to:
-
-```
-localhost:1234
-```
-
-in order to open app. 
-
-Press the upload button and select a file for upload.
+Press the *Upload data* button and select a file for upload.
 
 # Technical requirements:
 
@@ -191,7 +103,7 @@ These requirements are included in the docker image.
 
 This program requires python 3.8.3 as of the time or the latest version that is supported by Tensorflow.
 
-* **Coverage - For testing purposes**
+* **Coverage** - testing
 
 To check test coverage. 
 
@@ -203,25 +115,21 @@ For database of the MySQL type.
 
 Interacting with database via Python.
 
-* **Pip Chill** 
+* **pip-chill** 
 
-Not needed?
+For creating requirement.txt files - not necessary for program to run.
 
 * **Seaborn** 
 
-For plotting purposes
+For plotting.
 
 * **SKLearn**
 
 For AI part.
 
-* **Cycler**
-
-Part of Matplotlib
-
 * **Flask**
 
-For web app
+For web app.
 
 * **Tensorflow**
 
@@ -238,23 +146,17 @@ pip install -r requirements.txt
 ## Testing the database
 
 Then run
-
 ```
-
 python run_tests.py
-
 ```
 
-and it should work without problems.
-
-
-# Database API
+# Database API functions and variables
 
 ## API Functions
 * create_sql_connection : `(filename, section)` &#8594; (my_db, db_config)
 * create_table : `(cursor, table_name, column_dictionary)` &#8594; None
 * show_databases : `()` &#8594; None
-* show_tables : `(cursor)` &#8594; `result`
+* get_tables : `(cursor)` &#8594; `result`
 * drop_table : `(cursor, table_name)` &#8594; None
 * insert_data : `(cursor, table_name, column_dictionary, limit_offset, limit_row_count)` &#8594; None
 * get_data : `(cursor, table_name, column_dictionary, order_by, order_by_asc_desc)` &#8594; `Queried_Data`
@@ -350,9 +252,14 @@ Deletes a datapoint in `table_name` matching the criteria in `column_dictionary`
 
 Edits the datapoint with id `id` in the database using the data in `column_dictionary`
 
-# Backend API
+# Backend API functions and variables
 
 ## Backend functions
+* load_ai `(ai_name)` &#8594; None
+* get_database_column_names `(table_name)` &#8594; `database_col_names`
+* get_prediction_column_names `(table_name)` &#8594; `pred_cols`
+* get_sensor_column_names(self, table_name) sens_cols
+* get_sensor_prediction_column_name_pairs(self, table_name) pairs
 * delete_table `(table_name)` &#8594; None
 * import_data_json `(path_to_file, database_table, **kwargs)` &#8594; None
 * import_data_csv `(path_to_file, database_table, **kwargs)` &#8594; None
@@ -361,11 +268,39 @@ Edits the datapoint with id `id` in the database using the data in `column_dicti
 * add_dict_to_database `(data_dict, database_table, date_col=None, **kwargs)` &#8594; None
 * get_tables: &#8594; `tables`
 * get_all_data `(table_name, convert_datetime)` &#8594; None
+* edit_column_value`(table_name, id, column_name, new_column_value)` &#8594; None
 * edit_classification `(id)` &#8594; None
-* train_ai `(table_name, target_column='sensor1')` &#8594; None
+* strip_columns_from_data_rows `(table_name, data, cols_to_strip)` &#8594; None
+* classify_datapoints`(table_name, datapoints, use_historical[True])` &#8594; `preds, final_cls`
+* classify_database `(table_name)` &#8594; Bool
+* train_ai `(table_name, target_columns['sensor1'])` &#8594; None
 
 ## Variables
 
+### data
+
+Generic name for indata to the function. Data type depends on the function.
+
+### cols_to_strip
+
+A python list of strings containing the names of the columns that the user want to strip of the table.
+
+### pred_cols
+
+A python list of string contining the names of all columns containing predictions.
+
+### database_col_names
+
+A python list of strings representing the names of the coluimns in the table.
+
+### preds
+
+A python list of floats representing the predictions.
+
+### final_cls
+
+A python list of integers representing the anomaly check results.
+ 
 ### table_name and database_table
 
 A python string representing the name of the table you want to access.
@@ -411,6 +346,26 @@ A python string representing the name of the column considered the column contai
 
 ## Functions
 
+### load_ai
+
+Loads an AI model from the `ai/saved_ai_models` folder.
+
+### get_database_column_names
+
+Returns the names of the columns in `table_name`.
+
+### get_prediction_column_names
+
+Returns the names of the columns containing predictions in `table_name`.
+
+### get_sensor_column_names
+
+Returns the names of the columns containing sensor data in `table_name`.
+
+### get_sensor_prediction_column_name_pairs
+
+Returns a list of sensor-prediction pairs from `table_name`.
+
 ### delete_table
 
 Deletes `table_name` from the database.
@@ -445,21 +400,48 @@ Returns all data in `table_name`, with the option to convert the data from the `
 
 ### edit_classification
 
-Edits the classification whose row id is `id`.
+Edits the classification whoose row id is `id`.
+
+### edit_column_value
+
+Edits the value at row `id`, at `column_name` in `table_name`.
+
+### strip_columns_from_data_rows
+
+Strips `cols_to_strip` from `table_name`.
+
+### classify_datapoints
+
+Classifies the datapoints in `table_name`.
+
+### classify_database
+
+Classifies the entire database.
 
 ### train_ai
 
 Trains a new AI model.
 
-# AI
+# AI functions and variables
 
 ## AI Functions
-* load_ai_model `(load_ai_path)`: `model`, `INPUT_WIDTH`, `SHIFT`, `LABEL_WIDTH` &#8594;
-* train_ai `(model, train_data, validation_data, patience = 2, max_epochs = 5)`: &#8594; None
-* run_ai `(model, input_list, shift = 1, label_width = 1, lower_sensitivity = 1.5, upper_sensitivity = 1.5, verbose = 0)`:  &#8594; `output_array`, `anomaly`
-* create_window `(df, input_width=6, label_width=1, shift=1, label_columns=['values'])`: `w2` &#8594;
+* create_ai_model `(output_dim[1])`: &#8594; `model`
+* load_ai_model `(load_ai_path)`: &#8594; `model`, `INPUT_WIDTH`, `SHIFT`, `LABEL_WIDTH`
+* save_ai_model `(model, save_ai_path, input_width = 1, SHIFT = 1, LABEL_WIDTH = 1, in_dimentions = 1, out_dimentions = 1)`: &#8594; `model`
+* train_ai `(model, train_data, validation_data, patience[2], max_epochs[5])`: &#8594; None
+* run_ai `(model, input_list, shift[1], label_width[1], lower_sensitivity[1.5], upper_sensitivity[1.5], verbose[0])`:  &#8594; `output_array`, `anomaly`
+* create_window `(df, input_width=6, label_width=1, shift=1, label_columns=['values'])`: &#8594; `w2`
+* def get_ai_names `()`: &#8594; `name_list`
 
 ## Variables
+
+### output_dim and OUT_DIM
+
+A python integer representing the dimension of outputs the AI will return (how many columns the AI will predict). Default: 1
+
+### IN_DIM
+
+A python integer representing the dimension of inputs the AI will take in (how many columns the AI will predict). Default: 1
 
 ### load_ai_path
 
@@ -489,7 +471,7 @@ A python integer representing the maximum amount of epochs the Ai model will be 
 
 A list of lists containting the input to be predicted on. Each nestled list is a datapoint. `input_list` needs to be at least `INPUT_WIDTH` * `SHIFT` long, where the last datapoint is the one being predicted upon and tested for anomalies.
 
-### shift
+### shift and SHIFT
 
 A python integer representing how many datapoints ahead the prediction will be. Default: `1`
 
@@ -515,7 +497,7 @@ Debugging variable;
 
 A pandas dataframe that will be turned into training and validation data for the AI model to train on.
 
-### input_width
+### input_width and INPUT_WIDTH
 
 A python integer representing the amountsd of inputs the AI model will accept when predicting and test for anomalies. Default: `6`
 
@@ -537,7 +519,15 @@ A python list containing wether the datapoints are anomalies or not. Each predic
 
 A `window` object contining a training, a validation and a test dataset for the AI train on.
 
+### name_list
+
+A python list oft strings containing the names of all created and saved AI models.
+
 ## Functions
+
+### create_ai_model
+
+Creates an AI model.
 
 ### load_ai_model
 
