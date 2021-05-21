@@ -80,8 +80,7 @@ def create_sql_connection(confparser, section='mysql'):
             db_config[k] = os.environ.get(environ_key, default)
         except:
             raise Exception(f'Key {environ_key} does not exist in the environment.')
-    # db_config['host']=os.environ['MYSQL_DATABASE_HOST']
-    # db_config['port']=os.environ['MYSQL_DATABASE_PORT']
+            
     try:
         my_db = MySQLConnection(autocommit=True, **db_config)
     except:
