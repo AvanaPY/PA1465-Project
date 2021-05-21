@@ -74,9 +74,10 @@ def create_sql_connection(confparser, section='mysql'):
             db_config[item[0]] = item[1]
     else:
         raise Exception('Section {0} not found in the config file'.format(section,))
-    for k, environ_key in zip(('host', 'port'), ('MYSQL_DATABASE_HOST', 'MYSQL_DATABASE_PORT')):
+        
+    for k, environ_key, default in zip(('host', 'port'), ('MYSQL_DATABASE_HOST', 'MYSQL_DATABASE_PORT'), ('172.17.0.2', '3306')):
         try:
-            db_config[k] = os.environ[environ_key]
+            db_config[k] = os.environ.get(environ_key, default)
         except:
             raise Exception(f'Key {environ_key} does not exist in the environment.')
     # db_config['host']=os.environ['MYSQL_DATABASE_HOST']
