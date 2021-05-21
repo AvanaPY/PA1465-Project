@@ -499,7 +499,7 @@ class BackendBase:
             tables = get_tables(self._curs)
             return tables
         except:
-            raise
+            return []
 
     def get_all_data(self, table_name, convert_datetime=False):
         """ 

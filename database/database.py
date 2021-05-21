@@ -1,5 +1,19 @@
 from mysql.connector import MySQLConnection
 from .python_mysql_dbconfig import read_db_config
+import os
+
+DEFAULT_TABLES = ['columns_priv', 'component', 'db',
+    'default_roles', 'engine_cost', 'func', 'general_log',
+    'global_grants', 'gtid_executed', 'help_category',
+    'help_keyword', 'help_relation', 'help_topic',
+    'password_history', 'plugin', 'procs_priv',
+    'proxies_priv', 'replication_asynchronous_connection_failover',
+    'replication_asynchronous_connection_failover_managed',
+    'role_edges', 'server_cost', 'servers', 'slave_master_info',
+    'slave_relay_log_info', 'slave_worker_info', 'slow_log', 'tables_priv',
+    'time_zone', 'time_zone_leap_second', 'time_zone_name', 'time_zone_transition',
+    'time_zone_transition_type', 'user', 'innodb_index_stats', 'innodb_table_stats'
+]
 
 DEFAULT_TABLES = ['columns_priv', 'component', 'db',
     'default_roles', 'engine_cost', 'func', 'general_log',
@@ -73,6 +87,13 @@ def create_sql_connection(confparser, section='mysql'):
             db_config[item[0]] = item[1]
     else:
         raise Exception('Section {0} not found in the config file'.format(section,))
+
+    for k, environ_key in zip(('host', 'port'), ('MYSQL_DATABASE_HOST', 'MYSQL_DATABASE_PORT')):
+        try:
+            db_config[k] = os.environ[environ_key]
+        except:
+            raise Exception(f'Key {environ_key} does not exist in the environment.')
+            
     try:
         my_db = MySQLConnection(autocommit=True, **db_config)
     except:

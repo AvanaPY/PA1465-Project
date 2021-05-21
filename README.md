@@ -24,8 +24,22 @@ ip=localhost
 port=hurrdurr
 ```
 
-# Starting up a database
+# Setting up a database and starting the service.
 
+Let this be your config.ini file
+```
+[mysql]
+host = localhost
+database = mysql
+user = root
+password = 123
+
+[app]
+ip=0.0.0.0
+port=1234
+```
+
+## MySQL database with Docker
 You can test-run the `database.py` file if you start up a mysql docker container and run the file. 
 
 Pull the mysql docker image with 
@@ -40,14 +54,27 @@ Run the docker image with
 docker run --name mysql -e MYSQL_ROOT_PASSWORD=123 -d -p 3306:3306 mysql:latest
 ```
 
-Let this be your config.ini file
+## Building the project into a docker container
+
+`git pull` for any new changes.
+
+Then run
+``` 
+docker build --tag unique-project-name .
 ```
-[mysql]
-host = localhost
-database = mysql
-user = root
-password = 123
+in order to build the project into a docker file. This can take a while.
+
+
+## Running the project docker container
+
+After that run
 ```
+docker run --name cogitel -p 1234:1234 -p 8888:3306 -e MYSQL_DATABASE_HOST=172.17.0.2 -e MYSQL_DATABASE_PORT=3306 unique-project-name
+```
+
+NOTES:
+* The ip address (MYSQL_DATABASE_HOST) will be the local ip address to the MySQL docker container, on our test systems it defaulted to 172.17.0.2 but it may be different on yours. To check the ip address of the docker container simply call `docker inspect mysql` and look for "ip address" in the output.
+* MYSQL_DATABASE_PORT is defaulted to 3306 when starting up the MySQL docker container, however this can change if the user wants it to. 
 
 ## Testing the database
 Then run
