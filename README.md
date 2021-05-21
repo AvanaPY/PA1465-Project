@@ -76,6 +76,9 @@ NOTES:
 * The ip address (MYSQL_DATABASE_HOST) will be the local ip address to the MySQL docker container, on our test systems it defaulted to 172.17.0.2 but it may be different on yours. To check the ip address of the docker container simply call `docker inspect mysql` and look for "ip address" in the output.
 * MYSQL_DATABASE_PORT is defaulted to 3306 when starting up the MySQL docker container, however this can change if the user wants it to. 
 
+ENVIRONMENT VARIABLES:
+* MYSQL_DATABASE_HOST refers to the ip-address of the MySQL database, defaults to 172.17.0.2.
+* MYSQL_DATABASE_PORT refers to the port of the MySQL address, defaults to 3306 
 ## Testing the database
 Then run
 ```
@@ -108,19 +111,19 @@ Create a config.ini file in the root directory with this content
 
 [mysql]
 
-host = [localhost](http://localhost) #exchange this if the database is not localy hosted. 
+host = localhost        #exchange this if the database is not locally hosted. 
 
 database = python_mysql #exchange this with your own database
 
-user = root #exchange this with your own username
+user = root             #exchange this with your own username
 
-password = password #exchange this with your own password
+password = password     #exchange this with your own password
 
 [app]
 
-ip=localhost #exchange this with the appropriate ip. 
+ip=localhost    #exchange this with the appropriate ip. 
 
-port=port #exchange this with the appropriate port
+port=port       #exchange this with the appropriate port
 
 ```
 
@@ -162,7 +165,7 @@ password = 123
 
 ### Upload data to database
 
-Run `wsgy.py`(http://app.py) in terminal by typing:
+Run `wsgy.py` in terminal by typing:
 
 ```
 python wsgy.py
