@@ -1,6 +1,3 @@
-# Python
-This program requires python 3.8.3 as of the time or the latest version that is supported by Tensorflow.
-
 # User manual for AI prediction
 
 This guide aims to guide users and developers on how various aspects of the program functions and goes into more details in how specific functions operate. This guide is aimed at a broad audience while including technical information. 
@@ -32,7 +29,7 @@ ip=localhost            #exchange this with the appropriate ip.
 port=[port]            #exchange this with the appropriate port
 
 ```
-## Setting up a database.
+## Setting up a database. (Example database if none exists)
 
 You can test-run the `database.py` file if you start up a mysql docker container and run the file. 
 
@@ -76,24 +73,39 @@ ENVIRONMENT VARIABLES:
 
 **The following steps need to be done before the program can begin detecting anomalies.** 
 
-## Testing the database
-To test the database, run
-```
-python test.py
-```
-## Upload data to database
+## The webapp
 
-Run the docker container in terminal by typing:
-```
-docker run --name mysql -e MYSQL_ROOT_PASSWORD=123 -d -p 3306:3306 mysql:latest
-```
-in your command prompt, or by running it through ***Docker Desktop***. Open
+### Upload data 
+Prerequisites:
+* **Setup**
+* **Setting up database**
+* **Running the project docker container**
+
+Then access the application by going to the following URL in your web browser of choice:
 
 `http://localhost:[port]/dashapp/`
 
-in your web browser of choice
-
 Press the *Upload data* button and select a file for upload.
+
+### Update graphs
+To update the graphs on the website click the button *Update chart*.
+
+### Train AI
+To train the backend AI click the button *Train AI*. This will train the AI on currently selected table in the database. 
+
+### Drop table
+To drop the table click the *Drop Table* button. This will drop the selected table. 
+
+### Reclassify
+To reclassify data, click the *Reclassify* button. This will reclassify the data in the selected table. 
+
+### Loading and selecting tables
+To select a table, select a table from the dropdown menu above the *Load table* button. 
+To load a table, click *Load Table*. Note that selecting a table should be done prior to loading.
+
+### Select AI
+To select an AI model, select a table from the dropdown menu above the *Load AI* button. 
+To load an AI model, click *Load AI*. Note that selecting an AI model should be done prior to loading.
 
 # Technical requirements:
 
@@ -139,15 +151,6 @@ These requirements can be installed by typing in the terminal:
 
 ```
 pip install -r requirements.txt
-```
-
-# Testing:
-
-## Testing the database
-
-Then run
-```
-python run_tests.py
 ```
 
 # Database API functions and variables
@@ -400,7 +403,7 @@ Returns all data in `table_name`, with the option to convert the data from the `
 
 ### edit_classification
 
-Edits the classification whoose row id is `id`.
+Edits the classification whose row id is `id`.
 
 ### edit_column_value
 
@@ -426,7 +429,7 @@ Trains a new AI model.
 
 ## AI Functions
 * create_ai_model `(output_dim[1])`: &#8594; `model`
-* load_ai_model `(load_ai_path)`: &#8594; `model`, `INPUT_WIDTH`, `SHIFT`, `LABEL_WIDTH`
+* load_ai_model `(load_ai_path)`: &#8594; `model`, `INPUT_WIDTH`, `SHIFT`, `LABEL_WIDTH`, `IN_DIM`, `OUT_DIM
 * save_ai_model `(model, save_ai_path, input_width = 1, SHIFT = 1, LABEL_WIDTH = 1, in_dimentions = 1, out_dimentions = 1)`: &#8594; `model`
 * train_ai `(model, train_data, validation_data, patience[2], max_epochs[5])`: &#8594; None
 * run_ai `(model, input_list, shift[1], label_width[1], lower_sensitivity[1.5], upper_sensitivity[1.5], verbose[0])`:  &#8594; `output_array`, `anomaly`
@@ -469,7 +472,7 @@ A python integer representing the maximum amount of epochs the Ai model will be 
 
 ### input_list
 
-A list of lists containting the input to be predicted on. Each nestled list is a datapoint. `input_list` needs to be at least `INPUT_WIDTH` * `SHIFT` long, where the last datapoint is the one being predicted upon and tested for anomalies.
+A list of lists containting the input to be predicted on. Each nestled list is a datapoint. `input_list` needs to be at least `INPUT_WIDTH` + `SHIFT` long, where the last datapoint is the one being predicted upon and tested for anomalies.
 
 ### shift and SHIFT
 
@@ -499,7 +502,7 @@ A pandas dataframe that will be turned into training and validation data for the
 
 ### input_width and INPUT_WIDTH
 
-A python integer representing the amountsd of inputs the AI model will accept when predicting and test for anomalies. Default: `6`
+A python integer representing the amount of inputs the AI model will accept when predicting and test for anomalies. Default: `6`
 
 ### label_columns
 
@@ -521,7 +524,7 @@ A `window` object contining a training, a validation and a test dataset for the 
 
 ### name_list
 
-A python list oft strings containing the names of all created and saved AI models.
+A python list of strings containing the names of all created and saved AI models.
 
 ## Functions
 
@@ -539,7 +542,7 @@ Trains a new AI model.
 
 ### run_ai
 
-Runs the selected AI model and returns a list of predicitons and anomnaly check results.
+Runs the selected AI model and returns a list of predictions and status of anomaly (`1` or `0`) for each output dimension. 
 
 ### create_window
 
