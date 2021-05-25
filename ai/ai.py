@@ -14,7 +14,7 @@ def create_ai_model(output_dim = 1):
         Creates an AI model
 
         Args::
-            --
+            output_dim: int - the dimension of outputs (how many columns the AI will predict). Default: 1
 
         Returns::
             Tensorflow AI model
@@ -46,6 +46,11 @@ def load_ai_model(load_ai_path):
 
     Returns:
         model       : a Tensorflow AI model.
+        INPUT_WIDTH : int
+        SHIFT       : int
+        LABEL_WIDTH : int 
+        IN_DIM      : int
+        OUT_DIM     : int
 
     Raises:
         Any errors tensorflow might've raised when loading the ai model.

@@ -43,6 +43,18 @@ class BackendBase:
             print(f'INFO: AI MODEL NOT LOADED')
 
     def load_ai(self, ai_name):
+        """
+            Function for getting the information about a table
+
+            Args:
+                ai_name: str
+            
+            Returns:
+                -
+
+            Raises:
+                -
+        """
         self._load_ai = True
         try:
             self._ai_model_name = ai_name
@@ -52,7 +64,6 @@ class BackendBase:
             self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = None, 0, 0, 0, 0, 0
             self._load_ai = False
             print(f'Failed to load AI model: {str(e)}')
-
 
     def _get_database_description_no_id_column(self, table_name):
         """
@@ -80,7 +91,7 @@ class BackendBase:
 
     def get_database_column_names(self, table_name):
         """
-            A function for getting all the columns in the table
+            A function for getting all the column names in the table
 
             Args:
                 table_name          : str
@@ -116,12 +127,35 @@ class BackendBase:
         return pred_cols
         
     def get_sensor_column_names(self, table_name):
-        
+        """
+            Function for getting the names of the sensor columns in the table
+
+            Args:
+                table_name  : str
+            
+            Returns:
+                sens_cols   : list<str>
+
+            Raises:
+                -
+        """
         cols = self.get_database_column_names(table_name)
         sens_cols = [col for col in cols if not PREDICTION_COLUMN_NAME in col and col not in (ID_COLUMN_NAME, DATETIME_COLUMN_NAME, CLASSIFICATION_COLUMN_NAME)]
         return sens_cols
 
     def get_sensor_prediction_column_name_pairs(self, table_name):
+        """
+            Function for getting the pairs of sensor-sensorprediction pairs
+
+            Args:
+                table_name  : str
+            
+            Returns:
+                pairs       : list<tuple>
+
+            Raises:
+                -
+        """
         preds = self.get_prediction_column_names(table_name)
         pairs = [(pred.replace(PREDICTION_COLUMN_NAME, ''), pred) for pred in preds]
         return pairs
@@ -221,7 +255,7 @@ class BackendBase:
                 -
 
             Raises:
-                -
+                Propagates any errors
         """
         try:
             if table_name:
@@ -240,10 +274,12 @@ class BackendBase:
             Imports data from a json file and converts it into dict.
 
             Args:
-                path_to_file: str
+                path_to_file    : str
+                database_table  : str
+                max_values      : int
             
             Returns:
-                dct: a dictionary containing the data in the json file 
+                dct             : a dictionary containing the data in the json file 
 
             Raises:
                 Propagates any errors
@@ -263,10 +299,11 @@ class BackendBase:
             Imports data from a csv file and converts it into dict.
 
             Args:
-                path_to_file: str
+                path_to_file    : str
+                database_table  : str
             
             Returns:
-                dct: a dictionary containing the data in the csv file. 
+                dct         : a dictionary containing the data in the csv file. 
 
             Raises:
                 Propagates any errors.
@@ -280,8 +317,8 @@ class BackendBase:
             Exports data as a json file.
 
             Args:
-                path_to_file: str
-                database_table: str
+                path_to_file    : str
+                database_table  : str
             
             Returns:
                 -
@@ -307,8 +344,8 @@ class BackendBase:
             Exports data as a csv file.
 
             Args:
-                path_to_file: str
-                database_table: str
+                path_to_file    : str
+                database_table  : str
             
             Returns:
                 -
@@ -332,9 +369,9 @@ class BackendBase:
             Adds a dictionary to the database.
 
             Args:
-                data_dict: dict - a dictionary containing the data from the import functions.
-                database_table: str - the table name in the database.
-                date_col: str - The column that should be considered as the datetime column.
+                data_dict       : dict - a dictionary containing the data from the import functions.
+                database_table  : str - the table name in the database.
+                date_col        : str - The column that should be considered as the datetime column.
 
             Returns:
                 -
@@ -379,10 +416,10 @@ class BackendBase:
             ID, Date, Classification, Sensor1, Sensor2... predictionSensor1, predictionSensor2...
 
             Args:
-                data_dict : dict
+                data_dict   : dict
 
             Returns:
-                -
+                sorted_data : dict
 
             Raises:
                 -
@@ -410,7 +447,6 @@ class BackendBase:
 
             Args:
                 data_dict           : A dictionary of data values.
-                date_col[optional]  : Which column in the data_dict that should be interpreted as datetime.
 
             Returns:
                 dct                 : Dictionary of column-name:column-sql-types.
@@ -472,7 +508,7 @@ class BackendBase:
                 ]
 
             Raises:
-                None
+                -
         """
         keys = dct.keys()
         items_in_column = len(dct[list(keys)[0]])
@@ -506,10 +542,11 @@ class BackendBase:
             A wrapping function for returning all the data in the table.
 
             Args:
-                table_name  : str
+                table_name      : str
+                convert_datetime: bool
             
             Returns:
-                data        : a list of touples containing the data of the database, where each touple is a row.
+                data            : a list of touples containing the data of the database, where each touple is a row.
 
             Raises:
                 -
@@ -553,11 +590,13 @@ class BackendBase:
             It also checks if it has a "prediction" column, if it doesn't it also adds this column to the data with new prediction values.
 
             Args:
+                table_name: str
                 data: dict - Data dictionary of format
                 {
                     "key1": [ value1, value2 ],
                     "key2": [ value3, value4 ]
                 }
+                classify_if_not_exist: bool
             Returns:
                 -
             Raises:
@@ -594,6 +633,19 @@ class BackendBase:
                 data[pkey] = [0] * data_point_count
 
     def _check_has_datetime_column(self, table_name : str, data : dict, **kwargs):
+        """
+            Checks if thetable has a datetime column, else adds it.
+
+            Args:
+                table_name  : str
+                data        : dict
+            
+            Returns:
+                -
+
+            Raises:
+                -
+        """
         if DATETIME_COLUMN_NAME not in data:
             data_points = len(list(data.values())[0])
 
@@ -616,12 +668,6 @@ class BackendBase:
                         dt_obj = datetime.datetime.now()
                     dt_obj += datetime.timedelta(0, i)
                     data[DATETIME_COLUMN_NAME][i] = datetime.datetime.strftime(dt_obj, WANTED_DATETIME_FORMAT)
-    
-    # TODO: Alert for anomaly function
-    def scream(self):
-        """ Screams in python
-        """
-        print("REEEEEEEEE")
 
     def edit_column_value(self, table_name : str, id : int, column_name : str, new_column_value):
         """ 
@@ -655,9 +701,9 @@ class BackendBase:
             Edits a classification in the table.
 
             Args:
-                table_name : str - table name.
-                id: int - the id of the row of the datapoint being edited.
-                classification: int - the classification of the datapoint, either 1 (True) or 0 (False).
+                table_name      : str - table name.
+                id              : int - the id of the row of the datapoint being edited.
+                classification  : int - the classification of the datapoint, either 1 (True) or 0 (False).
             Returns:
                 -
             Raises:
@@ -670,8 +716,8 @@ class BackendBase:
             Delets a datapoint.
 
             Args:
-                table_name : str - table name.
-                id: int - the id of the datapint being deleted.
+                table_name  : str - table name.
+                id          : int - the id of the datapint being deleted.
             Returns:
                 -
             Raises:
@@ -687,7 +733,9 @@ class BackendBase:
             Returns all non-classified data points.
             
             Args:
-                _table_name: str - Default None.
+                _table_name         : str - Default None.
+                NON_CLASSIFIED_VALUE: any - the datatype Non-classified datapoints will become. Default None
+                convert_datetime    : bool
             Returns:
                 data: a list of touples where each touple is a row in the databasae.
             Raises:
@@ -710,7 +758,7 @@ class BackendBase:
             Returns all data points where the calssification column is 1.
             
             Args:
-                -
+                table_name: str
             Returns:
                 data: a list of touples where each touple is a row in the database.
             Raises:
@@ -723,7 +771,20 @@ class BackendBase:
 
     def strip_columns_from_data_rows(self, table_name : str, data : list, cols_to_strip : list):
         """
-            SUPPOSE THAT `data` IS COLUMN-WISE ORDERED ACCORDING TO THE GOD DAMN DATABASE.
+            OBS: SUPPOSE THAT `data` IS COLUMN-WISE ORDERED ACCORDING TO THE DATABASE!
+
+            Function for getting the information about a table
+
+            Args:
+                table_name      : str
+                data            : list
+                cols_to_strip   : list<str>
+            
+            Returns:
+                -
+
+            Raises:
+                -
         """
         data_cols = self.get_database_column_names(table_name)
 
@@ -744,7 +805,7 @@ class BackendBase:
                 use_historical[optional]: bool - wether to use historical data or only the data in datapoints (True: yes, False: no).
             Returns:
                 preds                   : list - a list of predictions
-                final_cls               : list - a list of anomaly chec results.
+                final_cls               : list - a list of anomaly check results.
             Raises:
                 -
         """
@@ -828,8 +889,10 @@ class BackendBase:
             Trains AI model with target_column data. It's possible to save the newly trained model through this function.
             
             Args:
-                table_name: str
-                target_column: str
+                table_name      : str
+                label_columns   : list<str>
+                save_ai         : bool
+                save_ai_path    : str
             Returns:
                 -
             Raises:
@@ -868,6 +931,18 @@ class BackendBase:
             ai.save_ai_model(self._ai_model, save_ai_path)
 
     def classify_database(self, table_name):
+        """
+            Classifies the entire database
+
+            Args:
+                table_name: str
+            
+            Returns:
+                bool
+
+            Raises:
+                -
+        """
         if not self._load_ai:
             return False
         data = self.get_all_data(table_name)
