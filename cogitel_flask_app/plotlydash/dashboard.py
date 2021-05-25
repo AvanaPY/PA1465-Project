@@ -102,7 +102,7 @@ def init_dashboard(server):
                         style=DROPDOWN_STYLE
                     ),
                     html.Button(className="button-square", id='button-load-ai', children=[
-                            html.Span(className="btn-square-span", children='Load ai')
+                            html.Span(className="btn-square-span", children='Load AI ')
                         ]),
                 ]),
             ]),
