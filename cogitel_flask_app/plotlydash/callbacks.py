@@ -135,13 +135,6 @@ def upload_data(contents, name, clicks):
 def update_backend_status_labels(clicks):
     return f'Database loaded: {app._backend._my_db is not None}', f'AI model loaded: {app._backend._load_ai} ({app._backend._ai_model_name})'
 
-# TODO: Bugitel no pls :(
-@dash_app.callback([Output('bugitel-logo', 'src')],
-                    Input('bugitel-report', 'n_clicks'),
-                    prevent_initial_call=True)
-def bug_report(clicks):
-    return ['/static/img/bugitel.png']
-
 @dash_app.callback([Output('confirm-ai-trained', 'displayed'),
  #                   Output('confirm-ai-trained', 'message'),
                     ],

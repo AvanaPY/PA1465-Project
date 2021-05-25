@@ -49,13 +49,10 @@ def init_dashboard(server):
         dcc.Store(id='files_uploaded'),
         html.Div(className="div-header center-items", children=[
             html.A(id='logo', href='/', children=[
-                html.Img(id="bugitel-logo", src='/static/img/cogitel-logo.png')
+                html.Img(id="cugitel-logo", src='/static/img/cogitel-logo.png')
             ])
         ]),
         html.Div(className="dash-container", children=[
-            html.Button(id="bugitel-report", className="button-square", children=[ # TODO: Bugitel no pls :(
-                html.Span(className="btn-square-span", children='Bug report')
-            ]),
             html.Div(className="backend-status-div", children=[
                 html.Div(className="backend-status-list", children=[
                     html.Div(className="backend-status-sublist", children=[
