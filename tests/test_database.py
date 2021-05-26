@@ -4,7 +4,12 @@ except:
     from database import *
 import unittest
 
-my_db, _ = create_sql_connection()
+
+from configparser import ConfigParser
+parser = ConfigParser()
+parser.read('./config.ini')
+
+my_db, _ = create_sql_connection(parser)
 curs = my_db.cursor()
 
 try:

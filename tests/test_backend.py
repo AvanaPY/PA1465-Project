@@ -1,10 +1,15 @@
+from mysql.connector.errors import DatabaseError
 import backend
 import unittest
 import database
 import backend.errors as backend_errors
 from datetime import datetime
 
-b = backend.BackendBase()
+from configparser import ConfigParser
+parser = ConfigParser()
+parser.read('./config.ini')
+
+b = backend.BackendBase(parser)
 table_name_json = 'test_table_json'
 table_name_csv  = 'test_table_csv'
 
@@ -39,7 +44,13 @@ class BackendUnitTest(unittest.TestCase):
         try:
             b.import_data_json('./test_files/base_json_file_id.json', table_name_json, id_colum_name='id', date_col='date')
             data = b.get_all_data(table_name_json, convert_datetime=True)
-            self.assertTrue(data == [(1, '2021-01-20 00:00:00', 21, 22, 23, 0, 0.0), (2, '2021-01-21 00:00:00', 22, 32, 32, 0, 0.0)])
+            self.assertTrue(data == [(1, '2021-05-18 11:19:00', None, 1, 4, 21, 0.0, 0.0, 0.0), 
+                                     (2, '2021-05-18 11:19:10', None, 2, 1, 7, 0.0, 0.0, 0.0), 
+                                     (3, '2021-05-18 11:19:20', None, 3, 3, -2, 0.0, 0.0, 0.0), 
+                                     (4, '2021-05-18 11:19:30', None, 4, 7, 11, 0.0, 0.0, 0.0), 
+                                     (5, '2021-05-18 11:19:40', None, 5, 1, 21, 0.0, 0.0, 0.0), 
+                                     (6, '2021-05-18 11:19:50', None, 6, 3, 4, 0.0, 0.0, 0.0),
+                                     (7, '2021-05-18 11:19:55', None, 7, 4, 11, 0.0, 0.0, 0.0)])
 
         except Exception as e:
             self.assertFalse(True)
@@ -72,7 +83,7 @@ class BackendUnitTest(unittest.TestCase):
 
         try:
             col_names = b.get_database_column_names(table_name_json)
-            self.assertTrue(col_names == ['id', 'date', 'sensor1', 'sensor2', 'sensor3', 'classification', 'prediction'])
+            self.assertTrue(col_names == ['id', 'date', 'classification', 'sensor1', 'sensor2', 'sensor3', 'PREDICTIONsensor1', 'PREDICTIONsensor2', 'PREDICTIONsensor3'])
         except:
             self.assertTrue(False)
 
@@ -107,45 +118,17 @@ class BackendUnitTest(unittest.TestCase):
         for table in table_list:
             database.drop_table(b._curs, table)
     
-    def test_set_reset_current_table(self):
-        table_list = ["atable1", "atable2", "atable3", "atable4"]
-        for table in table_list:
-            database.create_table(b._curs, table, {
-                'id': 'INT(6) PRIMARY KEY AUTO_INCREMENT',
-                'name':'VARCHAR(255)',
-                'age':'INT(6)'
-            })
-
-        try:
-            b.set_current_table("atable2")
-            self.assertTrue(b._current_table == "atable2")
-
-            b.set_current_table("atable1")
-            self.assertTrue(b._current_table == "atable1")
-
-            b.set_current_table("atable3")
-            self.assertTrue(b._current_table == "atable3")
-
-            b.set_current_table("atable4")
-            self.assertTrue(b._current_table == "atable4")
-            
-            table = b.get_current_table()
-            self.assertTrue(table == "atable4")
-
-            b.reset_current_table()
-            self.assertTrue(b._current_table == None)
-
-        except:
-            self.assertTrue(False)
-              
-        for table in table_list:
-            database.drop_table(b._curs, table)
-    
     def test_get_all_data(self):
         b.import_data_json("./test_files/base_json_file_id.json", table_name_json, date_col='date')
         try:
             data = b.get_all_data(table_name_json, convert_datetime=True)
-            self.assertTrue(data == [(1, '2021-01-20 00:00:00', 21, 22, 23, 0, 0.0), (2, '2021-01-21 00:00:00', 22, 32, 32, 0, 0.0)])
+            self.assertTrue(data == [(1, '2021-05-18 11:19:00', None, 1, 4, 21, 0.0, 0.0, 0.0), 
+                                     (2, '2021-05-18 11:19:10', None, 2, 1, 7, 0.0, 0.0, 0.0), 
+                                     (3, '2021-05-18 11:19:20', None, 3, 3, -2, 0.0, 0.0, 0.0), 
+                                     (4, '2021-05-18 11:19:30', None, 4, 7, 11, 0.0, 0.0, 0.0), 
+                                     (5, '2021-05-18 11:19:40', None, 5, 1, 21, 0.0, 0.0, 0.0), 
+                                     (6, '2021-05-18 11:19:50', None, 6, 3, 4, 0.0, 0.0, 0.0), 
+                                     (7, '2021-05-18 11:19:55', None, 7, 4, 11, 0.0, 0.0, 0.0)])
         except:
             self.assertTrue(False)
         b.delete_table(table_name_json)
@@ -239,14 +222,14 @@ class BackendUnitTest(unittest.TestCase):
             self.assertTrue(False)
 
     def test_column_types_not_matching(self):
-        b.import_data_json("./test_files/base_json_file_id.json", 'random_json_table_name_fuck_off_please_work')
+        b.import_data_json("./test_files/base_json_file_id.json", 'random_json_table_name_please_work')
         try:
-            b.import_data_json("./test_files/test_json_file_column_types_not_matching.json", 'random_json_table_name_fuck_off_please_work')
+            b.import_data_json("./test_files/test_json_file_column_types_not_matching.json", 'random_json_table_name_please_work')
         except backend_errors.ColumnTypesNotMatchingException:
             self.assertTrue(True)
         except:
             self.assertTrue(False)
-        b.delete_table('random_json_table_name_fuck_off_please_work')
+        b.delete_table('random_json_table_name_please_work')
 
     def test_anomaly_alert(self):
         self.assertTrue(True)
@@ -258,13 +241,13 @@ class BackendUnitTest(unittest.TestCase):
         self.assertTrue(True)
 
     def test_get_all_non_classified(self):
-        b.import_data_json("./test_files/test_json_file_with_non_classified.json", 'random_json_table_name_fuck_off_please_work2', date_col='date')
+        b.delete_table('random_json_table_name_please_work3')
+        b.import_data_json("./test_files/test_json_file_with_non_classified.json", 'random_json_table_name_please_work3', date_col='date')
         try:
-            data = b._get_all_non_classified('random_json_table_name_fuck_off_please_work2', convert_datetime=True)
-            self.assertTrue(data==[(3, '2021-01-22 00:00:00', 21, 32, 22, None, 0.0)])
-        except:
+            data = b._get_all_non_classified('random_json_table_name_please_work3', convert_datetime=True)
+            self.assertTrue(data==[(3, '2021-01-22 00:00:02', None, 21, 32, 22, 0.0, 0.0, 0.0)])
+        except Exception as e:
             self.assertTrue(False)
-        b.delete_table('random_json_table_name_fuck_off_please_work2')
     
     def test_get_anomalies(self):
         self.assertTrue(True)

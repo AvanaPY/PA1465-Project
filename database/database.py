@@ -68,22 +68,23 @@ def create_sql_connection(confparser, section='mysql'):
             None
     """
     db_config = {}
-    if confparser.has_section(section):
-        items = confparser.items(section)
-        for item in items:
-            db_config[item[0]] = item[1]
-    else:
-        raise Exception('Section {0} not found in the config file'.format(section,))
+    if confparser:
+        if confparser.has_section(section):
+            items = confparser.items(section)
+            for item in items:
+                db_config[item[0]] = item[1]
+        else:
+            raise Exception('Section {0} not found in the config file'.format(section,))
         
     for k, environ_key, default in zip(('host', 'port'), ('MYSQL_DATABASE_HOST', 'MYSQL_DATABASE_PORT'), ('172.17.0.2', '3306')):
-        try:
-            db_config[k] = os.environ.get(environ_key, default)
-        except:
-            raise Exception(f'Key {environ_key} does not exist in the environment.')
-            
+        db_config[k] = os.environ.get(environ_key, default)
+
     try:
+        print(f'Attempting to connect to MySQL database at {db_config["host"]}:{db_config["port"]}... ', end='')
         my_db = MySQLConnection(autocommit=True, **db_config)
-    except:
+        print(f'Done.')
+    except Exception as e:
+        print(f'Failed. ({str(e)})')
         my_db = None
     return my_db, db_config
 

@@ -40,6 +40,9 @@ def init_app(confparser, section='app', load_ai=False, **kwargs) -> App:
 
     host = os.environ.get('APPLICATION_HOST', host)
     port = os.environ.get('APPLICATION_PORT', port)
+
+    print(f'Creating application to run on {host}:{port}')
+
     app = App(host, port, confparser, instance_relative_config=False, load_ai=load_ai, **kwargs)
 
     with app.app_context():
