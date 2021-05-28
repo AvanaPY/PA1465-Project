@@ -1,1 +1,9 @@
 ./env/*
+.git/*
+__pycache__
+./htmlcov/*
+./logs/*
+./test_files/*
+t_anom.json
+t_reg.json
+t4.json
