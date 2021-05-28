@@ -113,7 +113,9 @@ These requirements are included in the docker image.
 
 * **Python**
 
-This program requires python 3.8.3 as of the time or the latest version that is supported by Tensorflow.
+This program requires python 3.7 as of the time or the latest version that is supported by Tensorflow.
+
+NOTE: We originally intended to use python 3.8.3, but as a result of how Tensorflow for Python 3.8.3 works on WSL, using Python 3.7 is more stable. (3.8.3 crashed when trying to train the AI on the database for unknown reasons)
 
 * **Coverage** - testing
 
