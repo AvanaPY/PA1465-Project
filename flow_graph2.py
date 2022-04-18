@@ -1,6 +1,6 @@
+#!/usr/bin/env python
 # To generate overall file:
-#   code2flow backend ai database cogitel_flask_app wsgi.py --output out.dot
-#   dot -Tpdf out.dot -o flowchart.pdf
+#   code2flow backend ai database cogitel_flask_app wsgi.py --output out.dot && dot -Tpdf out.dot -o flowchart.pdf
 
 import codecs
 import pydot
@@ -339,26 +339,30 @@ class CFGGenerator(ast.NodeVisitor):
 if __name__ == '__main__':
     base_folder = "CFG"
     file_folder = "backend"
-    filename = "ext"
+    files = [
+        "backend",
+        "errors",
+        "ext"
+    ]
+    for filename in files:
+        try:
+            fp = os.path.join(file_folder, filename) + ".py"
+            folder = base_folder + filename
 
-    try:
-        fp = os.path.join(file_folder, filename) + ".py"
-        folder = base_folder + filename
+            if not os.path.exists(folder):
+                os.makedirs(folder)
 
-        if not os.path.exists(folder):
-            os.makedirs(folder)
+            file = codecs.open(fp, 'r', 'utf-8')
+            code = file.read()
+            file.close()
+            st = time.time()
 
-        file = codecs.open(fp, 'r', 'utf-8')
-        code = file.read()
-        file.close()
-        st = time.time()
+            tree = ast.parse(code)
 
-        tree = ast.parse(code)
-
-        cfg = CFG()
-        generator = CFGGenerator(cfg, folder)
-        generator.visit(tree)
-        ed = time.time()
-        print("time: %.3f s" % (ed - st))
-    except Exception as e:
-        print('Error:', e)
+            cfg = CFG()
+            generator = CFGGenerator(cfg, folder)
+            generator.visit(tree)
+            ed = time.time()
+        except Exception as e:
+            print('Error:', e)
+    print("time: %.3f s" % (ed - st))
