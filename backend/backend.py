@@ -251,7 +251,6 @@ class BackendBase:
         else:
             raise Exception('Table name is Null or has an equivalent value')
 
-
     def import_data_json(self, path_to_file, database_table, max_values=None, **kwargs):
         """
             Imports data from a json file and converts it into dict.
@@ -639,18 +638,10 @@ class BackendBase:
             Raises:
                 Any propagated errors.
         """
-        try :
-            edit_data(self._curs, table_name,
-                { column_name : new_column_value },
-                { ID_COLUMN_NAME: id }
-            )
-        except merrors.ProgrammingError as e:
-            if e.errno == 1146:
-                raise backend_errors.TableDoesNotExistException(table_name)
-            else:
-                raise
-        except:
-            raise
+        edit_data(self._curs, table_name,
+            { column_name : new_column_value },
+            { ID_COLUMN_NAME: id }
+        )
 
     def edit_classification(self, table_name : str, id : int , classification : bool):
         """ 
@@ -679,10 +670,7 @@ class BackendBase:
             Raises:
                 Any propagated errors.
         """
-        try :
-            delete_data(self._curs, table_name, { "id" : id })
-        except Exception as e:
-            print(e) # TODO: Same shit here, proper error
+        delete_data(self._curs, table_name, { "id" : id })
 
     def _get_all_non_classified(self, table_name, NON_CLASSIFIED_VALUE=None, convert_datetime=False, **kwargs):
         """ 
