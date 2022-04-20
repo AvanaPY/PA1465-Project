@@ -2,7 +2,6 @@
 
 * Test creating backend
 * Test connecting to database
-* Test fuck you
 * get_database_column_names
 * get_prediction_column_names
 * add_dict_to_database
