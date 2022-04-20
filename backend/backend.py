@@ -25,22 +25,27 @@ ID_COLUMN_NAME = 'id'
 
 WANTED_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
+DEBUG = False
+
 class BackendBase:
     def __init__(self, confparser, database_section='mysql', ai_model='temp_ai_saved', load_ai=False):
         self._my_db, self._db_config = create_sql_connection(confparser=confparser, section=database_section)
         if self._my_db:
             self._curs = self._my_db.cursor(buffered=True)
-            print(f'SUCCESSFULLY CONNECTED TO DATABASE')
+            if DEBUG:
+                print(f'SUCCESSFULLY CONNECTED TO DATABASE')
         else:
             self._curs = None
-            print(f'FAILED TO LOAD DATABASE: NO DATABASE AVAILABLE')
+            if DEBUG:
+                print(f'FAILED TO LOAD DATABASE: NO DATABASE AVAILABLE')
 
         self._load_ai = load_ai
         if load_ai:
             self.load_ai(ai_model)
         else:
             self._ai_model_name = ''
-            print(f'INFO: AI MODEL NOT LOADED')
+            if DEBUG:
+                print(f'INFO: AI MODEL NOT LOADED')
 
     def load_ai(self, ai_name):
         """
@@ -173,9 +178,10 @@ class BackendBase:
             Raises:
                 Backend.Error
         '''
+        if not table_name in self.get_tables():
+            return False
         # Ask the database for the table's data types
         database_col_names, database_col_types = self._get_database_description_no_id_column(table_name)
-
 
         # Fast check to make sure the column counts are the same
         data_col_names = data.keys()
@@ -363,6 +369,7 @@ class BackendBase:
         """
         if not self._my_db:
             raise backend_errors.NoDatabaseConnectedException()
+                    
         self._check_has_classifications(database_table, data_dict, **kwargs)
         self._check_has_datetime_column(database_table, data_dict, **kwargs)
 
@@ -372,11 +379,15 @@ class BackendBase:
                 del data_dict[key]
 
         data_dict = self._sort_data_dictionary(data_dict)
+
+        if not database_table in self.get_tables():
+            self._create_table_based_on_data_dict(database_table, data_dict, date_col=date_col, **kwargs)
+            
         self._compatability_check(data_dict, database_table)
 
         inv_dct = self._invert_dictionary(data_dict)
         for row in inv_dct:
-            cmd(self._curs, database_table, row)
+            insert_data(self._curs, database_table, row)
 
     def _sort_data_dictionary(self, data_dict : dict):
         """

@@ -12,7 +12,8 @@ DEFAULT_TABLES = ['columns_priv', 'component', 'db',
     'role_edges', 'server_cost', 'servers', 'slave_master_info',
     'slave_relay_log_info', 'slave_worker_info', 'slow_log', 'tables_priv',
     'time_zone', 'time_zone_leap_second', 'time_zone_name', 'time_zone_transition',
-    'time_zone_transition_type', 'user', 'innodb_index_stats', 'innodb_table_stats'
+    'time_zone_transition_type', 'user', 'innodb_index_stats', 'innodb_table_stats',
+    'replication_group_configuration_version', 'replication_group_member_actions'
 ]
 
 def _skip_none_dictionary(dictionary):
