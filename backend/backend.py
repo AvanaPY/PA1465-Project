@@ -376,7 +376,7 @@ class BackendBase:
 
         inv_dct = self._invert_dictionary(data_dict)
         for row in inv_dct:
-            insert_data(self._curs, database_table, row)
+            cmd(self._curs, database_table, row)
 
     def _sort_data_dictionary(self, data_dict : dict):
         """
@@ -742,7 +742,7 @@ class BackendBase:
             Args:
                 table_name              : str
                 datapoints              : list - a list of datapoints to be predicted and checked for anomalies.
-                use_historical[optional]: bool - wether to use historical data or only the data in datapoints (True: yes, False: no).
+                use_historical[optional]: bool - whether to use historical data or only the data in datapoints (True: yes, False: no).
             Returns:
                 preds                   : list - a list of predictions
                 final_cls               : list - a list of anomaly check results.
