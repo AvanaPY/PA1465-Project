@@ -1,7 +1,4 @@
 import unittest
-from tests import BackendTest, ready
+from tests import BackendTest
 
-if ready():
-    unittest.main()
-else:
-    print(f'Not running unit tests: Not ready')
+unittest.main()

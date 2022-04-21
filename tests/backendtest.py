@@ -1,3 +1,4 @@
+from lib2to3.pytree import convert
 import unittest
 from backend import BackendBase
 import backend.errors as berrors
@@ -8,8 +9,11 @@ parser.read('./config.ini')
 
 b = BackendBase(confparser=parser, load_ai=False)
 class BackendTest(unittest.TestCase):
-    def setUp(self):
-        pass
+
+    @classmethod
+    def setUpClass(cls):
+        if not b._my_db:
+            raise unittest.SkipTest(f'No connected database: Cannot test Module')
     
     def tearDown(self):
         for table in b.get_tables():
@@ -22,45 +26,20 @@ class BackendTest(unittest.TestCase):
     def test_delete_table_not_exist(self):
         with self.assertRaises(Exception):
             b.delete_table("not exist")
-
-    def test_import_json(self): 
-        b.import_data_json('./tests/test_data/base_json.json', 't')
-
-    def test_import_json_max_values(self): 
-        b.import_data_json('./tests/test_data/base_json.json', 't', max_values=1)
-        d = b.get_all_data('t', convert_datetime=True)
-        self.assertEqual(d, [(1, '2021-05-18 11:19:00', None, 1, 4, 21, 0.0, 0.0, 0.0)])
         
     def test_import_export_json(self):
         b.import_data_json('./tests/test_data/base_json.json', 't')
         b.export_data_json('./tests/test_data/export.json', 't')
         
-    def test_import_json_export_csv(self):    
-        b.import_data_json('./tests/test_data/base_json.json', 't')
-        b.export_data_csv('./tests/test_data/export.csv', 't')
-        
-    def test_import_get_all(self):
-        b.import_data_json('./tests/test_data/base_json.json', 't')
-        data = b.get_all_data('t', True)
-        self.assertEqual(data, [(1, '2021-05-18 11:19:00', None, 1, 4, 21, 0.0, 0.0, 0.0), 
-                                (2, '2021-05-18 11:19:10', None, 2, 1, 7, 0.0, 0.0, 0.0), 
-                                (3, '2021-05-18 11:19:20', None, 3, 3, -2, 0.0, 0.0, 0.0), 
-                                (4, '2021-05-18 11:19:30', None, 4, 7, 11, 0.0, 0.0, 0.0), 
-                                (5, '2021-05-18 11:19:40', None, 5, 1, 21, 0.0, 0.0, 0.0), 
-                                (6, '2021-05-18 11:19:50', None, 6, 3, 4, 0.0, 0.0, 0.0), 
-                                (7, '2021-05-18 11:19:55', None, 7, 4, 11, 0.0, 0.0, 0.0)])
-        
-    def test_import_csv_get_all(self):
+    def test_import_export_csv(self):    
         b.import_data_csv('./tests/test_data/base_csv.csv', 't')
-        data = b.get_all_data('t', True)
-        self.assertEqual(data, [(1, '2021-05-18 11:19:00', None, 1, 4, 21, 0.0, 0.0, 0.0), 
-                                (2, '2021-05-18 11:19:10', None, 2, 1, 7, 0.0, 0.0, 0.0), 
-                                (3, '2021-05-18 11:19:20', None, 3, 3, -2, 0.0, 0.0, 0.0), 
-                                (4, '2021-05-18 11:19:30', None, 4, 7, 11, 0.0, 0.0, 0.0), 
-                                (5, '2021-05-18 11:19:40', None, 5, 1, 21, 0.0, 0.0, 0.0), 
-                                (6, '2021-05-18 11:19:50', None, 6, 3, 4, 0.0, 0.0, 0.0), 
-                                (7, '2021-05-18 11:19:55', None, 7, 4, 11, 0.0, 0.0, 0.0)])
-        
+        b.export_data_csv('./tests/test_data/export.csv', 't')
+
+    def test_import_json_max_values(self): 
+        b.import_data_json('./tests/test_data/base_json.json', 't', max_values=1)
+        d = b.get_all_data('t', convert_datetime=True)
+        self.assertEqual(d, [(1, '2021-05-18 11:19:00', None, 1, 4, 21, 0.0, 0.0, 0.0)])
+
     def test_prediction_column_name_pairs(self):
         b.import_data_json('./tests/test_data/base_json.json', 't')
         pairs = b.get_sensor_prediction_column_name_pairs('t')
@@ -68,6 +47,22 @@ class BackendTest(unittest.TestCase):
                                  ('sensor2', 'PREDICTIONsensor2'), 
                                  ('sensor3', 'PREDICTIONsensor3')])
     
+    def test_no_datetime_col(self):
+        b.import_data_json('./tests/test_data/no_datetime_col.json', 't')
+        data = b.get_all_data('t', convert_datetime=True)
+        
+        data = [
+            (id, pred, s1, s2, s3, p1, p2, p3) for id, _, pred, s1, s2, s3, p1, p2, p3 in data
+        ]
+        
+        self.assertEqual(data, [(1, None, 1, 4, 21, 0.0, 0.0, 0.0), 
+                                (2, None, 2, 1, 7, 0.0, 0.0, 0.0), 
+                                (3, None, 3, 3, -2, 0.0, 0.0, 0.0),
+                                (4, None, 4, 7, 11, 0.0, 0.0, 0.0), 
+                                (5, None, 5, 1, 21, 0.0, 0.0, 0.0), 
+                                (6, None, 6, 3, 4, 0.0, 0.0, 0.0), 
+                                (7, None, 7, 4, 11, 0.0, 0.0, 0.0)])
+
     def test_sensor_column_names(self):
         b.import_data_json('./tests/test_data/base_json.json', 't')
         sensors = b.get_sensor_column_names('t')
@@ -106,22 +101,6 @@ class BackendTest(unittest.TestCase):
         b.import_data_json('./tests/test_data/classification_json.json', 't')
         d = b.get_all_data('t', convert_datetime=True)
         self.assertEqual(d, [(1, '2021-05-18 11:19:00', 1, 1, 0.0), (2, '2021-05-18 11:19:10', 1, 2, 0.0)])
-        
-    def test_no_datetime_col(self):
-        b.import_data_json('./tests/test_data/no_datetime_col.json', 't')
-        data = b.get_all_data('t', convert_datetime=True)
-        
-        data = [
-            (id, pred, s1, s2, s3, p1, p2, p3) for id, _, pred, s1, s2, s3, p1, p2, p3 in data
-        ]
-        
-        self.assertEqual(data, [(1, None, 1, 4, 21, 0.0, 0.0, 0.0), 
-                                (2, None, 2, 1, 7, 0.0, 0.0, 0.0), 
-                                (3, None, 3, 3, -2, 0.0, 0.0, 0.0),
-                                (4, None, 4, 7, 11, 0.0, 0.0, 0.0), 
-                                (5, None, 5, 1, 21, 0.0, 0.0, 0.0), 
-                                (6, None, 6, 3, 4, 0.0, 0.0, 0.0), 
-                                (7, None, 7, 4, 11, 0.0, 0.0, 0.0)])
     
     def test_delete_data(self):
         b.import_data_json('./tests/test_data/base_json.json', 't')
@@ -173,4 +152,16 @@ class BackendTest(unittest.TestCase):
                              ['2021-05-18 11:19:40', None, 1, 21, 0.0, 0.0, 0.0], 
                              ['2021-05-18 11:19:50', None, 3, 4, 0.0, 0.0, 0.0], 
                              ['2021-05-18 11:19:55', None, 4, 11, 0.0, 0.0, 0.0]])
-        
+    
+    def test_edit_classification(self):
+        b.import_data_json('./tests/test_data/base_json.json', 't')
+        b.edit_classification('t', 1, True)
+        d = b.get_all_data('t', convert_datetime=True)
+        self.assertEqual(d, [(1, '2021-05-18 11:19:00', 1, 1, 4, 21, 0.0, 0.0, 0.0), 
+                            (2, '2021-05-18 11:19:10', None, 2, 1, 7, 0.0, 0.0, 0.0), 
+                            (3, '2021-05-18 11:19:20', None, 3, 3, -2, 0.0, 0.0, 0.0), 
+                            (4, '2021-05-18 11:19:30', None, 4, 7, 11, 0.0, 0.0, 0.0), 
+                            (5, '2021-05-18 11:19:40', None, 5, 1, 21, 0.0, 0.0, 0.0), 
+                            (6, '2021-05-18 11:19:50', None, 6, 3, 4, 0.0, 0.0, 0.0), 
+                            (7, '2021-05-18 11:19:55', None, 7, 4, 11, 0.0, 0.0, 0.0)])
+    
