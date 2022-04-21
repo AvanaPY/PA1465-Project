@@ -1,0 +1,50 @@
+Backend
+compatability check: 7
+get database description no Id column: 1
+check has datetime column: 2
+create table based on data dict: 1
+create table dict: 2
+check has classification: 2
+classify datapoints: 2
+get prediction column names: 1
+get database column names: 1
+strip columns from data rows: 1
+invert dictionary: 1
+import data csv: 1
+import data json: 1
+edit clasification: 1
+edit column values: 1
+x init: 2
+x load AI: 1
+export data json: 1
+export data csv: 1
+classify database: 2
+get all non classified: 1
+get all data: 1
+convert row datetime: 1
+get sensor column names: 1
+get sensor prediction column name pairs: 1
+strip columns from data rows: 1
+add dict to database: 1
+
+ext:
+sql type to python type: 2
+all type equal or none: 3
+get data column types: 2
+
+
+macroPaths:
+29-45
+699-672
+272-367-230-444-ext:62-ext:33
+297-367-163-68-ext:4
+297-367-410
+297-367-635
+297-367-585-798-772-92
+297-367-488
+146-112-92
+887-92
+315-92
+342-540-564-92
+731-564-92
+933-129-92
