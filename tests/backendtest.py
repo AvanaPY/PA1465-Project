@@ -19,14 +19,6 @@ class BackendTest(unittest.TestCase):
         for table in b.get_tables():
             b.delete_table(table)
 
-    def test_delete_table_null(self):
-        with self.assertRaises(Exception):
-            b.delete_table('')
-            
-    def test_delete_table_not_exist(self):
-        with self.assertRaises(Exception):
-            b.delete_table("not exist")
-        
     def test_import_export_json(self):
         b.import_data_json('./tests/test_data/base_json.json', 't')
         b.export_data_json('./tests/test_data/export.json', 't')

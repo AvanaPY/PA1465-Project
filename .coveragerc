@@ -9,6 +9,7 @@ exclude_lines =
     def classify_database
     def train_ai
     def load_ai
+    def delete_table
     if DEBUG:
     if self._my_db:
     if load_ai:
