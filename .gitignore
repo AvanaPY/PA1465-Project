@@ -356,3 +356,6 @@ MigrationBackup/
 .vscode
 ./env
 htmlcov/*
+
+/CFG*/
+*.dot

@@ -12,7 +12,8 @@ DEFAULT_TABLES = ['columns_priv', 'component', 'db',
     'role_edges', 'server_cost', 'servers', 'slave_master_info',
     'slave_relay_log_info', 'slave_worker_info', 'slow_log', 'tables_priv',
     'time_zone', 'time_zone_leap_second', 'time_zone_name', 'time_zone_transition',
-    'time_zone_transition_type', 'user', 'innodb_index_stats', 'innodb_table_stats'
+    'time_zone_transition_type', 'user', 'innodb_index_stats', 'innodb_table_stats',
+    'replication_group_configuration_version', 'replication_group_member_actions'
 ]
 
 def _skip_none_dictionary(dictionary):
@@ -75,16 +76,13 @@ def create_sql_connection(confparser, section='mysql'):
                 db_config[item[0]] = item[1]
         else:
             raise Exception('Section {0} not found in the config file'.format(section,))
-        
-    for k, environ_key, default in zip(('host', 'port'), ('MYSQL_DATABASE_HOST', 'MYSQL_DATABASE_PORT'), ('172.17.0.2', '3306')):
-        db_config[k] = os.environ.get(environ_key, default)
 
     try:
         print(f'Attempting to connect to MySQL database at {db_config["host"]}:{db_config["port"]}... ', end='')
         my_db = MySQLConnection(autocommit=True, **db_config)
         print(f'Done.')
     except Exception as e:
-        print(f'Failed. ({str(e)})')
+        print(f'Failed.\n({str(e)})')
         my_db = None
     return my_db, db_config
 

@@ -1,0 +1,9 @@
+[mysql]
+host=localhost
+port=3310
+database=mysql
+user=root
+password=123
+[app]
+ip=localhost 
+port=69420

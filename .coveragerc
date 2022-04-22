@@ -1,0 +1,17 @@
+[run]
+branch = True
+omit =
+    database/*
+    ai/*
+[report]
+exclude_lines =
+    def classify_datapoints
+    def classify_database
+    def train_ai
+    def load_ai
+    def delete_table
+    if DEBUG:
+    if self._my_db:
+    if load_ai:
+    if not self._my_db: 
+    if classify_if_not_exist and self._load_ai: 
