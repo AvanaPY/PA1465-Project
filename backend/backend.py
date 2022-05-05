@@ -61,9 +61,15 @@ class BackendBase:
                 -
         """
         self._load_ai = True
-        self._ai_model_name = ai_name
-        self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = load_ai_model(f'./ai/saved_models/{ai_name}')
-
+        try:
+            self._ai_model_name = ai_name
+            self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = load_ai_model(f'./ai/saved_models/{ai_name}')
+        except Exception as e:
+            self._ai_model_name = ''
+            self._ai_model, self._ai_input_size, self._ai_shift_size, self._ai_output_size, self._input_dim, self._output_dim = None, 0, 0, 0, 0, 0
+            self._load_ai = False
+            print(f'Failed to load AI model: {str(e)}')
+            
     def _get_database_description_no_id_column(self, table_name):
         """
             Function for getting the information about a table
@@ -178,11 +184,15 @@ class BackendBase:
             Raises:
                 Backend.Error
         '''
-        if not table_name in self.get_tables():
-            return False
-        # Ask the database for the table's data types
-        database_col_names, database_col_types = self._get_database_description_no_id_column(table_name)
+        try:
+            # Ask the database for the table's data types
+            database_col_names, database_col_types = self._get_database_description_no_id_column(table_name)
 
+        except merrors.Error as e:
+            raise backend_errors.TableDoesNotExistException(table_name)
+        except Exception as e:
+            raise
+        
         # Fast check to make sure the column counts are the same
         data_col_names = data.keys()
         
@@ -252,11 +262,17 @@ class BackendBase:
             Raises:
                 Propagates any errors
         """
-        if table_name:
-            drop_table(self._curs, table_name)
-        else:
-            raise Exception('Table name is Null or has an equivalent value')
-
+        try:
+            if table_name:
+                drop_table(self._curs, table_name)
+            else:
+                raise Exception('Table name is Null or has an equivalent value')
+        except merrors.ProgrammingError as e:
+            if e.errno == 1146:
+                raise backend_errors.TableDoesNotExistException(table_name)
+            raise
+        except:
+            raise
     def import_data_json(self, path_to_file, database_table, max_values=None, **kwargs):
         """
             Imports data from a json file and converts it into dict.
@@ -379,15 +395,22 @@ class BackendBase:
                 del data_dict[key]
 
         data_dict = self._sort_data_dictionary(data_dict)
-
-        if not database_table in self.get_tables():
+        try:
+            self._compatability_check(data_dict, database_table)
+        
+        except backend_errors.TableDoesNotExistException:
             self._create_table_based_on_data_dict(database_table, data_dict, date_col=date_col, **kwargs)
-            
-        self._compatability_check(data_dict, database_table)
+            self._compatability_check(data_dict, database_table)
+        
+        except:
+            raise
 
-        inv_dct = self._invert_dictionary(data_dict)
-        for row in inv_dct:
-            insert_data(self._curs, database_table, row)
+        try:
+            inv_dct = self._invert_dictionary(data_dict)
+            for row in inv_dct:
+                insert_data(self._curs, database_table, row)
+        except Exception as e:
+            raise
 
     def _sort_data_dictionary(self, data_dict : dict):
         """
@@ -513,9 +536,12 @@ class BackendBase:
             Raises:
                 No tables available error.
         """
-        tables = get_tables(self._curs)
-        return tables
-
+        try:
+            tables = get_tables(self._curs)
+            return tables
+        except:
+            return []
+        
     def get_all_data(self, table_name, convert_datetime=False):
         """ 
             A wrapping function for returning all the data in the table.
@@ -530,11 +556,16 @@ class BackendBase:
             Raises:
                 -
         """
-        data = get_data(self._curs, table_name)
-        if convert_datetime:
-            self._convert_row_datetime(table_name, data)
-        return data 
-
+        try:
+            data = get_data(self._curs, table_name)
+            if convert_datetime:
+                self._convert_row_datetime(table_name, data)
+            return data 
+        except merrors.ProgrammingError as e:
+            if e.errno == 1146:
+                raise backend_errors.TableDoesNotExistException(table_name)
+            raise
+        
     def _convert_row_datetime(self, table_name, data):
         """ Converts the "date" column in the data from datetime.datetime objects to string values.
 
@@ -633,7 +664,16 @@ class BackendBase:
         else:
             date_format = "%Y-%m-%d"
             for i, v in enumerate(data[DATETIME_COLUMN_NAME]):
-                dt_obj = datetime.datetime.strptime(v, WANTED_DATETIME_FORMAT)
+                try:
+                    dt_obj = datetime.datetime.strptime(v, WANTED_DATETIME_FORMAT)
+                except:
+                    try:
+                        dt_obj = datetime.datetime.strptime(v, date_format)
+                    except:
+                        dt_obj = datetime.datetime.now()
+                    dt_obj += datetime.timedelta(0, i)
+                    data[DATETIME_COLUMN_NAME][i] = datetime.datetime.strftime(dt_obj, WANTED_DATETIME_FORMAT)
+
 
     def edit_column_value(self, table_name : str, id : int, column_name : str, new_column_value):
         """ 
@@ -697,12 +737,16 @@ class BackendBase:
                 Any propagated errors.
         """
 
-        data = get_data(self._curs, table_name, column_dictionary={
-            CLASSIFICATION_COLUMN_NAME: NON_CLASSIFIED_VALUE,
-        })
-        if convert_datetime:
-            self._convert_row_datetime(table_name, data)
-        return data
+        try:
+            data = get_data(self._curs, table_name, column_dictionary={
+                CLASSIFICATION_COLUMN_NAME: NON_CLASSIFIED_VALUE,
+            })
+            if convert_datetime:
+                self._convert_row_datetime(table_name, data)
+            return data
+        except Exception as e:
+            raise
+            # TODO: Make this a proper exception instead
 
     def _get_all_anomalies(self, table_name):
         """ 
@@ -762,8 +806,14 @@ class BackendBase:
         """
         if use_historical:
             n = self._ai_input_size # Amount of datapoints the AI will use
-            n_last_datapoints = get_data(self._curs, table_name, order_by=[DATETIME_COLUMN_NAME], order_by_asc_desc='DESC', limit_row_count=n)
-
+            try:
+                n_last_datapoints = get_data(self._curs, table_name, order_by=[DATETIME_COLUMN_NAME], order_by_asc_desc='DESC', limit_row_count=n)
+            except merrors.ProgrammingError as e:
+                if e.errno == 1146:
+                    raise backend_errors.TableDoesNotExistException(table_name)
+                raise e
+            except:
+                raise
             n_last_datapoints = list(reversed(n_last_datapoints))
 
             prediction_columns = self.get_prediction_column_names(table_name)
@@ -803,8 +853,11 @@ class BackendBase:
                 for j in range(len(preds)):
                     flipped_preds[i].append(preds[j][i])
 
-            with open('./jsonlog.json', 'r+') as f:
-                fl = json.load(f)
+            try:
+                with open('./jsonlog.json', 'r+') as f:
+                    fl = json.load(f)
+            except Exception as e:
+                fl = []
 
             now = datetime.datetime.strftime(datetime.datetime.now(), WANTED_DATETIME_FORMAT)
 
