@@ -3,7 +3,6 @@ from configparser import ConfigParser
 parser = ConfigParser()
 parser.read('./config.ini')
 
-
 b = BackendBase(confparser=parser)
 
 b.import_data_json('t.json', 'tabl')

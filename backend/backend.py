@@ -385,7 +385,7 @@ class BackendBase:
         """
         if not self._my_db:
             raise backend_errors.NoDatabaseConnectedException()
-                    
+
         self._check_has_classifications(database_table, data_dict, **kwargs)
         self._check_has_datetime_column(database_table, data_dict, **kwargs)
 
